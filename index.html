@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Z-Rede | Futurista Corrigido</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>Z-Rede | Instagram Clone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* Variáveis e Reset */
+        /* Variáveis e Reset (Design Instagram-Like) */
         :root {
-            --bg-body: #0a0a1a; /* Fundo muito escuro */
-            --bg-card: #15152a; /* Card ligeiramente mais claro */
-            --border-color: #2a2a40; /* Borda sutil */
-            --text-primary: #e0e0f0; /* Texto principal claro */
-            --text-secondary: #8a8ac0; /* Texto secundário azulado */
-            --accent-color: #00e6ff; /* Azul néon */
-            --accent-glow: 0 0 8px var(--accent-color); /* Efeito de brilho */
-            --glass-header: rgba(10, 10, 26, 0.8); /* Fundo transparente para o header */
-            font-size: 16px; /* Base font-size para rem */
+            --bg-body: #FAFAFA; /* Fundo muito claro */
+            --bg-card: #FFFFFF; /* Fundo dos elementos */
+            --border-color: #DBDBDB; /* Borda clara e sutil */
+            --text-primary: #262626; /* Texto quase preto */
+            --text-secondary: #8E8E8E; /* Texto cinza */
+            --accent-color: #0095F6; /* Azul Instagram */
+            --accent-danger: #ED4956; /* Vermelho like */
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -27,233 +25,164 @@
             background-color: var(--bg-body);
             color: var(--text-primary);
             display: flex;
-            justify-content: center; /* Centraliza o #app-container */
+            justify-content: center;
             min-height: 100vh;
-            overflow-x: hidden; /* Evita rolagem horizontal indesejada */
+            overflow-x: hidden;
+            font-size: 14px;
         }
 
-        /* Contêiner Principal da Aplicação */
+        /* Contêiner Principal */
         #app-container {
             width: 100%;
-            max-width: 600px; /* Largura máxima para desktops/tablets */
-            border-left: 1px solid var(--border-color);
-            border-right: 1px solid var(--border-color);
+            max-width: 480px; /* Largura mais estreita, como o Instagram */
             min-height: 100vh;
             position: relative;
-            background-color: var(--bg-body); /* Garante que o fundo esteja sempre escuro */
+            background-color: var(--bg-body);
         }
 
-        /* Header Fixo */
+        /* Header Fixo (Topo) */
         .sticky-header {
             position: sticky;
             top: 0;
             z-index: 100;
-            background-color: var(--glass-header);
-            backdrop-filter: blur(8px);
+            background-color: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
-            padding: 1rem 1rem; /* 16px */
+            padding: 0.5rem 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 54px;
         }
         .logo { 
-            font-family: 'Orbitron', sans-serif; 
-            font-size: 1.6rem; 
+            font-family: sans-serif; 
+            font-size: 1.5rem; 
             font-weight: 700; 
-            color: var(--accent-color);
-            text-shadow: var(--accent-glow);
+            color: var(--text-primary);
         }
 
-        /* Autenticação */
+        /* Autenticação/Login */
         .auth-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 4rem); /* Ajusta para a altura do header se ele existisse */
-            padding: 1.5rem;
+            min-height: calc(100vh - 54px);
+            padding: 2rem;
+        }
+        .auth-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem 1.5rem;
+            width: 100%;
+            max-width: 350px;
             text-align: center;
         }
-        .auth-title { 
-            font-family: 'Orbitron', sans-serif; 
-            font-size: 2rem; 
-            margin-bottom: 0.8rem; 
-            text-shadow: var(--accent-glow);
-        }
+        .auth-title { font-size: 1.8rem; margin-bottom: 1.5rem; }
         input[type="email"] {
-            width: 90%;
-            max-width: 400px; /* Limita a largura do input */
-            background: var(--bg-card);
+            width: 100%;
+            background: #FAFAFA;
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 0.75rem 1rem; /* 12px 16px */
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 0.75rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
             outline: none;
-            margin-bottom: 1rem;
-            box-shadow: 0 0 5px rgba(0, 230, 255, 0.3);
+            margin-bottom: 0.5rem;
         }
-        input[type="email"]:focus {
-            border-color: var(--accent-color);
-            box-shadow: var(--accent-glow);
-        }
-        
-        /* Botões */
         .btn {
             border: none;
-            border-radius: 9999px; /* Botões arredondados */
-            padding: 0.75rem 1.2rem; /* 12px 24px */
-            font-weight: 700;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
+            transition: background-color 0.2s;
         }
         .btn-primary { 
             background-color: var(--accent-color); 
-            color: var(--bg-body); 
-            width: 90%; 
-            max-width: 400px;
+            color: white; 
+            width: 100%; 
             margin-top: 0.5rem;
-            box-shadow: var(--accent-glow);
         }
-        .btn-primary:hover {
-            background-color: #00b3cc;
-            box-shadow: 0 0 12px var(--accent-color);
-        }
-        .btn-logout { 
-            color: var(--text-secondary); 
-            background: transparent; 
-            padding: 0.5rem 0.75rem; /* 8px 12px */
-            font-size: 0.9rem;
-        }
-        .btn-logout:hover {
-            color: var(--accent-color);
-        }
-        .btn-tweet { 
-            background-color: var(--accent-color); 
-            color: var(--bg-body); 
-            padding: 0.6rem 1rem; /* 10px 20px */
-            box-shadow: var(--accent-glow);
-        }
-        .btn-tweet:hover:not(:disabled) {
-            background-color: #00b3cc;
-            box-shadow: 0 0 12px var(--accent-color);
-        }
-        .btn-tweet:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
+        .btn-primary:disabled { background-color: rgba(0, 149, 246, 0.5); }
 
-        /* Área de Composição */
+        /* Composição/Postagem */
         .compose-area {
-            padding: 1rem; /* 16px */
+            padding: 1rem;
             border-bottom: 1px solid var(--border-color);
-            display: flex;
-            gap: 1rem; /* 16px */
             background-color: var(--bg-card);
         }
         .compose-input {
-            border: none;
-            background: transparent;
+            width: 100%;
+            border: 1px solid var(--border-color);
+            background-color: #FAFAFA;
             resize: none;
-            font-family: 'Inter', sans-serif;
-            font-size: 1.1rem;
-            min-height: 4.5rem; /* 72px */
-            padding: 0.6rem 0; /* 10px 0 */
-            width: 100%;
-            color: var(--text-primary);
-            caret-color: var(--accent-color);
-            line-height: 1.5;
+            font-size: 1rem;
+            min-height: 80px;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
         }
-        .compose-input::placeholder {
-            color: var(--text-secondary);
-        }
-        .compose-area > div { /* Contêiner do input e botão */
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-        }
-        .compose-area > div > div { /* Contêiner do botão postar */
-            border-top: 1px solid var(--border-color);
-            padding-top: 0.8rem; /* 12px */
+        .btn-post {
+            background-color: var(--accent-color); 
+            color: white; 
+            float: right;
         }
 
-        /* Tweet Feed Item */
-        .tweet {
-            padding: 1rem; /* 16px */
+        /* Feed Post */
+        .post-card {
+            background-color: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
-            display: flex;
-            gap: 1rem; /* 16px */
-            background-color: var(--bg-body);
-            transition: background-color 0.2s ease;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        .tweet:hover {
-            background-color: rgba(0, 230, 255, 0.05);
-        }
-        .avatar {
-            width: 2.75rem; /* 44px */
-            height: 2.75rem; /* 44px */
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-            border: 1px solid var(--accent-color);
-            box-shadow: 0 0 4px rgba(0, 230, 255, 0.5);
-        }
-        .tweet-header { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 0.5rem; /* 8px */
-            align-items: center; 
-            font-size: 0.95rem; 
-        }
-        .username { 
-            font-weight: 700; 
-            color: var(--text-primary);
-            text-shadow: 0 0 2px rgba(224, 224, 240, 0.2);
-        }
-        .handle, .time { 
-            color: var(--text-secondary); 
-            font-weight: 400; 
-            font-size: 0.85rem;
-        }
-        .tweet-content { 
-            margin-top: 0.5rem; /* 8px */
-            font-size: 1rem; 
-            line-height: 1.5; 
-            white-space: pre-wrap; 
-            word-wrap: break-word;
-        }
-
-        /* Mensagens de Status */
-        .status-msg { 
-            margin-top: 1.25rem; /* 20px */
-            padding: 0.75rem; /* 12px */
-            border-radius: 8px; 
-            width: 90%; 
-            max-width: 400px;
-            font-size: 0.95rem;
-            text-align: left;
+        .post-header {
             display: flex;
             align-items: center;
-            gap: 0.6rem; /* 10px */
+            padding: 0.75rem 1rem;
         }
-        .status-error { background-color: #4a1a1a; color: #ff6b6b; border: 1px solid #ff0000; box-shadow: 0 0 5px #ff0000;}
-        .status-success { background-color: #1a4a1a; color: #6bff6b; border: 1px solid #00ff00; box-shadow: 0 0 5px #00ff00;}
-        .fa-spinner { animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 0.75rem;
+            border: 2px solid var(--accent-color); /* Borda sutil de perfil */
+            padding: 1px;
+        }
+        .username {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .post-image {
+            width: 100%;
+            max-height: 480px;
+            object-fit: cover;
+            display: block;
+        }
+        .post-actions {
+            padding: 0.5rem 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .liked { color: var(--accent-danger); }
 
-        /* Loader */
-        .loader { 
-            text-align: center; 
-            padding: 2.5rem; /* 40px */
-            color: var(--accent-color); 
-            font-size: 2rem;
-            text-shadow: var(--accent-glow);
+        .post-details {
+            padding: 0 1rem 1rem 1rem;
         }
+        .likes-count { font-weight: 600; margin-bottom: 0.2rem; }
+        .post-caption { margin-bottom: 0.5rem; }
+        .post-time { color: var(--text-secondary); font-size: 0.7rem; margin-top: 0.5rem; }
+        .status-msg { margin-top: 1rem; padding: 0.75rem; border-radius: 4px; width: 100%; text-align: center;}
+        .status-error { background-color: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB;}
+        .status-success { background-color: #D4EDDA; color: #155724; border: 1px solid #C3E6CB;}
+        .loader { text-align: center; padding: 2rem; color: var(--accent-color); font-size: 1.5rem;}
     </style>
 </head>
 <body>
@@ -263,80 +192,77 @@
 
     <script>
         // =========================================================
-        // !!! SUAS CREDENCIAIS SUPABASE (AUTOMATICAMENTE INSERIDAS) !!!
+        // !!! CREDENCIAIS SUPABASE ATUALIZADAS !!!
         // =========================================================
-        const SUPABASE_URL = 'https://ehwqfzkjmbhnssgktoff.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVod3FmemtqbWJobnNzZ2t0b2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NjY4NjAsImV4cCI6MjA4MDA0Mjg2MH0.sGwrMA0nDz7VDJMGmaf94tLBX0JC4cwEvPSf9NvSpwM';
+        const SUPABASE_URL = 'https://qzerbrzpfvuhoaitbnlw.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_bFIvUUsgTVClHVRs6yciag_jSvo1jjL';
         
-        // =========================================================
-        // !!! URL DE REDIRECIONAMENTO (MUITO IMPORTANTE) !!!
-        // ATENÇÃO: Configure este URL nas "Redirect URLs" e "Allowed CORS Origins" do seu painel Supabase.
-        // =========================================================
-        const SITE_URL = 'http://localhost:5500'; // Ex: 'https://seuapp.vercel.app' ou 'http://localhost:3000'
-
+        // URL de Redirecionamento
+        const SITE_URL = 'https://z-rede.vercel.app'; 
+        
         let supabaseClient;
         let currentSession = null;
+        let currentProfile = null;
 
         try {
+            // Inicializa o cliente Supabase com as novas chaves
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log("Supabase client initialized.");
         } catch (err) {
-            console.error("Erro crítico ao inicializar Supabase:", err);
-            document.getElementById('app-container').innerHTML = `
-                <div style="color:red; padding: 20px; text-align:center;">
-                    <h1>ERRO CRÍTICO</h1>
-                    <p>Falha ao conectar ao Supabase. Verifique seu console e suas chaves API.</p>
-                </div>
-            `;
+            document.getElementById('app-container').innerHTML = "<h1 style='color:red; padding: 20px; text-align:center;'>ERRO: Falha ao inicializar Supabase. Verifique as chaves.</h1>";
         }
 
         const appContainer = document.getElementById('app-container');
 
         async function initApp() {
-            // Tentar obter a sessão atual ao iniciar
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
-            if (error) {
-                console.error("Erro ao obter sessão:", error.message);
-                // Pode renderizar uma tela de erro ou forçar o login
-            }
+            const { data: { session } } = await supabaseClient.auth.getSession();
             currentSession = session;
+            if (currentSession) {
+                await fetchCurrentProfile();
+            }
             route();
-
-            // Escutar mudanças no estado de autenticação
-            supabaseClient.auth.onAuthStateChange((_event, session) => {
+            supabaseClient.auth.onAuthStateChange(async (_event, session) => {
                 currentSession = session;
+                if (session) {
+                    await fetchCurrentProfile();
+                } else {
+                    currentProfile = null;
+                }
                 route();
             });
         }
 
-        // Roteador simples de UI
-        function route() {
+        async function fetchCurrentProfile() {
             if (currentSession) {
-                renderFeedUI();
-            } else {
-                renderAuthUI();
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('id, username, full_name, avatar_url, bio')
+                    .eq('id', currentSession.user.id)
+                    .single();
+                
+                if (data) currentProfile = data;
+                if (error) console.error("Erro ao buscar perfil atual:", error);
             }
+        }
+
+        function route() {
+            currentSession ? renderFeedUI() : renderAuthUI();
         }
 
         // --- UI de Autenticação ---
         function renderAuthUI() {
             appContainer.innerHTML = `
                 <div class="auth-wrapper">
-                    <div class="logo" style="font-size: 3.5rem; margin-bottom: 1.5rem;">Z</div>
-                    <h1 class="auth-title">Entre na Rede</h1>
-                    <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem;">Acontece agora.</p>
-                    
-                    <input type="email" id="email-input" placeholder="Seu e-mail">
-                    
-                    <button class="btn btn-primary" onclick="handleLogin()">
-                        <span>Entrar com Link Mágico</span>
-                    </button>
-                    
-                    <div id="auth-status" class="status-msg" style="display:none;"></div>
+                    <div class="auth-box">
+                        <div class="logo" style="font-size: 2.2rem; margin-bottom: 2rem;">Z-Rede</div>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Entre com seu e-mail para acesso.</p>
+                        <input type="email" id="email-input" placeholder="E-mail">
+                        <button class="btn btn-primary" onclick="handleLogin()">Entrar com Link Mágico</button>
+                        <div id="auth-status" class="status-msg" style="display:none;"></div>
+                    </div>
                 </div>
             `;
         }
-
+        
         async function handleLogin() {
             const email = document.getElementById('email-input').value;
             const statusEl = document.getElementById('auth-status');
@@ -344,135 +270,294 @@
             if (!email || !email.includes('@')) {
                 statusEl.style.display = 'block';
                 statusEl.className = 'status-msg status-error';
-                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Por favor, insira um e-mail válido.';
+                statusEl.innerHTML = 'Por favor, insira um e-mail válido.';
                 return;
             }
 
             statusEl.style.display = 'block';
-            statusEl.className = 'status-msg'; // Reset para o estado de loading
+            statusEl.className = 'status-msg';
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando link...';
 
-            // Chama a API de login com a opção de redirecionamento
             const { error } = await supabaseClient.auth.signInWithOtp({
                 email: email,
-                options: {
-                    emailRedirectTo: SITE_URL 
-                }
+                options: { emailRedirectTo: SITE_URL }
             });
 
             if (error) {
                 statusEl.className = 'status-msg status-error';
-                statusEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro: ${error.message}`;
+                statusEl.innerHTML = `Erro: ${error.message}`;
             } else {
                 statusEl.className = 'status-msg status-success';
-                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Link enviado! Verifique seu e-mail.';
+                statusEl.innerHTML = 'Link enviado! Verifique seu e-mail.';
             }
         }
 
-        // --- UI do Feed ---
+        // --- UI do Feed Principal ---
         function renderFeedUI() {
-            const usernamePlaceholder = currentSession.user.email ? currentSession.user.email.split('@')[0] : 'Usuário';
-            const avatarPlaceholder = `https://ui-avatars.com/api/?name=${usernamePlaceholder}&background=random&color=fff&size=44`;
+            const username = currentProfile?.username || 'Carregando...';
+            const avatar = currentProfile?.avatar_url || `https://ui-avatars.com/api/?name=Z&background=0095F6&color=fff&size=36`;
 
             appContainer.innerHTML = `
                 <div class="sticky-header">
-                    <div class="logo">Z</div>
-                    <button class="btn btn-logout" onclick="supabaseClient.auth.signOut()" title="Sair da Rede">
-                        Sair <i class="fas fa-sign-out-alt"></i>
-                    </button>
-                </div>
-
-                <div class="compose-area">
-                    <img src="${avatarPlaceholder}" class="avatar" alt="Seu Avatar">
-                    <div style="flex: 1; min-width: 0;">
-                        <textarea id="tweet-input" class="compose-input" placeholder="O que está acontecendo na Rede?" oninput="toggleButton()"></textarea>
-                        <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                            <button id="post-btn" class="btn btn-tweet" onclick="postTweet()" disabled>Postar</button>
-                        </div>
+                    <div class="logo">Z-Rede</div>
+                    <div style="display:flex; gap: 10px;">
+                        <button class="action-btn" onclick="renderSearchUI()" title="Pesquisar"><i class="fas fa-search"></i></button> 
+                        <button class="action-btn" onclick="renderProfileUI(currentProfile.id)" title="Meu Perfil">
+                             <img src="${avatar}" class="avatar" style="width: 24px; height: 24px; padding: 0; border: none;">
+                        </button>
+                        <button class="action-btn" onclick="supabaseClient.auth.signOut()" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
                     </div>
                 </div>
 
-                <div id="feed-container" class="feed-container">
-                    <div class="loader"><i class="fas fa-circle-notch fa-spin"></i> Carregando Rede...</div>
+                <div id="main-content">
+                    <div class="compose-area">
+                        <textarea id="post-input" class="compose-input" placeholder="O que você está pensando?" oninput="togglePostButton()"></textarea>
+                        <input type="file" id="image-upload" accept="image/*" style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem;">
+                        <button id="post-btn" class="btn btn-post" onclick="handlePostWithImage()" disabled>Postar</button>
+                        <div style="clear: both;"></div>
+                    </div>
+                    <div id="feed-container">
+                        <div class="loader"><i class="fas fa-circle-notch fa-spin"></i> Carregando Feed...</div>
+                    </div>
                 </div>
             `;
-            loadTweets();
-            setupRealtime(); // Ativa a atualização em tempo real
+            loadFeed();
         }
 
-        // Lógica de Postagem
-        function toggleButton() {
-            document.getElementById('post-btn').disabled = !document.getElementById('tweet-input').value.trim();
+        function togglePostButton() {
+            const input = document.getElementById('post-input');
+            const image = document.getElementById('image-upload');
+            document.getElementById('post-btn').disabled = !(input?.value.trim() || image?.files.length > 0);
         }
 
-        async function postTweet() {
-            const content = document.getElementById('tweet-input').value;
-            if(!content.trim()) return;
+        // ------------------------------------------
+        // LÓGICA DE DADOS
+        // ------------------------------------------
+        
+        // 🔴 PLACEHOLDER DE UPLOAD EXTERNO
+        async function uploadImageToExternalService(file) {
+            if (!file) return null;
+            console.warn("Usando upload simulado. Implemente a integração real!");
+            await new Promise(resolve => setTimeout(resolve, 1500)); 
+            return "https://picsum.photos/480/480?" + Math.random(); 
+        }
 
-            document.getElementById('post-btn').disabled = true;
+        async function handlePostWithImage() {
+            const content = document.getElementById('post-input').value;
+            const imageFile = document.getElementById('image-upload').files[0];
+            const postBtn = document.getElementById('post-btn');
+            
+            if (!content.trim() && !imageFile) return;
 
-            const { error } = await supabaseClient
-                .from('tweets')
-                .insert({ content: content, user_id: currentSession.user.id });
+            postBtn.disabled = true;
 
-            if (!error) {
-                document.getElementById('tweet-input').value = '';
-                toggleButton(); // Desabilita o botão novamente
-            } else {
+            let imageUrl = null;
+            try {
+                if (imageFile) {
+                    imageUrl = await uploadImageToExternalService(imageFile); 
+                    if (!imageUrl) throw new Error("Falha ao obter URL da imagem.");
+                }
+
+                const { error } = await supabaseClient
+                    .from('posts')
+                    .insert({ 
+                        content: content, 
+                        user_id: currentSession.user.id,
+                        image_url: imageUrl
+                    });
+
+                if (error) throw error;
+                
+                document.getElementById('post-input').value = '';
+                document.getElementById('image-upload').value = ''; 
+                togglePostButton();
+                loadFeed(); // Recarrega o feed para mostrar o novo post
+                
+            } catch (error) {
                 alert("Erro ao postar: " + error.message);
-                document.getElementById('post-btn').disabled = false;
+                postBtn.disabled = false;
             }
         }
 
-        // Carregar Tweets
-        async function loadTweets() {
+        async function loadFeed() {
             const container = document.getElementById('feed-container');
-            const { data, error } = await supabaseClient
-                .from('tweets')
-                .select('*, profiles(username, avatar_url)') // Busca dados do perfil do autor
-                .order('created_at', { ascending: false }); // Últimos tweets primeiro
+            const { data: posts, error } = await supabaseClient
+                .from('posts')
+                .select(`
+                    *, 
+                    profiles(username, avatar_url, full_name, is_verified),
+                    likes(user_id)
+                `)
+                .order('created_at', { ascending: false });
 
             if (error) {
-                container.innerHTML = `<div style="padding:20px; text-align:center; color:red">Erro ao carregar feed: ${error.message}</div>`;
+                container.innerHTML = `<div class="status-msg status-error">Erro ao carregar feed: ${error.message}</div>`;
                 return;
             }
 
-            if (!data || data.length === 0) {
-                container.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-secondary)">
-                    <i class="fas fa-satellite-dish fa-2x" style="margin-bottom:10px; display:block;"></i>
-                    Nenhuma transmissão na Rede ainda. Seja o primeiro!
-                </div>`;
-                return;
-            }
-
-            container.innerHTML = data.map(t => {
-                const username = t.profiles?.username || 'Rede Anônima';
-                const handle = username.toLowerCase().replace(/\s/g, '').slice(0, 15);
-                const avatar = t.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${username}&background=random&color=fff&size=44`;
-                const timeStr = timeDiff(new Date(t.created_at));
+            container.innerHTML = posts.map(post => {
+                const user = post.profiles;
+                const liked = post.likes.some(like => like.user_id === currentSession.user.id);
+                const likesCount = post.likes.length;
 
                 return `
-                <div class="tweet">
-                    <img src="${avatar}" class="avatar" loading="lazy" alt="Avatar de ${username}">
-                    <div style="flex: 1; min-width: 0;">
-                        <div class="tweet-header">
-                            <span class="username">${username}</span>
-                            <span class="handle">@${handle}</span>
-                            <span class="time">· ${timeStr}</span>
+                <div class="post-card" data-post-id="${post.id}">
+                    <div class="post-header" onclick="renderProfileUI('${user.id}')" style="cursor:pointer;">
+                        <img src="${user.avatar_url}" class="avatar" alt="${user.username}">
+                        <div>
+                            <span class="username">${user.username} ${user.is_verified ? '<i class="fas fa-check-circle" style="color: var(--accent-color); font-size: 0.8rem;"></i>' : ''}</span>
                         </div>
-                        <div class="tweet-content">${escapeHtml(t.content)}</div>
+                    </div>
+
+                    ${post.image_url ? `<img src="${post.image_url}" class="post-image" alt="Post Image">` : ''}
+
+                    <div class="post-actions">
+                        <button class="action-btn" onclick="toggleLike('${post.id}', ${liked})">
+                            <i class="fas fa-heart ${liked ? 'liked' : ''}"></i>
+                        </button>
+                        <button class="action-btn" onclick="alert('Funcionalidade de Comentários não implementada na UI rápida. ID do Post: ${post.id}')">
+                            <i class="far fa-comment"></i>
+                        </button>
+                    </div>
+
+                    <div class="post-details">
+                        <div class="likes-count">${likesCount} curtidas</div>
+                        ${post.content ? `<div class="post-caption"><span class="username">${user.username}</span> ${escapeHtml(post.content)}</div>` : ''}
+                        <div class="post-time">${timeDiff(new Date(post.created_at))}</div>
                     </div>
                 </div>
                 `;
-            }).join('');
+            }).join('') || `<div style="padding:40px; text-align:center; color:var(--text-secondary)">Seja o primeiro a postar!</div>`;
+        }
+
+        async function toggleLike(postId, currentlyLiked) {
+            const userId = currentSession.user.id;
+            
+            if (currentlyLiked) {
+                await supabaseClient.from('likes').delete().match({ user_id: userId, post_id: postId });
+            } else {
+                await supabaseClient.from('likes').insert({ user_id: userId, post_id: postId });
+            }
+            // Recarrega o feed para atualizar a contagem
+            loadFeed(); 
+        }
+
+        // ------------------------------------------
+        // LÓGICA DE PERFIL/PESQUISA (Exemplos de chamadas)
+        // ------------------------------------------
+
+        async function renderProfileUI(profileId) {
+            const targetId = profileId || currentProfile.id;
+
+            const { data: profile, error } = await supabaseClient
+                .from('profiles')
+                .select(`
+                    *, 
+                    posts(id), 
+                    followers!followers_following_id_fkey(follower_id), 
+                    following:followers!followers_follower_id_fkey(following_id)
+                `)
+                .eq('id', targetId)
+                .single();
+            
+            if (error || !profile) {
+                alert('Perfil não encontrado: ' + (error ? error.message : ''));
+                return;
+            }
+
+            const isOwnProfile = targetId === currentProfile.id;
+            const isFollowing = profile.followers.some(f => f.follower_id === currentProfile.id);
+            
+            document.getElementById('main-content').innerHTML = `
+                <div style="padding: 1rem; background-color: var(--bg-card);">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <img src="${profile.avatar_url}" class="avatar" style="width: 80px; height: 80px; margin: 0 auto; padding: 2px;">
+                        <h2 class="username" style="font-size: 1.2rem; margin-top: 0.5rem;">${profile.username} ${profile.is_verified ? '<i class="fas fa-check-circle" style="color: var(--accent-color); font-size: 0.8rem;"></i>' : ''}</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">${profile.full_name || ''}</p>
+                        <p>${profile.bio || 'Nenhuma biografia ainda.'}</p>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-around; text-align: center; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 0.5rem 0; margin-bottom: 1rem;">
+                        <div><span style="font-weight: 600;">${profile.posts.length}</span> posts</div>
+                        <div><span style="font-weight: 600;">${profile.followers.length}</span> seguidores</div>
+                        <div><span style="font-weight: 600;">${profile.following.length}</span> seguindo</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        ${isOwnProfile ? 
+                            `<button class="btn" style="background: #EFEFEF; color: var(--text-primary);" onclick="alert('Abrir tela de edição de perfil')">Editar Perfil</button>` :
+                            `<button class="btn btn-primary" onclick="toggleFollow('${profile.id}', ${isFollowing})" style="width: 80%; max-width: 300px; background: ${isFollowing ? '#EFEFEF' : 'var(--accent-color)'}; color: ${isFollowing ? 'var(--text-primary)' : 'white'};">
+                                ${isFollowing ? 'Seguindo' : 'Seguir'}
+                            </button>`
+                        }
+                        <button class="btn" style="background: none; color: var(--text-secondary); margin-top: 1rem; display:block; width: 100%;" onclick="loadFeed()">Voltar ao Feed</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function toggleFollow(targetId, isFollowing) {
+            const userId = currentSession.user.id;
+            if (isFollowing) {
+                await supabaseClient.from('followers').delete().match({ follower_id: userId, following_id: targetId });
+            } else {
+                await supabaseClient.from('followers').insert({ follower_id: userId, following_id: targetId });
+            }
+            renderProfileUI(targetId); // Recarrega a UI do perfil
+        }
+
+        async function renderSearchUI() {
+            // Este é apenas o front-end da pesquisa. A chamada de dados fica em outra função.
+            document.getElementById('main-content').innerHTML = `
+                <div style="padding: 1rem; background-color: var(--bg-card); border-bottom: 1px solid var(--border-color);">
+                    <input type="text" id="search-input" placeholder="Pesquisar usuários por @username" style="width: 100%; padding: 10px; border: 1px solid #DBDBDB; border-radius: 4px;" oninput="searchUsers(this.value)">
+                </div>
+                <div id="search-results" style="padding: 1rem;">
+                    <p style="color: var(--text-secondary); text-align: center;">Comece a digitar para encontrar usuários.</p>
+                </div>
+                <button class="btn" style="background: none; color: var(--text-secondary); margin-top: 1rem; display:block; width: 100%;" onclick="loadFeed()">Voltar ao Feed</button>
+            `;
+        }
+
+        async function searchUsers(query) {
+            const resultsDiv = document.getElementById('search-results');
+            if (query.length < 3) {
+                resultsDiv.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Digite pelo menos 3 caracteres.</p>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="loader"><i class="fas fa-circle-notch fa-spin"></i> Buscando...</div>';
+
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .select('id, username, avatar_url, full_name')
+                .ilike('username', `%${query}%`) // Usa ilike para pesquisa não sensível a maiúsculas/minúsculas
+                .limit(10);
+
+            if (error) {
+                resultsDiv.innerHTML = `<div class="status-msg status-error">Erro na pesquisa: ${error.message}</div>`;
+                return;
+            }
+
+            if (data.length === 0) {
+                resultsDiv.innerHTML = `<p style="color: var(--text-secondary); text-align: center;">Nenhum usuário encontrado com "@${query}".</p>`;
+                return;
+            }
+
+            resultsDiv.innerHTML = data.map(user => `
+                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #EFEFEF; cursor: pointer;" onclick="renderProfileUI('${user.id}')">
+                    <img src="${user.avatar_url}" class="avatar" style="width: 40px; height: 40px; margin-right: 1rem; padding: 0; border: 1px solid #C7C7C7;">
+                    <div>
+                        <span class="username">${user.username}</span>
+                        <p style="color: var(--text-secondary); font-size: 0.8rem;">${user.full_name || ''}</p>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // Funções Utilitárias
         function timeDiff(date) {
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMin = Math.floor(diffMs / 60000);
-
+            const diffMin = Math.floor((new Date() - date) / 60000);
             if (diffMin < 1) return 'agora';
             if (diffMin < 60) return `${diffMin}m`;
             if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h`;
@@ -487,19 +572,6 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
-        }
-
-        // Configuração de Realtime (Atualizações ao Vivo)
-        function setupRealtime() {
-            // Garante que o canal seja único para evitar duplicação em caso de rerender
-            supabaseClient.removeChannel(supabaseClient.getChannels().find(ch => ch.topic === 'realtime:public:tweets'));
-            
-            supabaseClient.channel('realtime:public:tweets') 
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, (payload) => {
-                    console.log('Nova inserção detectada:', payload);
-                    loadTweets(); 
-                })
-                .subscribe();
         }
         
         // Iniciar a aplicação
