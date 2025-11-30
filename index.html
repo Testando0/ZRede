@@ -3,193 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Z - Rede Mobile</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Z-Rede | Futurista</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* --- Variáveis e Reset --- */
+        /* Variáveis e Reset */
         :root {
-            --bg-body: #000000;
-            --border-color: #2f3336;
-            --text-primary: #e7e9ea;
-            --text-secondary: #71767b;
-            --accent-color: #1d9bf0;
-            --glass-header: rgba(0, 0, 0, 0.65);
+            --bg-body: #0a0a1a; /* Fundo muito escuro */
+            --bg-card: #15152a; /* Card ligeiramente mais claro */
+            --border-color: #2a2a40; /* Borda sutil */
+            --text-primary: #e0e0f0; /* Texto principal claro */
+            --text-secondary: #8a8ac0; /* Texto secundário azulado */
+            --accent-color: #00e6ff; /* Azul néon */
+            --accent-glow: 0 0 8px var(--accent-color); /* Efeito de brilho */
+            --glass-header: rgba(10, 10, 26, 0.8); /* Fundo transparente para o header */
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-body);
             color: var(--text-primary);
             display: flex;
             justify-content: center;
             min-height: 100vh;
+            overflow-x: hidden; /* Evita rolagem horizontal em mobile */
         }
 
-        /* --- Layout Principal (Mobile-First) --- */
+        /* Contêiner Principal da Aplicação */
         #app-container {
             width: 100%;
-            /* Limita a largura em telas maiores (desktop) */
-            max-width: 600px; 
+            max-width: 600px;
             border-left: 1px solid var(--border-color);
             border-right: 1px solid var(--border-color);
             min-height: 100vh;
             position: relative;
         }
 
-        /* Header Fixo e Transparente */
+        /* Header Fixo */
         .sticky-header {
             position: sticky;
             top: 0;
             z-index: 100;
             background-color: var(--glass-header);
-            backdrop-filter: blur(8px); /* Menos blur para mobile */
+            backdrop-filter: blur(8px);
             border-bottom: 1px solid var(--border-color);
-            padding: 12px 16px; /* Ajuste para mobile */
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .logo { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); }
-
-        /* --- Componentes --- */
-
-        /* Botões */
-        .btn {
-            border: none;
-            border-radius: 9999px;
-            padding: 10px 20px;
-            font-weight: 700;
-            font-size: 0.95rem; 
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-primary { 
-            background-color: var(--text-primary); 
-            color: #000; 
-            width: 100%; /* Ajuste para telas pequenas */
-            margin-bottom: 10px;
-        }
-        .btn-tweet { 
-            background-color: var(--accent-color); 
-            color: white; 
-            padding: 8px 18px; 
-        }
-        .btn-tweet:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-logout { 
-            color: var(--text-secondary); 
-            background: transparent; 
-            font-size: 0.9rem; 
-            padding: 5px;
+        .logo { 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 1.6rem; 
+            font-weight: 700; 
+            color: var(--accent-color);
+            text-shadow: var(--accent-glow);
         }
 
-        /* Tela de Autenticação */
+        /* Autenticação */
         .auth-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* Usa viewport height no mobile */
-            min-height: calc(100vh - 50px); 
+            min-height: calc(100vh - 50px);
             padding: 20px;
             text-align: center;
         }
-        .auth-title { font-size: 1.8rem; margin-bottom: 8px; }
-
-        /* Input Login */
-        #email-input {
-            width: 90%; 
-            padding: 12px 16px; /* Mais padding para toque */
-            margin-bottom: 15px;
+        .auth-title { 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 2rem; 
+            margin-bottom: 10px; 
+            text-shadow: var(--accent-glow);
+        }
+        input[type="email"] {
+            width: 90%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 8px;
             font-size: 1rem;
+            outline: none;
+            margin-bottom: 15px;
+            box-shadow: 0 0 5px rgba(0, 230, 255, 0.3); /* Brilho sutil */
+        }
+        input[type="email"]:focus {
+            border-color: var(--accent-color);
+            box-shadow: var(--accent-glow);
         }
         
-        /* Área de Postagem */
+        /* Botões */
+        .btn {
+            border: none;
+            border-radius: 9999px;
+            padding: 12px 24px; /* Mais padding para toque mobile */
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary { 
+            background-color: var(--accent-color); 
+            color: var(--bg-body); 
+            width: 90%; 
+            margin-top: 5px;
+            box-shadow: var(--accent-glow);
+        }
+        .btn-primary:hover {
+            background-color: #00b3cc; /* Um pouco mais escuro no hover */
+            box-shadow: 0 0 12px var(--accent-color);
+        }
+        .btn-logout { 
+            color: var(--text-secondary); 
+            background: transparent; 
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        .btn-logout:hover {
+            color: var(--accent-color);
+        }
+        .btn-tweet { 
+            background-color: var(--accent-color); 
+            color: var(--bg-body); 
+            padding: 10px 20px;
+            box-shadow: var(--accent-glow);
+        }
+        .btn-tweet:hover:not(:disabled) {
+            background-color: #00b3cc;
+            box-shadow: 0 0 12px var(--accent-color);
+        }
+        .btn-tweet:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Área de Composição */
         .compose-area {
-            padding: 12px 16px; /* Mais compacto para mobile */
+            padding: 16px; /* Mais espaçamento */
             border-bottom: 1px solid var(--border-color);
             display: flex;
-            gap: 10px;
+            gap: 15px; /* Mais espaço entre avatar e input */
+            background-color: var(--bg-card);
         }
         .compose-input {
             border: none;
+            background: transparent;
             resize: none;
-            font-family: inherit;
+            font-family: 'Inter', sans-serif;
             font-size: 1.1rem; /* Fonte ligeiramente maior */
-            height: auto;
-            min-height: 50px;
+            min-height: 70px; /* Altura mínima maior */
             padding: 10px 0;
             width: 100%;
+            color: var(--text-primary);
+            caret-color: var(--accent-color); /* Cursor piscando em néon */
+        }
+        .compose-input::placeholder {
+            color: var(--text-secondary);
         }
 
-        /* Feed Item */
+        /* Tweet Feed Item */
         .tweet {
-            padding: 12px 16px;
+            padding: 16px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
-            gap: 10px;
-            transition: background 0.2s;
+            gap: 15px;
+            background-color: var(--bg-body); /* Fundo mais escuro para o feed */
+            transition: background-color 0.2s ease;
         }
-        .tweet:hover { background-color: rgba(255,255,255,0.03); }
-        
+        .tweet:hover {
+            background-color: rgba(0, 230, 255, 0.05); /* Pequeno destaque no hover */
+        }
         .avatar {
-            width: 38px;
-            height: 38px;
+            width: 44px; /* Avatares um pouco maiores */
+            height: 44px;
             border-radius: 50%;
             object-fit: cover;
-            flex-shrink: 0; /* Impede que o avatar encolha */
+            flex-shrink: 0;
+            border: 1px solid var(--accent-color); /* Borda néon no avatar */
+            box-shadow: 0 0 4px rgba(0, 230, 255, 0.5);
         }
-        
         .tweet-header { 
             display: flex; 
-            flex-wrap: wrap; /* Quebra a linha se necessário */
-            gap: 5px; 
+            flex-wrap: wrap; /* Quebra linha em telas muito pequenas */
+            gap: 8px; 
             align-items: center; 
-            font-size: 0.9rem; /* Mais sutil */
+            font-size: 0.95rem; 
         }
-        .username { font-weight: 700; color: var(--text-primary); }
-        .handle, .time { color: var(--text-secondary); font-weight: 400; }
+        .username { 
+            font-weight: 700; 
+            color: var(--text-primary);
+            text-shadow: 0 0 2px rgba(224, 224, 240, 0.2);
+        }
+        .handle, .time { 
+            color: var(--text-secondary); 
+            font-weight: 400; 
+            font-size: 0.85rem;
+        }
         .tweet-content { 
-            margin-top: 4px; 
+            margin-top: 8px; 
             font-size: 1rem; 
-            line-height: 1.4; /* Melhora a leitura */
+            line-height: 1.5; 
             white-space: pre-wrap; 
             word-wrap: break-word;
         }
 
-        /* Utilitários */
-        .status-msg { margin-top: 15px; font-size: 0.85rem; padding: 10px; border-radius: 4px; display: none; }
-        .status-success { color: #00ba7c; background: rgba(0, 186, 124, 0.1); }
-        .status-error { color: #f4212e; background: rgba(244, 33, 46, 0.1); }
-        .loader { color: var(--accent-color); font-size: 1.5rem; animation: spin 1s linear infinite; margin: 20px auto; display: block; text-align: center;}
+        /* Mensagens de Status */
+        .status-msg { 
+            margin-top: 20px; 
+            padding: 12px; 
+            border-radius: 8px; 
+            width: 90%; 
+            font-size: 0.95rem;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-error { background-color: #4a1a1a; color: #ff6b6b; border: 1px solid #ff0000; box-shadow: 0 0 5px #ff0000;}
+        .status-success { background-color: #1a4a1a; color: #6bff6b; border: 1px solid #00ff00; box-shadow: 0 0 5px #00ff00;}
+        .fa-spinner { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* Media Query para Desktop (ajustes de layout em telas maiores) */
-        @media (min-width: 601px) {
-            .auth-wrapper {
-                height: 100vh;
-            }
-            .auth-title { font-size: 2rem; }
-            .compose-area {
-                padding: 16px;
-            }
-            .tweet {
-                padding: 16px;
-            }
-            .avatar {
-                width: 48px;
-                height: 48px;
-            }
-            .compose-input {
-                min-height: 60px;
-            }
+        /* Loader */
+        .loader { 
+            text-align: center; 
+            padding: 40px; 
+            color: var(--accent-color); 
+            font-size: 2rem;
+            text-shadow: var(--accent-glow);
+        }
+
+        /* Responsividade (Ajustes para telas maiores, se necessário) */
+        @media (min-width: 480px) {
+            .auth-title { font-size: 2.5rem; }
+            .btn-primary { width: 70%; }
+            input[type="email"] { width: 70%; }
+            .compose-input { min-height: 80px; }
+            .avatar { width: 50px; height: 50px; }
+            .tweet { padding: 20px; }
+            .compose-area { padding: 20px; }
         }
     </style>
 </head>
@@ -199,42 +257,54 @@
         </div>
 
     <script>
-        // ==========================================
-        // CONFIGURAÇÃO
-        // ==========================================
-        const SUPABASE_URL = 'https://dxflqriicyeedjyrlvut.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2R4ZmxxcmlpY3llZWRqeXJsdnV0LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI0NTNiMGE2MC01YWRmLTQ2MGMtODhhMS05Yzg3NGE4NGQ5ZjMiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzY0NDk2NTgzLCJpYXQiOjE3NjQ0OTI5ODMsImVtYWlsIjoic2FrdXJheTQ1MkBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoic2FrdXJheTQ1MkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiI0NTNiMGE2MC01YWRmLTQ2MGMtODhhMS05Yzg3NGE4NGQ5ZjMifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJvdHAiLCJ0aW1lc3RhbXAiOjE3NjQ0OTI5ODN9XSwic2Vzc2lvbl9pZCI6ImMxMTIzZDMzLWM2Y2ItNGZlOS1hODliLWMwNDlkNjVhZjhmZiIsImlzX2Fub255bW91cyI6ZmFsc2V9.OblmfgZJbtRltxyYSlVVqv6Uw7T9wg4r3FB6elZRTZw';
+        // =========================================================
+        // !!! SUAS CREDENCIAIS SUPABASE (AUTOMATICAMENTE INSERIDAS) !!!
+        // =========================================================
+        const SUPABASE_URL = 'https://ehwqfzkjmbhnssgktoff.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVod3FmemtqbWJobnNzZ2t0b2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NjY4NjAsImV4cCI6MjA4MDA0Mjg2MH0.sGwrMA0nDz7VDJMGmaf94tLBX0JC4cwEvPSf9NvSpwM';
         
-        // URL PARA REDIRECIONAMENTO (IMPORTANTE: Garante o domínio Vercel)
-        const SITE_URL = 'https://z-rede.vercel.app'; 
+        // =========================================================
+        // !!! URL DE REDIRECIONAMENTO (MUITO IMPORTANTE) !!!
+        // ATENÇÃO: Configure este URL nas "Redirect URLs" e "Allowed CORS Origins" do seu painel Supabase.
+        // =========================================================
+        const SITE_URL = 'http://localhost:5500'; // Ex: 'https://seuapp.vercel.app' ou 'http://localhost:3000'
 
         let supabaseClient;
         let currentSession = null;
 
         try {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log("Supabase client initialized.");
         } catch (err) {
-            console.error("Erro crítico ao iniciar Supabase", err);
-            document.body.innerHTML = "<h1 style='color:white; padding: 20px;'>Erro de conexão. Verifique o console.</h1>";
+            console.error("Erro crítico ao inicializar Supabase:", err);
+            document.getElementById('app-container').innerHTML = `
+                <div style="color:red; padding: 20px; text-align:center;">
+                    <h1>ERRO CRÍTICO</h1>
+                    <p>Falha ao conectar ao Supabase. Verifique seu console e suas chaves API.</p>
+                </div>
+            `;
         }
 
         const appContainer = document.getElementById('app-container');
 
-        // ==========================================
-        // GERENCIAMENTO DE ESTADO E UI
-        // ==========================================
-        
         async function initApp() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
+            // Tentar obter a sessão atual ao iniciar
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
+            if (error) {
+                console.error("Erro ao obter sessão:", error.message);
+                // Pode renderizar uma tela de erro ou forçar o login
+            }
             currentSession = session;
             route();
 
+            // Escutar mudanças no estado de autenticação
             supabaseClient.auth.onAuthStateChange((_event, session) => {
                 currentSession = session;
                 route();
             });
         }
 
+        // Roteador simples de UI
         function route() {
             if (currentSession) {
                 renderFeedUI();
@@ -243,23 +313,21 @@
             }
         }
 
-        // ==========================================
-        // TELA DE LOGIN
-        // ==========================================
+        // --- UI de Autenticação ---
         function renderAuthUI() {
             appContainer.innerHTML = `
                 <div class="auth-wrapper">
-                    <div style="font-size: 3rem; margin-bottom: 20px;">Z</div>
-                    <h1 class="auth-title">Acontecendo agora</h1>
-                    <p class="auth-subtitle" style="color: var(--text-secondary);">Inscreva-se hoje.</p>
+                    <div class="logo" style="font-size: 3.5rem; margin-bottom: 25px;">Z</div>
+                    <h1 class="auth-title">Entre na Rede</h1>
+                    <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 1.1rem;">Acontece agora.</p>
                     
-                    <input type="email" id="email-input" placeholder="Seu e-mail" autocomplete="email">
+                    <input type="email" id="email-input" placeholder="Seu e-mail">
                     
-                    <button class="btn btn-primary" onclick="handleLogin()" style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="handleLogin()">
                         <span>Entrar com Link Mágico</span>
                     </button>
                     
-                    <div id="auth-status" class="status-msg"></div>
+                    <div id="auth-status" class="status-msg" style="display:none;"></div>
                 </div>
             `;
         }
@@ -269,15 +337,17 @@
             const statusEl = document.getElementById('auth-status');
             
             if (!email || !email.includes('@')) {
-                showStatus(statusEl, 'Por favor, insira um e-mail válido.', 'error');
+                statusEl.style.display = 'block';
+                statusEl.className = 'status-msg status-error';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Por favor, insira um e-mail válido.';
                 return;
             }
 
             statusEl.style.display = 'block';
+            statusEl.className = 'status-msg'; // Reset para o estado de loading
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando link...';
-            statusEl.className = 'status-msg';
 
-            // FORÇA O REDIRECIONAMENTO PARA O DOMÍNIO DA VERCEL
+            // Chama a API de login com a opção de redirecionamento
             const { error } = await supabaseClient.auth.signInWithOtp({
                 email: email,
                 options: {
@@ -286,56 +356,48 @@
             });
 
             if (error) {
-                showStatus(statusEl, error.message, 'error');
+                statusEl.className = 'status-msg status-error';
+                statusEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro: ${error.message}`;
             } else {
-                showStatus(statusEl, 'Link enviado! Verifique seu e-mail.', 'success');
+                statusEl.className = 'status-msg status-success';
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Link enviado! Verifique seu e-mail.';
             }
         }
 
-        function showStatus(el, msg, type) {
-            el.style.display = 'block';
-            el.className = `status-msg status-${type}`;
-            el.innerHTML = type === 'success' ? `<i class="fas fa-check-circle"></i> ${msg}` : `<i class="fas fa-exclamation-circle"></i> ${msg}`;
-        }
-
-        // ==========================================
-        // TELA PRINCIPAL (FEED)
-        // ==========================================
+        // --- UI do Feed ---
         function renderFeedUI() {
-            const userEmail = currentSession.user.email;
-            const username = userEmail.split('@')[0];
+            const usernamePlaceholder = currentSession.user.email ? currentSession.user.email.split('@')[0] : 'Usuário';
+            const avatarPlaceholder = `https://ui-avatars.com/api/?name=${usernamePlaceholder}&background=random&color=fff&size=44`;
 
             appContainer.innerHTML = `
                 <div class="sticky-header">
                     <div class="logo">Z</div>
-                    <button class="btn btn-logout" onclick="supabaseClient.auth.signOut()" title="Sair">
+                    <button class="btn btn-logout" onclick="supabaseClient.auth.signOut()" title="Sair da Rede">
                         Sair <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
 
                 <div class="compose-area">
-                    <img src="https://ui-avatars.com/api/?name=${username}&background=random" class="avatar">
-                    <div style="width: 100%;">
-                        <textarea id="tweet-input" class="compose-input" placeholder="O que está acontecendo?!" oninput="toggleButton()"></textarea>
+                    <img src="${avatarPlaceholder}" class="avatar" alt="Seu Avatar">
+                    <div style="flex: 1; min-width: 0;">
+                        <textarea id="tweet-input" class="compose-input" placeholder="O que está acontecendo na Rede?" oninput="toggleButton()"></textarea>
                         <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 10px;">
                             <button id="post-btn" class="btn btn-tweet" onclick="postTweet()" disabled>Postar</button>
                         </div>
                     </div>
                 </div>
 
-                <div id="feed-container">
-                    <div class="loader"><i class="fas fa-circle-notch fa-spin"></i></div>
+                <div id="feed-container" class="feed-container">
+                    <div class="loader"><i class="fas fa-circle-notch fa-spin"></i> Carregando Rede...</div>
                 </div>
             `;
-            
             loadTweets();
-            setupRealtime();
+            setupRealtime(); // Ativa a atualização em tempo real
         }
 
+        // Lógica de Postagem
         function toggleButton() {
-            const content = document.getElementById('tweet-input').value;
-            const btn = document.getElementById('post-btn');
-            btn.disabled = !content.trim();
+            document.getElementById('post-btn').disabled = !document.getElementById('tweet-input').value.trim();
         }
 
         async function postTweet() {
@@ -348,51 +410,45 @@
                 .from('tweets')
                 .insert({ content: content, user_id: currentSession.user.id });
 
-            if (error) {
+            if (!error) {
+                document.getElementById('tweet-input').value = '';
+                toggleButton(); // Desabilita o botão novamente
+            } else {
                 alert("Erro ao postar: " + error.message);
                 document.getElementById('post-btn').disabled = false;
-            } else {
-                document.getElementById('tweet-input').value = '';
-                toggleButton();
             }
         }
 
+        // Carregar Tweets
         async function loadTweets() {
             const container = document.getElementById('feed-container');
-            
             const { data, error } = await supabaseClient
                 .from('tweets')
-                .select('*, profiles(username, avatar_url)')
-                .order('created_at', { ascending: false });
+                .select('*, profiles(username, avatar_url)') // Busca dados do perfil do autor
+                .order('created_at', { ascending: false }); // Últimos tweets primeiro
 
             if (error) {
-                container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-secondary)">Erro ao carregar feed.</div>`;
+                container.innerHTML = `<div style="padding:20px; text-align:center; color:red">Erro ao carregar feed: ${error.message}</div>`;
                 return;
             }
 
             if (!data || data.length === 0) {
                 container.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-secondary)">
-                    <i class="fas fa-wind fa-2x" style="margin-bottom:10px; display:block;"></i>
-                    Nada para ver aqui ainda.
+                    <i class="fas fa-satellite-dish fa-2x" style="margin-bottom:10px; display:block;"></i>
+                    Nenhuma transmissão na Rede ainda. Seja o primeiro!
                 </div>`;
                 return;
             }
 
-            renderTweetList(data);
-        }
-
-        function renderTweetList(tweets) {
-            const container = document.getElementById('feed-container');
-            container.innerHTML = tweets.map(t => {
-                const username = t.profiles?.username || 'Usuário';
-                const handle = username.toLowerCase().replace(/\s/g, '');
-                const avatar = t.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${username}&background=333&color=fff`;
-                const time = new Date(t.created_at);
-                const timeStr = timeDiff(time);
+            container.innerHTML = data.map(t => {
+                const username = t.profiles?.username || 'Rede Anônima';
+                const handle = username.toLowerCase().replace(/\s/g, '').slice(0, 15);
+                const avatar = t.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${username}&background=random&color=fff&size=44`;
+                const timeStr = timeDiff(new Date(t.created_at));
 
                 return `
                 <div class="tweet">
-                    <img src="${avatar}" class="avatar" loading="lazy">
+                    <img src="${avatar}" class="avatar" loading="lazy" alt="Avatar de ${username}">
                     <div style="flex: 1; min-width: 0;">
                         <div class="tweet-header">
                             <span class="username">${username}</span>
@@ -406,6 +462,7 @@
             }).join('');
         }
 
+        // Funções Utilitárias
         function timeDiff(date) {
             const now = new Date();
             const diffMs = now - date;
@@ -427,16 +484,23 @@
                 .replace(/'/g, "&#039;");
         }
 
+        // Configuração de Realtime (Atualizações ao Vivo)
         function setupRealtime() {
-            supabaseClient.channel('public:tweets')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, () => {
-                    loadTweets();
+            // Garante que o canal seja único para evitar duplicação
+            supabaseClient.removeChannel(supabaseClient.getChannels().find(ch => ch.topic === 'realtime:public:tweets'));
+            
+            supabaseClient.channel('realtime:public:tweets') // Nome do canal para ouvir updates na tabela 'tweets'
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, (payload) => {
+                    console.log('Nova inserção detectada:', payload);
+                    loadTweets(); // Recarrega os tweets quando um novo é inserido
                 })
                 .subscribe();
         }
-
-        // Iniciar
+        
+        // Iniciar a aplicação
         initApp();
     </script>
 </body>
 </html>
+```http://googleusercontent.com/generated_image_content/0
+
