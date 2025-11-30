@@ -3,165 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Z Clone - Funcional e Elegante</title>
+    <title>Z Clone - Corrigido</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* Cores e Estilos Globais */
-        :root {
-            --bg-dark: #15202b; /* Fundo principal */
-            --bg-card: #1c2732; /* Fundo de componentes */
-            --border-gray: #2f3336; /* Linhas de divisão */
-            --text-primary: #e7e9ea; /* Texto principal (branco/claro) */
-            --text-secondary: #71767b; /* Texto secundário (cinza) */
-            --color-blue: #1d9bf0; /* Cor primária (Azul X) */
-        }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            display: flex;
-            justify-content: center;
-            margin: 0;
-            min-height: 100vh;
-        }
-        #app-container {
-            width: 100%;
-            max-width: 600px;
-            border-left: 1px solid var(--border-gray);
-            border-right: 1px solid var(--border-gray);
-        }
-
-        /* Componente de Autenticação */
-        .auth-container {
-            padding: 50px;
-            text-align: center;
-        }
-        .auth-container input {
-            padding: 12px;
-            margin-bottom: 15px;
-            width: 90%;
-            border-radius: 6px;
-            border: 1px solid var(--border-gray);
-            background: var(--bg-dark);
-            color: var(--text-primary);
-        }
-        .btn-primary {
-            background-color: var(--color-blue);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .btn-primary:hover:not(:disabled) {
-            background-color: #1a8cd8;
-        }
-        .btn-primary:disabled {
-            background-color: #0b517a;
-            cursor: not-allowed;
-        }
-
-        /* Área de Postagem (Input) */
-        .tweet-input-area {
-            padding: 15px;
-            border-bottom: 1px solid var(--border-gray);
-        }
-        #tweet-content {
-            width: 100%;
-            padding: 10px;
-            background-color: transparent;
-            border: none;
-            color: var(--text-primary);
-            resize: none;
-            height: 70px;
-            font-size: 1.2em;
-            outline: none;
-        }
-
-        /* Lista de Tweets (Feed) */
-        .tweet-item {
-            padding: 15px;
-            border-bottom: 1px solid var(--border-gray);
-            display: flex;
-            gap: 10px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .tweet-item:hover {
-            background-color: var(--bg-card);
-        }
-        .tweet-username {
-            font-weight: bold;
-            color: var(--text-primary);
-        }
-        .tweet-handle {
-            color: var(--text-secondary);
-            font-size: 0.9em;
-            margin-left: 5px;
-        }
-        .tweet-content-text {
-            margin-top: 5px;
-        }
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #3e444b;
-            flex-shrink: 0;
-            object-fit: cover;
-        }
-        .error-message {
-            color: red;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-        .loading-indicator {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-secondary);
-        }
+        /* (Mantive seus estilos originais pois estão ótimos) */
+        :root { --bg-dark: #15202b; --bg-card: #1c2732; --border-gray: #2f3336; --text-primary: #e7e9ea; --text-secondary: #71767b; --color-blue: #1d9bf0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg-dark); color: var(--text-primary); display: flex; justify-content: center; margin: 0; min-height: 100vh; }
+        #app-container { width: 100%; max-width: 600px; border-left: 1px solid var(--border-gray); border-right: 1px solid var(--border-gray); }
+        .auth-container { padding: 50px; text-align: center; }
+        .auth-container input { padding: 12px; margin-bottom: 15px; width: 90%; border-radius: 6px; border: 1px solid var(--border-gray); background: var(--bg-dark); color: var(--text-primary); }
+        .btn-primary { background-color: var(--color-blue); color: white; padding: 10px 20px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+        .btn-primary:hover:not(:disabled) { background-color: #1a8cd8; }
+        .btn-primary:disabled { background-color: #0b517a; cursor: not-allowed; }
+        .tweet-input-area { padding: 15px; border-bottom: 1px solid var(--border-gray); }
+        #tweet-content { width: 100%; padding: 10px; background-color: transparent; border: none; color: var(--text-primary); resize: none; height: 70px; font-size: 1.2em; outline: none; }
+        .tweet-item { padding: 15px; border-bottom: 1px solid var(--border-gray); display: flex; gap: 10px; cursor: pointer; transition: background-color 0.2s; }
+        .tweet-item:hover { background-color: var(--bg-card); }
+        .tweet-username { font-weight: bold; color: var(--text-primary); }
+        .tweet-handle { color: var(--text-secondary); font-size: 0.9em; margin-left: 5px; }
+        .tweet-content-text { margin-top: 5px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #3e444b; flex-shrink: 0; object-fit: cover; }
+        .error-message { color: red; margin-top: 10px; font-size: 0.9em; }
+        .loading-indicator { text-align: center; padding: 20px; color: var(--text-secondary); }
     </style>
 </head>
 <body>
 
-    <div id="app-container">
-        </div>
+    <div id="app-container"></div>
 
     <script>
-        // ===============================================
-        // ✅ CHAVES DO SUPABASE INSERIDAS
-        // ===============================================
         const SUPABASE_URL = 'https://dxflqriicyeedjyrlvut.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4ZmxxcmlpY3llZWRqeXJsdnV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NjE5MzgsImV4cCI6MjA4MDAzNzkzOH0.mIiQQJKZeBXPR9FVGI9148idR59ojoUqPi_ClOQ-ex0';
         
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // CORREÇÃO AQUI: Mudamos o nome da variável para supabaseClient
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
         const appContainer = document.getElementById('app-container');
         let currentSession = null;
         
-        // ===============================================
-        // AUXILIARES DE ESTADO (Para UX)
-        // ===============================================
-
         function showMessage(type, message) {
             const container = document.getElementById('message-container');
             if (container) {
                 container.innerHTML = `<div class="error-message" style="color: ${type === 'error' ? 'red' : 'green'};">${message}</div>`;
-                setTimeout(() => {
-                    container.innerHTML = '';
-                }, 5000);
+                setTimeout(() => container.innerHTML = '', 5000);
             }
         }
         
-        // ===============================================
-        // LÓGICA DE AUTENTICAÇÃO
-        // ===============================================
-
         async function updateUI() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             currentSession = session;
             
             if (session) {
@@ -188,53 +79,48 @@
             const email = document.getElementById('auth-email').value;
             if (!email) return showMessage('error', 'Por favor, insira um e-mail.');
 
-            const { error } = await supabase.auth.signInWithOtp({ email });
+            const { error } = await supabaseClient.auth.signInWithOtp({ email });
 
-            if (error) {
-                showMessage('error', 'Erro: ' + error.message);
-            } else {
-                showMessage('success', 'Link mágico enviado! Verifique sua caixa de entrada.');
-            }
+            if (error) showMessage('error', 'Erro: ' + error.message);
+            else showMessage('success', 'Link mágico enviado! Verifique sua caixa de entrada.');
         }
         
         async function signOut() {
-             await supabase.auth.signOut();
-             // Remove a subscrição realtime antes de mudar a UI
-             supabase.removeAllChannels(); 
+             await supabaseClient.auth.signOut();
+             supabaseClient.removeAllChannels(); 
              updateUI();
         }
 
-
-        // ===============================================
-        // LÓGICA DO FEED E REALTIME
-        // ===============================================
-
         async function getTweetsAndRender() {
             const listElement = document.getElementById('tweet-list');
-            if (listElement) {
-                 listElement.innerHTML = `<p class="loading-indicator">Carregando tweets...</p>`;
-            }
+            if (listElement) listElement.innerHTML = `<p class="loading-indicator">Carregando tweets...</p>`;
 
-            const { data: tweets, error } = await supabase
+            // O select depende da relação entre tweets e profiles
+            const { data: tweets, error } = await supabaseClient
                 .from('tweets')
                 .select(`id, content, created_at, profiles ( username, avatar_url )`)
                 .order('created_at', { ascending: false });
 
             if (error) {
                 console.error('Erro ao carregar tweets:', error);
-                if (listElement) listElement.innerHTML = `<p class="error-message">Erro ao carregar feed. Verifique as Regras de Segurança!</p>`;
+                if (listElement) listElement.innerHTML = `<p class="error-message">Erro ao carregar feed. Verifique se as tabelas existem no Supabase.</p>`;
                 return;
             }
 
             if (listElement) {
+                if(tweets.length === 0) {
+                    listElement.innerHTML = `<p style="text-align:center; padding:20px; color:var(--text-secondary)">Nenhum post ainda.</p>`;
+                    return;
+                }
+
                 listElement.innerHTML = tweets.map(tweet => `
                     <div class="tweet-item">
                         <img src="${tweet.profiles?.avatar_url || 'https://placehold.co/40'}" class="avatar" alt="Avatar"/>
                         <div>
                             <p>
-                                <span class="tweet-username">${tweet.profiles?.username || 'user'}</span>
+                                <span class="tweet-username">${tweet.profiles?.username || 'Usuário'}</span>
                                 <span class="tweet-handle">@${tweet.profiles?.username || 'user'}</span>
-                                <span class="tweet-handle">· ${new Date(tweet.created_at).toLocaleTimeString('pt-BR')}</span>
+                                <span class="tweet-handle">· ${new Date(tweet.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</span>
                             </p>
                             <p class="tweet-content-text">${tweet.content}</p>
                         </div>
@@ -244,31 +130,23 @@
         }
 
         function setupRealtimeSubscription() {
-            // Remove qualquer canal antigo antes de criar um novo
-            supabase.removeAllChannels();
-
-            supabase.channel('feed_de_tweets')
-                .on(
-                    'postgres_changes', 
-                    { event: 'INSERT', schema: 'public', table: 'tweets' },
-                    () => {
-                        // Recarrega o feed quando um novo tweet for inserido
-                        getTweetsAndRender(); 
-                    }
-                )
+            supabaseClient.removeAllChannels();
+            supabaseClient.channel('feed_de_tweets')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, () => {
+                    getTweetsAndRender(); 
+                })
                 .subscribe();
         }
 
         async function handlePost() {
             const content = document.getElementById('tweet-content').value;
             const user = currentSession?.user;
-
             if (!content || !user) return;
             
-            // Desabilita o botão para evitar cliques duplicados
             document.getElementById('tweet-button').disabled = true;
 
-            const { error } = await supabase
+            // Insere o tweet vinculado ao ID do usuário
+            const { error } = await supabaseClient
                 .from('tweets')
                 .insert({ content: content, user_id: user.id });
             
@@ -278,7 +156,6 @@
                  showMessage('error', 'Erro ao postar: ' + error.message);
             } else {
                 document.getElementById('tweet-content').value = ''; 
-                // O Realtime se encarrega de atualizar a lista!
             }
         }
         
@@ -291,19 +168,12 @@
                         <button id="tweet-button" class="btn-primary" onclick="handlePost()" disabled>Postar</button>
                     </div>
                 </div>
-                
                 <div style="border-bottom: 1px solid var(--border-gray); padding: 10px; text-align: right;">
-                    <span style="font-size: 0.9em; color: var(--text-secondary);">Logado como: ${user.email}</span>
-                    <button onclick="signOut()" style="background: none; border: none; color: var(--color-blue); cursor: pointer; margin-left: 10px;">
-                        Sair
-                    </button>
+                    <span style="font-size: 0.9em; color: var(--text-secondary);">Logado: ${user.email}</span>
+                    <button onclick="signOut()" style="background: none; border: none; color: var(--color-blue); cursor: pointer; margin-left: 10px;">Sair</button>
                 </div>
-
-                <div class="tweet-list" id="tweet-list">
-                    </div>
+                <div class="tweet-list" id="tweet-list"></div>
             `;
-            
-            // Adiciona listener para o input da textarea (precisa ser feito após o render)
             document.getElementById('tweet-content').addEventListener('input', checkTweetLength);
             getTweetsAndRender();
         }
@@ -313,16 +183,8 @@
             document.getElementById('tweet-button').disabled = content.trim().length === 0;
         }
 
-
-        // ===============================================
-        // INICIA O APP
-        // ===============================================
-        supabase.auth.onAuthStateChange((_event, session) => {
-            updateUI(); // Chama o updateUI em qualquer mudança de Auth
-        });
-        
-        updateUI(); // Chama o updateUI na primeira vez
-
+        supabaseClient.auth.onAuthStateChange((_event, session) => updateUI());
+        updateUI();
     </script>
 </body>
 </html>
