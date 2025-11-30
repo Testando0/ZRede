@@ -3,21 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Z-Rede | Instagram Clone</title>
+    <title>Z-Rede | Instagram Clone (Firebase)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     
     <style>
-        /* Variáveis e Reset (Design Instagram-Like) */
+        /* CSS... (mantido igual ao anterior para manter o design) */
         :root {
-            --bg-body: #FAFAFA; /* Fundo muito claro */
-            --bg-card: #FFFFFF; /* Fundo dos elementos */
-            --border-color: #DBDBDB; /* Borda clara e sutil */
-            --text-primary: #262626; /* Texto quase preto */
-            --text-secondary: #8E8E8E; /* Texto cinza */
-            --accent-color: #0095F6; /* Azul Instagram */
-            --accent-danger: #ED4956; /* Vermelho like */
+            --bg-body: #FAFAFA;
+            --bg-card: #FFFFFF;
+            --border-color: #DBDBDB;
+            --text-primary: #262626;
+            --text-secondary: #8E8E8E;
+            --accent-color: #0095F6;
+            --accent-danger: #ED4956;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -31,16 +34,14 @@
             font-size: 14px;
         }
 
-        /* Contêiner Principal */
         #app-container {
             width: 100%;
-            max-width: 480px; /* Largura mais estreita, como o Instagram */
+            max-width: 480px;
             min-height: 100vh;
             position: relative;
             background-color: var(--bg-body);
         }
 
-        /* Header Fixo (Topo) */
         .sticky-header {
             position: sticky;
             top: 0;
@@ -54,13 +55,12 @@
             height: 54px;
         }
         .logo { 
-            font-family: sans-serif; 
+            font-family: sans-serif;
             font-size: 1.5rem; 
             font-weight: 700; 
             color: var(--text-primary);
         }
 
-        /* Autenticação/Login */
         .auth-wrapper {
             display: flex;
             flex-direction: column;
@@ -77,8 +77,8 @@
             max-width: 350px;
             text-align: center;
         }
-        .auth-title { font-size: 1.8rem; margin-bottom: 1.5rem; }
-        input[type="email"] {
+        
+        input[type="email"], input[type="text"] {
             width: 100%;
             background: #FAFAFA;
             border: 1px solid var(--border-color);
@@ -105,7 +105,6 @@
         }
         .btn-primary:disabled { background-color: rgba(0, 149, 246, 0.5); }
 
-        /* Composição/Postagem */
         .compose-area {
             padding: 1rem;
             border-bottom: 1px solid var(--border-color);
@@ -128,7 +127,6 @@
             float: right;
         }
 
-        /* Feed Post */
         .post-card {
             background-color: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
@@ -146,7 +144,7 @@
             border-radius: 50%;
             object-fit: cover;
             margin-right: 0.75rem;
-            border: 2px solid var(--accent-color); /* Borda sutil de perfil */
+            border: 2px solid var(--accent-color);
             padding: 1px;
         }
         .username {
@@ -192,69 +190,80 @@
 
     <script>
         // =========================================================
-        // !!! CREDENCIAIS SUPABASE ATUALIZADAS !!!
+        // !!! CONFIGURAÇÃO FIREBASE INSERIDA !!!
         // =========================================================
-        const SUPABASE_URL = 'https://qzerbrzpfvuhoaitbnlw.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'sb_publishable_bFIvUUsgTVClHVRs6yciag_jSvo1jjL';
-        
-        // URL de Redirecionamento
-        const SITE_URL = 'https://z-rede.vercel.app'; 
-        
-        let supabaseClient;
-        let currentSession = null;
-        let currentProfile = null;
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHpunrtbhlIvLEev6fkZDNRvTieEQt1Hg",
+            authDomain: "sske-9ff9f.firebaseapp.com",
+            projectId: "sske-9ff9f",
+            storageBucket: "sske-9ff9f.firebasestorage.app",
+            messagingSenderId: "464070910654",
+            appId: "1:464070910654:web:b8b87b1835fe309630f4ef"
+        };
+        // =========================================================
+        const SITE_URL = 'https://z-rede.vercel.app'; // URL de redirecionamento para o Magic Link/OTP
 
-        try {
-            // Inicializa o cliente Supabase com as novas chaves
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } catch (err) {
-            document.getElementById('app-container').innerHTML = "<h1 style='color:red; padding: 20px; text-align:center;'>ERRO: Falha ao inicializar Supabase. Verifique as chaves.</h1>";
-        }
-
+        // Inicialização do Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = app.auth();
+        const db = app.firestore();
         const appContainer = document.getElementById('app-container');
 
-        async function initApp() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            currentSession = session;
-            if (currentSession) {
-                await fetchCurrentProfile();
+        let currentUser = null;
+        let currentProfile = null;
+
+        // --- Gerenciamento de Perfil (Profiles Collection) ---
+
+        /**
+         * Cria um perfil inicial no Firestore se não existir, e o retorna.
+         */
+        async function getOrCreateProfile(user) {
+            const profileRef = db.collection('profiles').doc(user.uid);
+            const doc = await profileRef.get();
+
+            if (doc.exists) {
+                return doc.data();
+            } else {
+                const initialUsername = user.email ? user.email.split('@')[0] + Math.floor(Math.random() * 999) : 'user' + user.uid.substring(0, 6);
+                const newProfile = {
+                    uid: user.uid,
+                    username: initialUsername.toLowerCase(),
+                    full_name: user.displayName || user.email,
+                    avatar_url: user.photoURL || `https://ui-avatars.com/api/?name=${initialUsername}&background=0095F6&color=fff&size=36`,
+                    bio: 'Novo na Z-Rede!',
+                    followers: [], 
+                    following: []  
+                };
+                await profileRef.set(newProfile);
+                return newProfile;
             }
-            route();
-            supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-                currentSession = session;
-                if (session) {
-                    await fetchCurrentProfile();
+        }
+
+        // --- Roteamento e Inicialização ---
+        
+        function initApp() {
+            auth.onAuthStateChanged(async user => {
+                if (user) {
+                    currentUser = user;
+                    // Garante que o perfil do Firestore seja criado/carregado antes de renderizar o feed
+                    currentProfile = await getOrCreateProfile(user); 
+                    renderFeedUI();
                 } else {
+                    currentUser = null;
                     currentProfile = null;
+                    renderAuthUI();
                 }
-                route();
             });
         }
 
-        async function fetchCurrentProfile() {
-            if (currentSession) {
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('id, username, full_name, avatar_url, bio')
-                    .eq('id', currentSession.user.id)
-                    .single();
-                
-                if (data) currentProfile = data;
-                if (error) console.error("Erro ao buscar perfil atual:", error);
-            }
-        }
-
-        function route() {
-            currentSession ? renderFeedUI() : renderAuthUI();
-        }
-
         // --- UI de Autenticação ---
+        
         function renderAuthUI() {
             appContainer.innerHTML = `
                 <div class="auth-wrapper">
                     <div class="auth-box">
-                        <div class="logo" style="font-size: 2.2rem; margin-bottom: 2rem;">Z-Rede</div>
-                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Entre com seu e-mail para acesso.</p>
+                        <div class="logo" style="font-size: 2.2rem; margin-bottom: 2rem;">Z-Rede (F)</div>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Entre com seu e-mail (Magic Link).</p>
                         <input type="email" id="email-input" placeholder="E-mail">
                         <button class="btn btn-primary" onclick="handleLogin()">Entrar com Link Mágico</button>
                         <div id="auth-status" class="status-msg" style="display:none;"></div>
@@ -262,7 +271,7 @@
                 </div>
             `;
         }
-        
+
         async function handleLogin() {
             const email = document.getElementById('email-input').value;
             const statusEl = document.getElementById('auth-status');
@@ -278,42 +287,62 @@
             statusEl.className = 'status-msg';
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando link...';
 
-            const { error } = await supabaseClient.auth.signInWithOtp({
-                email: email,
-                options: { emailRedirectTo: SITE_URL }
-            });
+            const actionCodeSettings = {
+                url: SITE_URL,
+                handleCodeInApp: true
+            };
 
-            if (error) {
+            try {
+                await auth.sendSignInLinkToEmail(email, actionCodeSettings);
+                window.localStorage.setItem('emailForSignIn', email);
+                statusEl.className = 'status-msg status-success';
+                statusEl.innerHTML = 'Link enviado! Verifique seu e-mail para entrar.';
+            } catch (error) {
                 statusEl.className = 'status-msg status-error';
                 statusEl.innerHTML = `Erro: ${error.message}`;
-            } else {
-                statusEl.className = 'status-msg status-success';
-                statusEl.innerHTML = 'Link enviado! Verifique seu e-mail.';
             }
         }
 
-        // --- UI do Feed Principal ---
+        // Verifica e finaliza o login se o usuário chegou por um Magic Link
+        if (auth.isSignInWithEmailLink(window.location.href)) {
+            let email = window.localStorage.getItem('emailForSignIn');
+            if (!email) {
+                email = prompt('Por favor, confirme seu e-mail para finalizar o login:');
+            }
+            if (email) {
+                auth.signInWithEmailLink(email, window.location.href)
+                    .then(() => {
+                        window.localStorage.removeItem('emailForSignIn');
+                        window.history.replaceState({}, document.title, SITE_URL); // Limpa o link na URL
+                    }).catch(error => {
+                        alert("Erro ao finalizar o login: " + error.message);
+                        renderAuthUI();
+                    });
+            }
+        }
+        
+        // --- UI do Feed Principal e Lógica ---
+
         function renderFeedUI() {
-            const username = currentProfile?.username || 'Carregando...';
-            const avatar = currentProfile?.avatar_url || `https://ui-avatars.com/api/?name=Z&background=0095F6&color=fff&size=36`;
+            const avatar = currentProfile?.avatar_url;
 
             appContainer.innerHTML = `
                 <div class="sticky-header">
-                    <div class="logo">Z-Rede</div>
+                    <div class="logo">Z-Rede (F)</div>
                     <div style="display:flex; gap: 10px;">
                         <button class="action-btn" onclick="renderSearchUI()" title="Pesquisar"><i class="fas fa-search"></i></button> 
-                        <button class="action-btn" onclick="renderProfileUI(currentProfile.id)" title="Meu Perfil">
+                        <button class="action-btn" onclick="renderProfileUI(currentUser.uid)" title="Meu Perfil">
                              <img src="${avatar}" class="avatar" style="width: 24px; height: 24px; padding: 0; border: none;">
                         </button>
-                        <button class="action-btn" onclick="supabaseClient.auth.signOut()" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
+                        <button class="action-btn" onclick="auth.signOut()" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
                     </div>
                 </div>
 
                 <div id="main-content">
                     <div class="compose-area">
                         <textarea id="post-input" class="compose-input" placeholder="O que você está pensando?" oninput="togglePostButton()"></textarea>
-                        <input type="file" id="image-upload" accept="image/*" style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem;">
-                        <button id="post-btn" class="btn btn-post" onclick="handlePostWithImage()" disabled>Postar</button>
+                        <input type="file" id="image-upload" accept="image/*" style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem;" disabled title="Upload de Imagem requer Firebase Storage">
+                        <button id="post-btn" class="btn btn-post" onclick="handlePost()" disabled>Postar</button>
                         <div style="clear: both;"></div>
                     </div>
                     <div id="feed-container">
@@ -323,191 +352,224 @@
             `;
             loadFeed();
         }
-
+        
         function togglePostButton() {
             const input = document.getElementById('post-input');
-            const image = document.getElementById('image-upload');
-            document.getElementById('post-btn').disabled = !(input?.value.trim() || image?.files.length > 0);
+            document.getElementById('post-btn').disabled = !input?.value.trim();
         }
 
-        // ------------------------------------------
-        // LÓGICA DE DADOS
-        // ------------------------------------------
-        
-        // 🔴 PLACEHOLDER DE UPLOAD EXTERNO
-        async function uploadImageToExternalService(file) {
-            if (!file) return null;
-            console.warn("Usando upload simulado. Implemente a integração real!");
-            await new Promise(resolve => setTimeout(resolve, 1500)); 
-            return "https://picsum.photos/480/480?" + Math.random(); 
-        }
+        async function handlePost() {
+            const content = document.getElementById('post-input').value.trim();
+            if (!content) return;
 
-        async function handlePostWithImage() {
-            const content = document.getElementById('post-input').value;
-            const imageFile = document.getElementById('image-upload').files[0];
             const postBtn = document.getElementById('post-btn');
-            
-            if (!content.trim() && !imageFile) return;
-
             postBtn.disabled = true;
 
-            let imageUrl = null;
             try {
-                if (imageFile) {
-                    imageUrl = await uploadImageToExternalService(imageFile); 
-                    if (!imageUrl) throw new Error("Falha ao obter URL da imagem.");
-                }
-
-                const { error } = await supabaseClient
-                    .from('posts')
-                    .insert({ 
-                        content: content, 
-                        user_id: currentSession.user.id,
-                        image_url: imageUrl
-                    });
-
-                if (error) throw error;
+                // Adiciona um novo documento na coleção 'posts'
+                await db.collection('posts').add({
+                    uid: currentUser.uid,
+                    username: currentProfile.username,
+                    avatar_url: currentProfile.avatar_url,
+                    content: content,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    likes_count: 0
+                    // image_url: (Upload Firebase Storage seria necessário aqui)
+                });
                 
                 document.getElementById('post-input').value = '';
-                document.getElementById('image-upload').value = ''; 
                 togglePostButton();
-                loadFeed(); // Recarrega o feed para mostrar o novo post
+                loadFeed(); 
                 
             } catch (error) {
                 alert("Erro ao postar: " + error.message);
+            } finally {
                 postBtn.disabled = false;
             }
         }
 
         async function loadFeed() {
             const container = document.getElementById('feed-container');
-            const { data: posts, error } = await supabaseClient
-                .from('posts')
-                .select(`
-                    *, 
-                    profiles(username, avatar_url, full_name, is_verified),
-                    likes(user_id)
-                `)
-                .order('created_at', { ascending: false });
+            container.innerHTML = `<div class="loader"><i class="fas fa-circle-notch fa-spin"></i> Carregando Feed...</div>`;
+            
+            try {
+                // Consulta o Firestore, ordenando por timestamp
+                const snapshot = await db.collection('posts')
+                    .orderBy('timestamp', 'desc')
+                    .limit(20)
+                    .get();
 
-            if (error) {
-                container.innerHTML = `<div class="status-msg status-error">Erro ao carregar feed: ${error.message}</div>`;
-                return;
-            }
+                const posts = await Promise.all(snapshot.docs.map(async doc => {
+                    const postData = doc.data();
+                    const postId = doc.id;
+                    
+                    // Busca curtidas separadamente para saber se o usuário curtiu
+                    const likeSnapshot = await db.collection('posts').doc(postId).collection('likes').doc(currentUser.uid).get();
+                    const liked = likeSnapshot.exists;
 
-            container.innerHTML = posts.map(post => {
-                const user = post.profiles;
-                const liked = post.likes.some(like => like.user_id === currentSession.user.id);
-                const likesCount = post.likes.length;
+                    return {
+                        id: postId,
+                        ...postData,
+                        liked: liked,
+                        likes_count: postData.likes_count || 0,
+                        username: postData.username || 'Usuário Desconhecido',
+                        avatar_url: postData.avatar_url || `https://ui-avatars.com/api/?name=U&background=0095F6&color=fff&size=36`
+                    };
+                }));
 
-                return `
+                container.innerHTML = posts.map(post => `
                 <div class="post-card" data-post-id="${post.id}">
-                    <div class="post-header" onclick="renderProfileUI('${user.id}')" style="cursor:pointer;">
-                        <img src="${user.avatar_url}" class="avatar" alt="${user.username}">
+                    <div class="post-header" onclick="renderProfileUI('${post.uid}')" style="cursor:pointer;">
+                        <img src="${post.avatar_url}" class="avatar" alt="${post.username}">
                         <div>
-                            <span class="username">${user.username} ${user.is_verified ? '<i class="fas fa-check-circle" style="color: var(--accent-color); font-size: 0.8rem;"></i>' : ''}</span>
+                            <span class="username">${post.username}</span>
                         </div>
                     </div>
 
                     ${post.image_url ? `<img src="${post.image_url}" class="post-image" alt="Post Image">` : ''}
 
                     <div class="post-actions">
-                        <button class="action-btn" onclick="toggleLike('${post.id}', ${liked})">
-                            <i class="fas fa-heart ${liked ? 'liked' : ''}"></i>
+                        <button class="action-btn" onclick="toggleLike('${post.id}', ${post.liked})">
+                            <i class="fas fa-heart ${post.liked ? 'liked' : ''}"></i>
                         </button>
-                        <button class="action-btn" onclick="alert('Funcionalidade de Comentários não implementada na UI rápida. ID do Post: ${post.id}')">
+                        <button class="action-btn" onclick="alert('Comentários não implementados. ID: ${post.id}')">
                             <i class="far fa-comment"></i>
                         </button>
                     </div>
 
                     <div class="post-details">
-                        <div class="likes-count">${likesCount} curtidas</div>
-                        ${post.content ? `<div class="post-caption"><span class="username">${user.username}</span> ${escapeHtml(post.content)}</div>` : ''}
-                        <div class="post-time">${timeDiff(new Date(post.created_at))}</div>
+                        <div class="likes-count">${post.likes_count} curtidas</div>
+                        <div class="post-caption"><span class="username">${post.username}</span> ${escapeHtml(post.content)}</div>
+                        <div class="post-time">${post.timestamp ? timeDiff(post.timestamp.toDate()) : 'agora'}</div>
                     </div>
                 </div>
-                `;
-            }).join('') || `<div style="padding:40px; text-align:center; color:var(--text-secondary)">Seja o primeiro a postar!</div>`;
+                `).join('') || `<div style="padding:40px; text-align:center; color:var(--text-secondary)">Seja o primeiro a postar!</div>`;
+            
+            } catch (error) {
+                container.innerHTML = `<div class="status-msg status-error">Erro ao carregar feed: ${error.message}</div>`;
+                console.error("Erro no loadFeed:", error);
+            }
         }
 
         async function toggleLike(postId, currentlyLiked) {
-            const userId = currentSession.user.id;
-            
-            if (currentlyLiked) {
-                await supabaseClient.from('likes').delete().match({ user_id: userId, post_id: postId });
-            } else {
-                await supabaseClient.from('likes').insert({ user_id: userId, post_id: postId });
+            const likeRef = db.collection('posts').doc(postId).collection('likes').doc(currentUser.uid);
+            const postRef = db.collection('posts').doc(postId);
+            const batch = db.batch();
+
+            try {
+                if (currentlyLiked) {
+                    // Descurtir: Deleta o documento de like e decrementa o contador no post.
+                    batch.delete(likeRef);
+                    batch.update(postRef, {
+                        likes_count: firebase.firestore.FieldValue.increment(-1)
+                    });
+                } else {
+                    // Curtir: Cria o documento de like e incrementa o contador no post.
+                    batch.set(likeRef, { uid: currentUser.uid });
+                    batch.update(postRef, {
+                        likes_count: firebase.firestore.FieldValue.increment(1)
+                    });
+                }
+                
+                await batch.commit();
+                loadFeed(); 
+                
+            } catch (error) {
+                console.error("Erro ao curtir/descurtir:", error);
+                alert("Erro na ação de curtir/descurtir: " + error.message);
             }
-            // Recarrega o feed para atualizar a contagem
-            loadFeed(); 
         }
 
-        // ------------------------------------------
-        // LÓGICA DE PERFIL/PESQUISA (Exemplos de chamadas)
-        // ------------------------------------------
+        // --- Lógica de Perfil e Seguir ---
 
-        async function renderProfileUI(profileId) {
-            const targetId = profileId || currentProfile.id;
-
-            const { data: profile, error } = await supabaseClient
-                .from('profiles')
-                .select(`
-                    *, 
-                    posts(id), 
-                    followers!followers_following_id_fkey(follower_id), 
-                    following:followers!followers_follower_id_fkey(following_id)
-                `)
-                .eq('id', targetId)
-                .single();
+        async function renderProfileUI(targetUid) {
+            const isOwnProfile = targetUid === currentUser.uid;
             
-            if (error || !profile) {
-                alert('Perfil não encontrado: ' + (error ? error.message : ''));
+            // 1. Obter Perfil
+            const profileDoc = await db.collection('profiles').doc(targetUid).get();
+            if (!profileDoc.exists) {
+                alert('Perfil não encontrado.');
                 return;
             }
-
-            const isOwnProfile = targetId === currentProfile.id;
-            const isFollowing = profile.followers.some(f => f.follower_id === currentProfile.id);
+            const profile = profileDoc.data();
             
+            // 2. Obter Dados de Interação
+            const postsSnapshot = await db.collection('posts').where('uid', '==', targetUid).get();
+            const followersCount = profile.followers ? profile.followers.length : 0;
+            const followingCount = profile.following ? profile.following.length : 0;
+            const isFollowing = profile.followers ? profile.followers.includes(currentUser.uid) : false;
+
             document.getElementById('main-content').innerHTML = `
                 <div style="padding: 1rem; background-color: var(--bg-card);">
                     <div style="text-align: center; margin-bottom: 1.5rem;">
                         <img src="${profile.avatar_url}" class="avatar" style="width: 80px; height: 80px; margin: 0 auto; padding: 2px;">
-                        <h2 class="username" style="font-size: 1.2rem; margin-top: 0.5rem;">${profile.username} ${profile.is_verified ? '<i class="fas fa-check-circle" style="color: var(--accent-color); font-size: 0.8rem;"></i>' : ''}</h2>
+                        <h2 class="username" style="font-size: 1.2rem; margin-top: 0.5rem;">@${profile.username}</h2>
                         <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">${profile.full_name || ''}</p>
                         <p>${profile.bio || 'Nenhuma biografia ainda.'}</p>
                     </div>
 
                     <div style="display: flex; justify-content: space-around; text-align: center; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 0.5rem 0; margin-bottom: 1rem;">
-                        <div><span style="font-weight: 600;">${profile.posts.length}</span> posts</div>
-                        <div><span style="font-weight: 600;">${profile.followers.length}</span> seguidores</div>
-                        <div><span style="font-weight: 600;">${profile.following.length}</span> seguindo</div>
+                        <div><span style="font-weight: 600;">${postsSnapshot.size}</span> posts</div>
+                        <div><span style="font-weight: 600;">${followersCount}</span> seguidores</div>
+                        <div><span style="font-weight: 600;">${followingCount}</span> seguindo</div>
                     </div>
                     
                     <div style="text-align: center;">
                         ${isOwnProfile ? 
-                            `<button class="btn" style="background: #EFEFEF; color: var(--text-primary);" onclick="alert('Abrir tela de edição de perfil')">Editar Perfil</button>` :
-                            `<button class="btn btn-primary" onclick="toggleFollow('${profile.id}', ${isFollowing})" style="width: 80%; max-width: 300px; background: ${isFollowing ? '#EFEFEF' : 'var(--accent-color)'}; color: ${isFollowing ? 'var(--text-primary)' : 'white'};">
+                            `<button class="btn" style="background: #EFEFEF; color: var(--text-primary);" onclick="alert('Edição de Perfil...')">Editar Perfil</button>` :
+                            `<button class="btn btn-primary" onclick="toggleFollowFirebase('${targetUid}', ${isFollowing})" style="width: 80%; max-width: 300px; background: ${isFollowing ? '#EFEFEF' : 'var(--accent-color)'}; color: ${isFollowing ? 'var(--text-primary)' : 'white'};">
                                 ${isFollowing ? 'Seguindo' : 'Seguir'}
                             </button>`
                         }
-                        <button class="btn" style="background: none; color: var(--text-secondary); margin-top: 1rem; display:block; width: 100%;" onclick="loadFeed()">Voltar ao Feed</button>
+                        <button class="btn" style="background: none; color: var(--text-secondary); margin-top: 1rem; display:block; width: 100%;" onclick="renderFeedUI()">Voltar ao Feed</button>
+                    </div>
+                    <div id="user-posts" style="margin-top: 20px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+                        ${postsSnapshot.docs.map(post => {
+                            // Exibe um grid simples de posts (como no Instagram)
+                            const data = post.data();
+                            return `<div style="aspect-ratio: 1/1; background: #EEE; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px solid #CCC; font-size: 0.8rem; color: var(--text-secondary); padding: 5px;">
+                                ${data.image_url ? `<img src="${data.image_url}" style="width: 100%; height: 100%; object-fit: cover;">` : escapeHtml(data.content.substring(0, 50)) + '...'}
+                            </div>`
+                        }).join('')}
                     </div>
                 </div>
             `;
         }
 
-        async function toggleFollow(targetId, isFollowing) {
-            const userId = currentSession.user.id;
-            if (isFollowing) {
-                await supabaseClient.from('followers').delete().match({ follower_id: userId, following_id: targetId });
-            } else {
-                await supabaseClient.from('followers').insert({ follower_id: userId, following_id: targetId });
+        async function toggleFollowFirebase(targetUid, isFollowing) {
+            const userProfileRef = db.collection('profiles').doc(currentUser.uid); // Quem está seguindo/deixando de seguir
+            const targetProfileRef = db.collection('profiles').doc(targetUid);   // Quem está sendo seguido/deixado de seguir
+            const batch = db.batch();
+
+            try {
+                if (isFollowing) {
+                    // DEIXAR DE SEGUIR
+                    batch.update(userProfileRef, {
+                        following: firebase.firestore.FieldValue.arrayRemove(targetUid)
+                    });
+                    batch.update(targetProfileRef, {
+                        followers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                    });
+                } else {
+                    // SEGUIR
+                    batch.update(userProfileRef, {
+                        following: firebase.firestore.FieldValue.arrayUnion(targetUid)
+                    });
+                    batch.update(targetProfileRef, {
+                        followers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    });
+                }
+                await batch.commit();
+                renderProfileUI(targetUid); // Recarrega o perfil para atualizar o botão
+            } catch (error) {
+                console.error("Erro ao seguir/deixar de seguir:", error);
+                alert("Erro: " + error.message);
             }
-            renderProfileUI(targetId); // Recarrega a UI do perfil
         }
+        
+        // --- Lógica de Pesquisa ---
 
         async function renderSearchUI() {
-            // Este é apenas o front-end da pesquisa. A chamada de dados fica em outra função.
             document.getElementById('main-content').innerHTML = `
                 <div style="padding: 1rem; background-color: var(--bg-card); border-bottom: 1px solid var(--border-color);">
                     <input type="text" id="search-input" placeholder="Pesquisar usuários por @username" style="width: 100%; padding: 10px; border: 1px solid #DBDBDB; border-radius: 4px;" oninput="searchUsers(this.value)">
@@ -515,12 +577,14 @@
                 <div id="search-results" style="padding: 1rem;">
                     <p style="color: var(--text-secondary); text-align: center;">Comece a digitar para encontrar usuários.</p>
                 </div>
-                <button class="btn" style="background: none; color: var(--text-secondary); margin-top: 1rem; display:block; width: 100%;" onclick="loadFeed()">Voltar ao Feed</button>
+                <button class="btn" style="background: none; color: var(--text-secondary); margin-top: 1rem; display:block; width: 100%;" onclick="renderFeedUI()">Voltar ao Feed</button>
             `;
         }
 
         async function searchUsers(query) {
             const resultsDiv = document.getElementById('search-results');
+            const queryLower = query.toLowerCase();
+            
             if (query.length < 3) {
                 resultsDiv.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Digite pelo menos 3 caracteres.</p>';
                 return;
@@ -528,34 +592,40 @@
             
             resultsDiv.innerHTML = '<div class="loader"><i class="fas fa-circle-notch fa-spin"></i> Buscando...</div>';
 
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .select('id, username, avatar_url, full_name')
-                .ilike('username', `%${query}%`) // Usa ilike para pesquisa não sensível a maiúsculas/minúsculas
-                .limit(10);
+            try {
+                // No Firestore, a pesquisa por substring é limitada.
+                // Usamos o método startAt/endAt para simular um ILIKE
+                const snapshot = await db.collection('profiles')
+                    .orderBy('username')
+                    .startAt(queryLower)
+                    .endAt(queryLower + '\uf8ff') // Truque para pesquisa "prefix" no Firestore
+                    .limit(10)
+                    .get();
 
-            if (error) {
-                resultsDiv.innerHTML = `<div class="status-msg status-error">Erro na pesquisa: ${error.message}</div>`;
-                return;
-            }
+                const data = snapshot.docs.map(doc => doc.data());
 
-            if (data.length === 0) {
-                resultsDiv.innerHTML = `<p style="color: var(--text-secondary); text-align: center;">Nenhum usuário encontrado com "@${query}".</p>`;
-                return;
-            }
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = `<p style="color: var(--text-secondary); text-align: center;">Nenhum usuário encontrado com "@${query}".</p>`;
+                    return;
+                }
 
-            resultsDiv.innerHTML = data.map(user => `
-                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #EFEFEF; cursor: pointer;" onclick="renderProfileUI('${user.id}')">
-                    <img src="${user.avatar_url}" class="avatar" style="width: 40px; height: 40px; margin-right: 1rem; padding: 0; border: 1px solid #C7C7C7;">
-                    <div>
-                        <span class="username">${user.username}</span>
-                        <p style="color: var(--text-secondary); font-size: 0.8rem;">${user.full_name || ''}</p>
+                resultsDiv.innerHTML = data.map(user => `
+                    <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #EFEFEF; cursor: pointer;" onclick="renderProfileUI('${user.uid}')">
+                        <img src="${user.avatar_url}" class="avatar" style="width: 40px; height: 40px; margin-right: 1rem; padding: 0; border: 1px solid #C7C7C7;">
+                        <div>
+                            <span class="username">@${user.username}</span>
+                            <p style="color: var(--text-secondary); font-size: 0.8rem;">${user.full_name || ''}</p>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status-msg status-error">Erro na pesquisa: ${error.message}</div>`;
+            }
         }
 
-        // Funções Utilitárias
+
+        // Funções Utilitárias (Mantidas)
         function timeDiff(date) {
             const diffMin = Math.floor((new Date() - date) / 60000);
             if (diffMin < 1) return 'agora';
