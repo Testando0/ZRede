@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Z - Rede</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Z - Rede Mobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* --- TEMA MIDNIGHT PRO --- */
+        /* --- Variáveis e Reset --- */
         :root {
             --bg-body: #000000;
-            --bg-card: #000000;
             --border-color: #2f3336;
             --text-primary: #e7e9ea;
             --text-secondary: #71767b;
             --accent-color: #1d9bf0;
-            --accent-hover: #1a8cd8;
-            --danger-color: #f4212e;
             --glass-header: rgba(0, 0, 0, 0.65);
         }
 
@@ -31,140 +28,169 @@
             display: flex;
             justify-content: center;
             min-height: 100vh;
-            overflow-y: scroll; /* Evita pulo de scroll */
         }
 
-        /* Layout Central */
+        /* --- Layout Principal (Mobile-First) --- */
         #app-container {
             width: 100%;
-            max-width: 600px;
+            /* Limita a largura em telas maiores (desktop) */
+            max-width: 600px; 
             border-left: 1px solid var(--border-color);
             border-right: 1px solid var(--border-color);
             min-height: 100vh;
             position: relative;
         }
 
-        /* Header com efeito de vidro */
+        /* Header Fixo e Transparente */
         .sticky-header {
             position: sticky;
             top: 0;
             z-index: 100;
             background-color: var(--glass-header);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(8px); /* Menos blur para mobile */
             border-bottom: 1px solid var(--border-color);
-            padding: 15px 16px;
+            padding: 12px 16px; /* Ajuste para mobile */
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        .logo { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); }
 
-        .logo { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; }
+        /* --- Componentes --- */
 
-        /* Auth Screen */
-        .auth-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 80vh;
-            padding: 20px;
-            text-align: center;
-        }
-        .auth-card {
-            background: var(--bg-body);
-            width: 100%;
-            max-width: 350px;
-        }
-        .auth-title { font-size: 2rem; font-weight: 700; margin-bottom: 10px; }
-        .auth-subtitle { color: var(--text-secondary); margin-bottom: 30px; font-size: 0.95rem; }
-
-        /* Inputs e Botões */
-        input, textarea {
-            width: 100%;
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 16px;
-            border-radius: 4px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        input:focus, textarea:focus { border-color: var(--accent-color); }
-
+        /* Botões */
         .btn {
             border: none;
             border-radius: 9999px;
-            padding: 12px 24px;
+            padding: 10px 20px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem; 
             cursor: pointer;
             transition: 0.2s;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
         }
-        .btn-primary { background-color: var(--text-primary); color: #000; width: 100%; }
-        .btn-primary:hover { opacity: 0.9; }
-        
-        .btn-tweet { background-color: var(--accent-color); color: white; padding: 8px 20px; font-size: 0.95rem; }
-        .btn-tweet:hover { background-color: var(--accent-hover); }
+        .btn-primary { 
+            background-color: var(--text-primary); 
+            color: #000; 
+            width: 100%; /* Ajuste para telas pequenas */
+            margin-bottom: 10px;
+        }
+        .btn-tweet { 
+            background-color: var(--accent-color); 
+            color: white; 
+            padding: 8px 18px; 
+        }
         .btn-tweet:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-logout { 
+            color: var(--text-secondary); 
+            background: transparent; 
+            font-size: 0.9rem; 
+            padding: 5px;
+        }
 
-        .btn-logout { color: var(--text-secondary); background: transparent; font-size: 0.9rem; padding: 5px; }
-        .btn-logout:hover { color: var(--danger-color); }
+        /* Tela de Autenticação */
+        .auth-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* Usa viewport height no mobile */
+            min-height: calc(100vh - 50px); 
+            padding: 20px;
+            text-align: center;
+        }
+        .auth-title { font-size: 1.8rem; margin-bottom: 8px; }
 
+        /* Input Login */
+        #email-input {
+            width: 90%; 
+            padding: 12px 16px; /* Mais padding para toque */
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        
         /* Área de Postagem */
         .compose-area {
-            padding: 16px;
+            padding: 12px 16px; /* Mais compacto para mobile */
             border-bottom: 1px solid var(--border-color);
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
         .compose-input {
             border: none;
             resize: none;
             font-family: inherit;
-            font-size: 1.2rem;
+            font-size: 1.1rem; /* Fonte ligeiramente maior */
             height: auto;
-            min-height: 60px;
+            min-height: 50px;
             padding: 10px 0;
+            width: 100%;
         }
-        .compose-input:focus { border-color: transparent; }
 
-        /* Feed */
+        /* Feed Item */
         .tweet {
-            padding: 16px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
-            gap: 12px;
-            cursor: pointer;
+            gap: 10px;
             transition: background 0.2s;
         }
         .tweet:hover { background-color: rgba(255,255,255,0.03); }
         
         .avatar {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             object-fit: cover;
-            background-color: #333;
+            flex-shrink: 0; /* Impede que o avatar encolha */
         }
         
-        .tweet-header { display: flex; gap: 5px; align-items: center; font-size: 0.95rem; }
+        .tweet-header { 
+            display: flex; 
+            flex-wrap: wrap; /* Quebra a linha se necessário */
+            gap: 5px; 
+            align-items: center; 
+            font-size: 0.9rem; /* Mais sutil */
+        }
         .username { font-weight: 700; color: var(--text-primary); }
         .handle, .time { color: var(--text-secondary); font-weight: 400; }
-        .tweet-content { margin-top: 4px; font-size: 1rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;}
+        .tweet-content { 
+            margin-top: 4px; 
+            font-size: 1rem; 
+            line-height: 1.4; /* Melhora a leitura */
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+        }
 
         /* Utilitários */
-        .hidden { display: none !important; }
-        .loader { color: var(--accent-color); font-size: 1.5rem; animation: spin 1s linear infinite; margin: 20px auto; display: block; text-align: center;}
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        .status-msg { margin-top: 15px; font-size: 0.9rem; padding: 10px; border-radius: 4px; display: none; }
+        .status-msg { margin-top: 15px; font-size: 0.85rem; padding: 10px; border-radius: 4px; display: none; }
         .status-success { color: #00ba7c; background: rgba(0, 186, 124, 0.1); }
         .status-error { color: #f4212e; background: rgba(244, 33, 46, 0.1); }
+        .loader { color: var(--accent-color); font-size: 1.5rem; animation: spin 1s linear infinite; margin: 20px auto; display: block; text-align: center;}
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Media Query para Desktop (ajustes de layout em telas maiores) */
+        @media (min-width: 601px) {
+            .auth-wrapper {
+                height: 100vh;
+            }
+            .auth-title { font-size: 2rem; }
+            .compose-area {
+                padding: 16px;
+            }
+            .tweet {
+                padding: 16px;
+            }
+            .avatar {
+                width: 48px;
+                height: 48px;
+            }
+            .compose-input {
+                min-height: 60px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -177,9 +203,9 @@
         // CONFIGURAÇÃO
         // ==========================================
         const SUPABASE_URL = 'https://dxflqriicyeedjyrlvut.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4ZmxxcmlpY3llZWRqeXJsdnV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NjE5MzgsImV4cCI6MjA4MDAzNzkzOH0.mIiQQJKZeBXPR9FVGI9148idR59ojoUqPi_ClOQ-ex0';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2R4ZmxxcmlpY3llZWRqeXJsdnV0LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI0NTNiMGE2MC01YWRmLTQ2MGMtODhhMS05Yzg3NGE4NGQ5ZjMiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzY0NDk2NTgzLCJpYXQiOjE3NjQ0OTI5ODMsImVtYWlsIjoic2FrdXJheTQ1MkBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoic2FrdXJheTQ1MkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiI0NTNiMGE2MC01YWRmLTQ2MGMtODhhMS05Yzg3NGE4NGQ5ZjMifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJvdHAiLCJ0aW1lc3RhbXAiOjE3NjQ0OTI5ODN9XSwic2Vzc2lvbl9pZCI6ImMxMTIzZDMzLWM2Y2ItNGZlOS1hODliLWMwNDlkNjVhZjhmZiIsImlzX2Fub255bW91cyI6ZmFsc2V9.OblmfgZJbtRltxyYSlVVqv6Uw7T9wg4r3FB6elZRTZw';
         
-        // URL PARA REDIRECIONAMENTO (IMPORTANTE)
+        // URL PARA REDIRECIONAMENTO (IMPORTANTE: Garante o domínio Vercel)
         const SITE_URL = 'https://z-rede.vercel.app'; 
 
         let supabaseClient;
@@ -189,7 +215,7 @@
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } catch (err) {
             console.error("Erro crítico ao iniciar Supabase", err);
-            document.body.innerHTML = "<h1 style='color:white'>Erro de conexão. Recarregue.</h1>";
+            document.body.innerHTML = "<h1 style='color:white; padding: 20px;'>Erro de conexão. Verifique o console.</h1>";
         }
 
         const appContainer = document.getElementById('app-container');
@@ -199,12 +225,10 @@
         // ==========================================
         
         async function initApp() {
-            // Verifica sessão atual
             const { data: { session } } = await supabaseClient.auth.getSession();
             currentSession = session;
             route();
 
-            // Ouve mudanças na autenticação (Login/Logout)
             supabaseClient.auth.onAuthStateChange((_event, session) => {
                 currentSession = session;
                 route();
@@ -220,24 +244,22 @@
         }
 
         // ==========================================
-        // TELA DE LOGIN (DESIGN LIMPO)
+        // TELA DE LOGIN
         // ==========================================
         function renderAuthUI() {
             appContainer.innerHTML = `
                 <div class="auth-wrapper">
-                    <div class="auth-card">
-                        <div style="font-size: 3rem; margin-bottom: 20px;">Z</div>
-                        <h1 class="auth-title">Acontecendo agora</h1>
-                        <p class="auth-subtitle">Inscreva-se hoje.</p>
-                        
-                        <input type="email" id="email-input" placeholder="Celular, e-mail ou nome de usuário" autocomplete="email">
-                        
-                        <button class="btn btn-primary" onclick="handleLogin()" style="margin-top: 20px;">
-                            <span>Entrar com Link Mágico</span>
-                        </button>
-                        
-                        <div id="auth-status" class="status-msg"></div>
-                    </div>
+                    <div style="font-size: 3rem; margin-bottom: 20px;">Z</div>
+                    <h1 class="auth-title">Acontecendo agora</h1>
+                    <p class="auth-subtitle" style="color: var(--text-secondary);">Inscreva-se hoje.</p>
+                    
+                    <input type="email" id="email-input" placeholder="Seu e-mail" autocomplete="email">
+                    
+                    <button class="btn btn-primary" onclick="handleLogin()" style="margin-top: 20px;">
+                        <span>Entrar com Link Mágico</span>
+                    </button>
+                    
+                    <div id="auth-status" class="status-msg"></div>
                 </div>
             `;
         }
@@ -253,13 +275,13 @@
 
             statusEl.style.display = 'block';
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando link...';
-            statusEl.className = 'status-msg'; // Reset class
+            statusEl.className = 'status-msg';
 
-            // AQUI ESTÁ A MÁGICA PARA O REDIRECT CORRETO
+            // FORÇA O REDIRECIONAMENTO PARA O DOMÍNIO DA VERCEL
             const { error } = await supabaseClient.auth.signInWithOtp({
                 email: email,
                 options: {
-                    emailRedirectTo: SITE_URL // Força o redirect para a Vercel
+                    emailRedirectTo: SITE_URL 
                 }
             });
 
@@ -281,14 +303,13 @@
         // ==========================================
         function renderFeedUI() {
             const userEmail = currentSession.user.email;
-            // Pega a parte antes do @ para usar como username provisório
             const username = userEmail.split('@')[0];
 
             appContainer.innerHTML = `
                 <div class="sticky-header">
                     <div class="logo">Z</div>
                     <button class="btn btn-logout" onclick="supabaseClient.auth.signOut()" title="Sair">
-                        <i class="fas fa-sign-out-alt"></i>
+                        Sair <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
 
@@ -325,10 +346,7 @@
 
             const { error } = await supabaseClient
                 .from('tweets')
-                .insert({ 
-                    content: content, 
-                    user_id: currentSession.user.id 
-                });
+                .insert({ content: content, user_id: currentSession.user.id });
 
             if (error) {
                 alert("Erro ao postar: " + error.message);
@@ -336,7 +354,6 @@
             } else {
                 document.getElementById('tweet-input').value = '';
                 toggleButton();
-                // O realtime atualizará a lista
             }
         }
 
@@ -349,7 +366,7 @@
                 .order('created_at', { ascending: false });
 
             if (error) {
-                container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--danger-color)">Erro ao carregar feed.</div>`;
+                container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-secondary)">Erro ao carregar feed.</div>`;
                 return;
             }
 
@@ -389,17 +406,14 @@
             }).join('');
         }
 
-        // Função auxiliar para data relativa (ex: "2h")
         function timeDiff(date) {
             const now = new Date();
             const diffMs = now - date;
-            const diffSec = Math.floor(diffMs / 1000);
-            const diffMin = Math.floor(diffSec / 60);
-            const diffHour = Math.floor(diffMin / 60);
+            const diffMin = Math.floor(diffMs / 60000);
 
-            if (diffSec < 60) return 'agora';
+            if (diffMin < 1) return 'agora';
             if (diffMin < 60) return `${diffMin}m`;
-            if (diffHour < 24) return `${diffHour}h`;
+            if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h`;
             return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
         }
 
@@ -416,7 +430,7 @@
         function setupRealtime() {
             supabaseClient.channel('public:tweets')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, () => {
-                    loadTweets(); // Recarrega o feed ao receber novo post
+                    loadTweets();
                 })
                 .subscribe();
         }
