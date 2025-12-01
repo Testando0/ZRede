@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>InstaClone Pro (Posts de Texto)</title>
+  <title>InstaClone Pro (Texto Final)</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   
   <style>
@@ -56,7 +56,7 @@
       border: 1px solid #444;
       border-radius: 5px;
       color: white;
-      resize: none; /* Adicionado para textarea */
+      resize: none; 
     }
 
     .btn-primary {
@@ -113,21 +113,20 @@
     /* --- FEED & POSTS --- */
     .post-card { margin-bottom: 20px; border: 1px solid #333; border-radius: 8px; background: #1a1a1a; }
     
-    /* Estilo para posts de TEXTO */
     .post-text-content { 
         padding: 20px; 
         font-size: 1.1rem;
         line-height: 1.4;
         min-height: 100px;
         color: #ddd;
-        white-space: pre-wrap; /* Mantém quebras de linha e espaços */
+        white-space: pre-wrap;
     }
     
     .post-header { padding: 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; }
     .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; object-fit: cover;}
     .post-img { width: 100%; height: auto; max-height: 500px; object-fit: cover; }
     .post-actions { padding: 10px; display: flex; gap: 15px; font-size: 1.5rem; border-top: 1px solid #333;}
-    .post-caption-small { padding: 0 10px 10px; color: #aaa; font-size: 0.9rem;} /* Para o texto de 'curtidas' */
+    .post-caption-small { padding: 0 10px 10px; color: #aaa; font-size: 0.9rem;}
     
     /* --- PERFIL --- */
     .profile-header { padding: 20px; display: flex; align-items: center; gap: 20px; }
@@ -137,7 +136,7 @@
     .btn-logout { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; margin-top: 5px; cursor: pointer; font-size: 0.8rem;}
     
     .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
-    .grid-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; background: #222; /* Fundo para posts de texto no grid */ } 
+    .grid-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; background: #222; } 
 
     /* --- MODAL UPLOAD --- */
     .upload-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; justify-content: center; align-items: center; flex-direction: column;}
@@ -269,7 +268,7 @@
     
     let currentUserData = null; 
 
-    // ================= FUNÇÕES ESSENCIAIS =================
+    // ================= FUNÇÕES DE FLUXO GERAL =================
 
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -307,7 +306,7 @@
       auth.signOut();
     }
 
-    // ================= FEED & POSTS (Adaptado para Texto) =================
+    // ================= FEED & POSTS =================
     function loadFeed() {
       const feedDiv = document.getElementById('screen-home');
       feedDiv.innerHTML = '<p style="text-align:center; padding-top: 20px;">A carregar publicações...</p>';
@@ -374,7 +373,7 @@
       db.ref(`posts/${postId}/likes`).transaction(likes => (likes || 0) + 1);
     }
 
-    // ================= FUNÇÃO DE PUBLICAÇÃO DE TEXTO (NOVO) =================
+    // ================= FUNÇÃO DE PUBLICAÇÃO DE TEXTO (FINAL) =================
     
     function openUpload() { 
         if (!auth.currentUser) {
@@ -384,40 +383,56 @@
     }
     
     function closeUpload() { 
-        // Limpa o modal e o conteúdo
         document.getElementById('modalUpload').style.display = 'none'; 
         document.getElementById('captionInput').value = ''; 
     }
 
     async function publishTextPost() {
+        // 1. Coleta e Validação Inicial
         const caption = document.getElementById('captionInput').value.trim();
+        const user = auth.currentUser;
         
-        if (!auth.currentUser) return alert("❌ ERRO: Você precisa estar logado para postar!");
-        if(caption.length < 5) return alert("❌ ERRO: Sua publicação deve ter pelo menos 5 caracteres.");
+        if (!user) {
+            return alert("❌ ERRO: Sua sessão expirou. Por favor, faça login novamente.");
+        }
+        if (caption.length < 5) {
+            return alert("❌ ERRO: Sua publicação deve ter pelo menos 5 caracteres.");
+        }
 
-        alert("✅ INICIANDO PUBLICAÇÃO: Salvando texto no Firebase...");
+        alert("✅ 1/2 - INICIANDO PUBLICAÇÃO: Salvando texto no Firebase...");
 
         try {
-            // Salva o post APENAS com o texto (caption) e uma flag
+            // 2. Tenta salvar o post no Firebase (Requer: ".write": "auth != null" na regra 'posts')
             await db.ref('posts').push({
-                uid: auth.currentUser.uid,
+                uid: user.uid, 
                 caption: caption,
-                isText: true, // Adiciona uma flag para indicar que é um post de texto
+                isText: true,
                 likes: 0,
                 timestamp: Date.now()
             });
 
-            // SUCESSO FINAL: Limpeza e Recarga
+            // 3. SUCESSO FINAL
             closeUpload();
-            navTo('home'); // Recarrega o feed para mostrar o novo post
-            alert("✅ SUCESSO FINAL: Publicação de texto completa!");
+            navTo('home'); 
+            alert("✅ 2/2 - SUCESSO FINAL: Publicação de texto efetuada!");
 
         } catch (e) {
-            alert("❌ ERRO FATAL AO SALVAR NO FIREBASE: " + e.message + " (Verifique suas Regras de Escrita!)");
+            // 4. Tratamento de Erro de Escrita
+            console.error("Firebase Push Error:", e);
+            
+            let errorMessage = `❌ ERRO FATAL AO SALVAR POST: ${e.message}.`;
+
+            if (e.message.includes("permission_denied") || e.message.includes("Permission denied")) {
+                errorMessage += "\n\n(Aviso do Servidor: A escrita foi negada. Verifique se as regras do Firebase 'posts' estão corretas: \".write\": \"auth != null\".)";
+            } else {
+                errorMessage += "\n\n(Aviso: O erro não é de permissão, é de rede ou configuração do projeto.)";
+            }
+
+            alert(errorMessage);
         }
     }
 
-    // ================= OUTRAS FUNÇÕES (Mantidas) =================
+    // ================= FUNÇÕES DE AUTENTICAÇÃO E PERFIL (Mantidas) =================
     
     function toggleAuth(type) {
       if(type === 'register') {
@@ -521,10 +536,9 @@
         document.getElementById('p-posts-count').innerText = posts.length;
 
         posts.forEach(p => {
-            // No perfil, posts de texto recebem um fundo escuro
-            const style = p.isText ? 'background: #333; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; padding: 10px; text-align: center; overflow: hidden;' : '';
             const content = p.isText ? p.caption.substring(0, 50) + '...' : `<img src="${p.imageUrl}" class="grid-img">`;
-
+            const style = p.isText ? 'background: #333; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; padding: 10px; text-align: center; overflow: hidden;' : '';
+            
             grid.innerHTML += `<div class="grid-img" style="${style}">${p.imageUrl ? `<img src="${p.imageUrl}" class="grid-img">` : content}</div>`;
         });
         
@@ -532,13 +546,13 @@
       });
     }
 
-    // ================= REGISTRO DE EVENTO (Chamando a nova função) =================
+    // ================= REGISTRO DE EVENTO =================
     document.addEventListener('DOMContentLoaded', () => {
         const shareButton = document.getElementById('btn-share-post');
         if (shareButton) {
             shareButton.addEventListener('click', (event) => {
                 event.preventDefault(); 
-                publishTextPost(); // Chamada da nova função
+                publishTextPost(); 
             });
         }
     });
