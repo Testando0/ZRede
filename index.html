@@ -234,17 +234,22 @@
     
     let currentUserData = null; 
 
-    // ================= SISTEMA DE AUTH =================
+    // ================= SISTEMA DE AUTH (CORRIGIDO PARA DESBLOQUEAR) =================
     
     auth.onAuthStateChanged(user => {
       if (user) {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('app-screen').style.display = 'block';
         
+        // Tentamos carregar o perfil do usuário, mas não travamos o app se falhar
         db.ref('users/' + user.uid).once('value').then(snap => {
           currentUserData = snap.val();
-          loadFeed(); 
+          loadFeed(); // Chama o feed após carregar dados
+        }).catch(error => {
+            alert("❌ ERRO AO CARREGAR DADOS DO PERFIL (USERS): " + error.message);
+            loadFeed(); // Chama o feed de qualquer forma para não travar
         });
+
       } else {
         document.getElementById('auth-screen').style.display = 'flex';
         document.getElementById('app-screen').style.display = 'none';
@@ -271,11 +276,9 @@
         if(password.length < 6) return alert("A senha deve ter pelo menos 6 caracteres.");
 
         try {
-            // 1. Cria autenticação
             const userCred = await auth.createUserWithEmailAndPassword(email, password);
             const uid = userCred.user.uid;
 
-            // 2. Salva no banco de dados (Perfil)
             await db.ref('users/' + uid).set({
                 username: username,
                 email: email,
@@ -283,9 +286,8 @@
                 profilePic: `https://ui-avatars.com/api/?name=${username}&background=random`
             });
 
-            alert("✅ SUCESSO! Conta criada. Tente postar agora.");
+            alert("✅ SUCESSO! Conta criada.");
         } catch (error) {
-            // MOSTRA O ERRO EXATO DO FIREBASE NA TELA
             alert("❌ ERRO NO CADASTRO: " + error.message);
         }
     }
@@ -295,7 +297,6 @@
       const password = document.getElementById('login-password').value;
 
       auth.signInWithEmailAndPassword(email, password)
-        // MOSTRA O ERRO EXATO DO FIREBASE NA TELA
         .catch(error => alert("❌ ERRO AO FAZER LOGIN: " + error.message));
     }
 
@@ -313,12 +314,13 @@
       const btnIndex = screenName === 'home' ? 0 : screenName === 'search' ? 1 : 2;
       document.querySelectorAll('.nav-btn')[btnIndex].classList.add('active');
 
-      if(screenName === 'profile') loadProfile(auth.currentUser.uid);
+      if(screenName === 'profile') loadProfile(auth.currentUser ? auth.currentUser.uid : null); // Checa se está logado
     }
 
-    // ================= FEED & POSTS =================
+    // ================= FEED & POSTS (CORRIGIDO PARA DESBLOQUEAR) =================
     function loadFeed() {
       const feedDiv = document.getElementById('screen-home');
+      feedDiv.innerHTML = '<p style="text-align:center; padding-top: 20px;">A carregar publicações...</p>';
       
       db.ref('posts').off(); 
 
@@ -327,6 +329,11 @@
         const posts = [];
         snapshot.forEach(child => posts.push({id: child.key, ...child.val()}));
         posts.reverse(); 
+        
+        if(posts.length === 0) {
+           feedDiv.innerHTML = '<p style="text-align:center; padding-top: 50px; color:#555;">Não há publicações no feed.</p>';
+           return;
+        }
 
         posts.forEach(post => {
           db.ref('users/' + post.uid).once('value').then(uSnap => {
@@ -352,10 +359,9 @@
           });
         });
       }, (error) => {
-          // Captura erros de leitura (permissão negada no feed)
-          if(error.code !== 'PERMISSION_DENIED') {
-             alert("❌ ERRO NO CARREGAMENTO DO FEED: " + error.message);
-          }
+          // ESTE ALERTA DEVE APARECER SE HOUVER UM BLOQUEIO DE LEITURA
+          alert("❌ ERRO AO CARREGAR FEED: " + error.message + " (Regras de Leitura 'posts' falharam!)");
+          feedDiv.innerHTML = '<p style="text-align:center; padding-top: 50px; color:red;">FALHA AO CARREGAR. Verifique as regras do Firebase.</p>';
       });
     }
 
@@ -364,7 +370,12 @@
     }
 
     // ================= UPLOAD DE FOTO =================
-    function openUpload() { document.getElementById('modalUpload').style.display = 'flex'; }
+    function openUpload() { 
+        if (!auth.currentUser) {
+            return alert("❌ Você precisa estar logado para abrir o uploader.");
+        }
+        document.getElementById('modalUpload').style.display = 'flex'; 
+    }
     function closeUpload() { document.getElementById('modalUpload').style.display = 'none'; }
 
     // FUNÇÃO DE POSTAGEM COM DEBUGGING APLICADO
@@ -372,9 +383,8 @@
       const fileInput = document.getElementById('fileInput');
       const caption = document.getElementById('captionInput').value;
       
-      // Checa se o usuário está logado antes de tentar qualquer coisa
       if (!auth.currentUser) {
-          return alert("❌ ERRO: Você precisa estar logado para postar! Por favor, faça login novamente.");
+          return alert("❌ ERRO: Você precisa estar logado para postar! Faça login novamente.");
       }
 
       if(!fileInput.files[0]) return alert("Escolha uma imagem");
@@ -401,12 +411,11 @@
               closeUpload();
               navTo('home');
           } catch (e) {
-              // MOSTRA ERRO DE PERMISSÃO DO FIREBASE NA TELA
-              alert("❌ ERRO AO SALVAR POST: " + e.message + " (Geralmente falha nas regras de escrita)");
+              alert("❌ ERRO AO SALVAR POST: " + e.message + " (Regras de Escrita 'posts' falharam!)");
           }
 
         } else {
-          alert('❌ ERRO NO UPLOAD DA IMAGEM: ' + data.status_txt);
+          alert('❌ ERRO NO UPLOAD DA IMAGEM (ImgBB): ' + (data.status_txt || 'Desconhecido'));
         }
       } catch (e) {
         alert('❌ ERRO GERAL NO UPLOAD: ' + e.message);
@@ -434,8 +443,7 @@
             resultsDiv.innerHTML += html;
           });
         }, (error) => {
-            // Captura erros na busca (principalmente se faltar a regra .indexOn)
-            alert("❌ ERRO NA BUSCA: " + error.message + " (Verifique .indexOn nas regras)");
+            alert("❌ ERRO NA BUSCA: " + error.message + " (Verifique a regra .indexOn: 'username'!)");
         });
     }
 
@@ -449,10 +457,13 @@
     }
 
     function loadProfile(uid) {
+      if (!uid) { // Proteção caso tente carregar perfil sem estar logado
+          return document.getElementById('p-username').innerText = "Erro: Faça Login";
+      }
+
       // 1. Carrega dados do usuário
       db.ref('users/' + uid).once('value', snap => {
         const u = snap.val();
-        // Checa se o usuário existe antes de tentar preencher os dados
         if (u) {
             document.getElementById('p-username').innerText = u.username;
             document.getElementById('p-avatar').src = u.profilePic;
@@ -463,7 +474,7 @@
 
       // 2. Carrega posts DESSE usuário
       const grid = document.getElementById('profile-posts-grid');
-      grid.innerHTML = '<p style="padding:10px">Carregando...</p>';
+      grid.innerHTML = '<p style="padding:10px">Carregando posts...</p>';
       
       db.ref('posts').orderByChild('uid').equalTo(uid).once('value', snap => {
         grid.innerHTML = '';
