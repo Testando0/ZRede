@@ -1,651 +1,448 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Z-Rede | Instagram Clone (Firebase)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InstaClone Pro</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  
+  <style>
+    /* --- CSS GERAL --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; outline: none; font-family: 'Inter', sans-serif; }
     
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    body {
+      background-color: #000;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- TELAS (SPA) --- */
+    .screen { display: none; padding-bottom: 70px; width: 100%; max-width: 500px; margin: 0 auto; }
+    .active-screen { display: block; }
+
+    /* --- AUTH SCREEN (LOGIN/CADASTRO) --- */
+    #auth-screen {
+      height: 100vh;
+      display: none; /* Controlado via JS */
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #1a1a1a, #000);
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 350px;
+    }
+
+    .logo {
+      font-family: 'Segoe UI', cursive;
+      font-size: 3rem;
+      margin-bottom: 30px;
+      background: linear-gradient(90deg, #FF7D05F7, #7f00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 5px;
+      color: white;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 15px;
+      background: #0095f6;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .toggle-auth {
+      margin-top: 20px;
+      color: #aaa;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .toggle-auth span { color: #0095f6; font-weight: bold; }
+
+    /* --- HEADER & NAV --- */
+    header {
+      padding: 15px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: #000;
+      z-index: 100;
+    }
+
+    .header-logo { font-family: 'Segoe UI', cursive; font-size: 1.5rem; }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #000;
+      border-top: 1px solid #333;
+      display: flex;
+      justify-content: space-around;
+      padding: 15px 0;
+      z-index: 200;
+    }
+
+    .nav-btn { font-size: 1.5rem; color: #fff; cursor: pointer; background: none; border: none; }
+    .nav-btn.active { color: #FF7D05F7; }
+
+    /* --- FEED --- */
+    .post-card { margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+    .post-header { padding: 10px; display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; object-fit: cover;}
+    .post-img { width: 100%; height: auto; max-height: 500px; object-fit: cover; }
+    .post-actions { padding: 10px; display: flex; gap: 15px; font-size: 1.5rem; }
+    .post-caption { padding: 0 10px; }
     
-    <style>
-        /* CSS... (mantido igual ao anterior para manter o design) */
-        :root {
-            --bg-body: #FAFAFA;
-            --bg-card: #FFFFFF;
-            --border-color: #DBDBDB;
-            --text-primary: #262626;
-            --text-secondary: #8E8E8E;
-            --accent-color: #0095F6;
-            --accent-danger: #ED4956;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-primary);
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-            font-size: 14px;
-        }
+    /* --- PERFIL --- */
+    .profile-header { padding: 20px; display: flex; align-items: center; gap: 20px; }
+    .profile-pic-lg { width: 80px; height: 80px; border-radius: 50%; background: #333; object-fit: cover; border: 2px solid #FF7D05F7; }
+    .profile-stats { flex: 1; }
+    .profile-name { font-size: 1.2rem; font-weight: bold; display: block; }
+    .btn-logout { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; margin-top: 5px; cursor: pointer; font-size: 0.8rem;}
+    
+    .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .grid-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer;}
 
-        #app-container {
-            width: 100%;
-            max-width: 480px;
-            min-height: 100vh;
-            position: relative;
-            background-color: var(--bg-body);
-        }
-
-        .sticky-header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background-color: var(--bg-card);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 54px;
-        }
-        .logo { 
-            font-family: sans-serif;
-            font-size: 1.5rem; 
-            font-weight: 700; 
-            color: var(--text-primary);
-        }
-
-        .auth-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: calc(100vh - 54px);
-            padding: 2rem;
-        }
-        .auth-box {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 2.5rem 1.5rem;
-            width: 100%;
-            max-width: 350px;
-            text-align: center;
-        }
-        
-        input[type="email"], input[type="text"] {
-            width: 100%;
-            background: #FAFAFA;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.75rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            outline: none;
-            margin-bottom: 0.5rem;
-        }
-        .btn {
-            border: none;
-            border-radius: 4px;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .btn-primary { 
-            background-color: var(--accent-color); 
-            color: white; 
-            width: 100%; 
-            margin-top: 0.5rem;
-        }
-        .btn-primary:disabled { background-color: rgba(0, 149, 246, 0.5); }
-
-        .compose-area {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--bg-card);
-        }
-        .compose-input {
-            width: 100%;
-            border: 1px solid var(--border-color);
-            background-color: #FAFAFA;
-            resize: none;
-            font-size: 1rem;
-            min-height: 80px;
-            padding: 0.5rem;
-            border-radius: 4px;
-            margin-bottom: 0.5rem;
-        }
-        .btn-post {
-            background-color: var(--accent-color); 
-            color: white; 
-            float: right;
-        }
-
-        .post-card {
-            background-color: var(--bg-card);
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .post-header {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-        }
-        .avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 0.75rem;
-            border: 2px solid var(--accent-color);
-            padding: 1px;
-        }
-        .username {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .post-image {
-            width: 100%;
-            max-height: 480px;
-            object-fit: cover;
-            display: block;
-        }
-        .post-actions {
-            padding: 0.5rem 1rem;
-            display: flex;
-            gap: 1rem;
-        }
-        .action-btn {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        .liked { color: var(--accent-danger); }
-
-        .post-details {
-            padding: 0 1rem 1rem 1rem;
-        }
-        .likes-count { font-weight: 600; margin-bottom: 0.2rem; }
-        .post-caption { margin-bottom: 0.5rem; }
-        .post-time { color: var(--text-secondary); font-size: 0.7rem; margin-top: 0.5rem; }
-        .status-msg { margin-top: 1rem; padding: 0.75rem; border-radius: 4px; width: 100%; text-align: center;}
-        .status-error { background-color: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB;}
-        .status-success { background-color: #D4EDDA; color: #155724; border: 1px solid #C3E6CB;}
-        .loader { text-align: center; padding: 2rem; color: var(--accent-color); font-size: 1.5rem;}
-    </style>
+    /* --- BUSCA --- */
+    .search-container { padding: 10px; }
+    .search-bar { width: 100%; padding: 10px; background: #262626; border: none; border-radius: 8px; color: white; }
+    .user-list-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #222; cursor: pointer; }
+    
+    /* --- MODAL UPLOAD (Mantido do anterior) --- */
+    .upload-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; justify-content: center; align-items: center; flex-direction: column;}
+    .upload-box { background: #222; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
+  </style>
 </head>
 <body>
 
-    <div id="app-container">
+  <div id="auth-screen">
+    <div class="auth-box">
+      <h1 class="logo">InstaClone</h1>
+      
+      <div id="login-form">
+        <input type="email" id="login-email" class="auth-input" placeholder="E-mail">
+        <input type="password" id="login-password" class="auth-input" placeholder="Senha">
+        <button class="btn-primary" onclick="handleLogin()">Entrar</button>
+        <p class="toggle-auth" onclick="toggleAuth('register')">Não tem uma conta? <span>Cadastre-se</span></p>
+      </div>
+
+      <div id="register-form" style="display: none;">
+        <input type="text" id="reg-username" class="auth-input" placeholder="Nome de Usuário (ex: joao123)">
+        <input type="email" id="reg-email" class="auth-input" placeholder="E-mail">
+        <input type="password" id="reg-password" class="auth-input" placeholder="Senha">
+        <button class="btn-primary" onclick="handleRegister()">Cadastrar</button>
+        <p class="toggle-auth" onclick="toggleAuth('login')">Já tem conta? <span>Entrar</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-screen" style="display: none;">
+    
+    <header>
+      <div class="header-logo">InstaClone</div>
+      <button onclick="openUpload()" style="background:none; border:none; color:white; font-size:1.5rem;"><i class="far fa-plus-square"></i></button>
+    </header>
+
+    <div id="screen-home" class="screen active-screen">
+      </div>
+
+    <div id="screen-search" class="screen">
+      <div class="search-container">
+        <input type="text" class="search-bar" placeholder="Pesquisar usuários..." oninput="searchUsers(this.value)">
+        <div id="search-results"></div>
+      </div>
+    </div>
+
+    <div id="screen-profile" class="screen">
+      <div class="profile-header">
+        <img src="https://via.placeholder.com/150" id="p-avatar" class="profile-pic-lg">
+        <div class="profile-stats">
+          <span class="profile-name" id="p-username">Carregando...</span>
+          <div style="margin: 10px 0;">
+            <strong id="p-posts-count">0</strong> publicações
+          </div>
+          <button class="btn-logout" id="btn-logout-action" onclick="logout()">Sair</button>
         </div>
+      </div>
+      <div class="profile-grid" id="profile-posts-grid"></div>
+    </div>
 
-    <script>
-        // =========================================================
-        // !!! CONFIGURAÇÃO FIREBASE INSERIDA !!!
-        // =========================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCHpunrtbhlIvLEev6fkZDNRvTieEQt1Hg",
-            authDomain: "sske-9ff9f.firebaseapp.com",
-            projectId: "sske-9ff9f",
-            storageBucket: "sske-9ff9f.firebasestorage.app",
-            messagingSenderId: "464070910654",
-            appId: "1:464070910654:web:b8b87b1835fe309630f4ef"
-        };
-        // =========================================================
-        const SITE_URL = 'https://z-rede.vercel.app'; // URL de redirecionamento para o Magic Link/OTP
+    <nav class="bottom-nav">
+      <button class="nav-btn active" onclick="navTo('home')"><i class="fas fa-home"></i></button>
+      <button class="nav-btn" onclick="navTo('search')"><i class="fas fa-search"></i></button>
+      <button class="nav-btn" onclick="navTo('profile')"><i class="fas fa-user"></i></button>
+    </nav>
 
-        // Inicialização do Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = app.auth();
-        const db = app.firestore();
-        const appContainer = document.getElementById('app-container');
+    <div class="upload-modal" id="modalUpload">
+      <div class="upload-box">
+        <h3>Nova Publicação</h3>
+        <input type="file" id="fileInput" class="auth-input" accept="image/*" style="margin-top:15px;">
+        <input type="text" id="captionInput" class="auth-input" placeholder="Legenda...">
+        <button class="btn-primary" onclick="uploadPost()">Compartilhar</button>
+        <button style="background:transparent; border:none; color:red; margin-top:10px; cursor:pointer;" onclick="closeUpload()">Cancelar</button>
+      </div>
+    </div>
 
-        let currentUser = null;
-        let currentProfile = null;
+  </div>
 
-        // --- Gerenciamento de Perfil (Profiles Collection) ---
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-        /**
-         * Cria um perfil inicial no Firestore se não existir, e o retorna.
-         */
-        async function getOrCreateProfile(user) {
-            const profileRef = db.collection('profiles').doc(user.uid);
-            const doc = await profileRef.get();
+  <script>
+    // ================= CONFIGURAÇÃO DO FIREBASE (DADOS APLICADOS) =================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCHpunrtbhlIvLEev6fkZDNRvTieEQt1Hg",
+      authDomain: "sske-9ff9f.firebaseapp.com",
+      databaseURL: "https://sske-9ff9f-default-rtdb.firebaseio.com",
+      projectId: "sske-9ff9f",
+      storageBucket: "sske-9ff9f.firebasestorage.app",
+      messagingSenderId: "464070910654",
+      appId: "1:464070910654:web:b8b87b1835fe309630f4ef"
+    };
 
-            if (doc.exists) {
-                return doc.data();
-            } else {
-                const initialUsername = user.email ? user.email.split('@')[0] + Math.floor(Math.random() * 999) : 'user' + user.uid.substring(0, 6);
-                const newProfile = {
-                    uid: user.uid,
-                    username: initialUsername.toLowerCase(),
-                    full_name: user.displayName || user.email,
-                    avatar_url: user.photoURL || `https://ui-avatars.com/api/?name=${initialUsername}&background=0095F6&color=fff&size=36`,
-                    bio: 'Novo na Z-Rede!',
-                    followers: [], 
-                    following: []  
-                };
-                await profileRef.set(newProfile);
-                return newProfile;
-            }
-        }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    
+    let currentUserData = null; 
 
-        // --- Roteamento e Inicialização ---
+    // ================= SISTEMA DE AUTH =================
+    
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
         
-        function initApp() {
-            auth.onAuthStateChanged(async user => {
-                if (user) {
-                    currentUser = user;
-                    // Garante que o perfil do Firestore seja criado/carregado antes de renderizar o feed
-                    currentProfile = await getOrCreateProfile(user); 
-                    renderFeedUI();
-                } else {
-                    currentUser = null;
-                    currentProfile = null;
-                    renderAuthUI();
-                }
-            });
-        }
+        db.ref('users/' + user.uid).once('value').then(snap => {
+          currentUserData = snap.val();
+          loadFeed(); 
+        });
+      } else {
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('app-screen').style.display = 'none';
+      }
+    });
 
-        // --- UI de Autenticação ---
-        
-        function renderAuthUI() {
-            appContainer.innerHTML = `
-                <div class="auth-wrapper">
-                    <div class="auth-box">
-                        <div class="logo" style="font-size: 2.2rem; margin-bottom: 2rem;">Z-Rede (F)</div>
-                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Entre com seu e-mail (Magic Link).</p>
-                        <input type="email" id="email-input" placeholder="E-mail">
-                        <button class="btn btn-primary" onclick="handleLogin()">Entrar com Link Mágico</button>
-                        <div id="auth-status" class="status-msg" style="display:none;"></div>
-                    </div>
+    function toggleAuth(type) {
+      if(type === 'register') {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('register-form').style.display = 'block';
+      } else {
+        document.getElementById('login-form').style.display = 'block';
+        document.getElementById('register-form').style.display = 'none';
+      }
+    }
+
+    async function handleRegister() {
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      const username = document.getElementById('reg-username').value.trim().toLowerCase();
+
+      if(!username) return alert("Digite um nome de usuário");
+
+      try {
+        const userCred = await auth.createUserWithEmailAndPassword(email, password);
+        const uid = userCred.user.uid;
+
+        await db.ref('users/' + uid).set({
+          username: username,
+          email: email,
+          uid: uid,
+          profilePic: `https://ui-avatars.com/api/?name=${username}&background=random`
+        });
+
+        alert("Conta criada com sucesso!");
+      } catch (error) {
+        alert("Erro ao cadastrar: " + error.message);
+      }
+    }
+
+    function handleLogin() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(error => alert("Erro ao entrar: " + error.message));
+    }
+
+    function logout() {
+      auth.signOut();
+    }
+
+    // ================= NAVEGAÇÃO =================
+    function navTo(screenName) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active-screen'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+      document.getElementById('screen-' + screenName).classList.add('active-screen');
+      
+      const btnIndex = screenName === 'home' ? 0 : screenName === 'search' ? 1 : 2;
+      document.querySelectorAll('.nav-btn')[btnIndex].classList.add('active');
+
+      if(screenName === 'profile') loadProfile(auth.currentUser.uid);
+    }
+
+    // ================= FEED & POSTS =================
+    function loadFeed() {
+      const feedDiv = document.getElementById('screen-home');
+      
+      db.ref('posts').limitToLast(50).on('value', (snapshot) => {
+        feedDiv.innerHTML = '';
+        const posts = [];
+        snapshot.forEach(child => posts.push({id: child.key, ...child.val()}));
+        posts.reverse(); 
+
+        posts.forEach(post => {
+          db.ref('users/' + post.uid).once('value').then(uSnap => {
+            const user = uSnap.val() || { username: 'Desconhecido', profilePic: 'https://via.placeholder.com/30' };
+            
+            const html = `
+              <div class="post-card">
+                <div class="post-header" onclick="viewUserProfile('${post.uid}')" style="cursor:pointer">
+                  <img src="${user.profilePic}" class="user-avatar">
+                  <strong>${user.username}</strong>
                 </div>
+                <img src="${post.imageUrl}" class="post-img" ondblclick="likePost('${post.id}')">
+                <div class="post-actions">
+                  <i class="far fa-heart" onclick="likePost('${post.id}')"></i>
+                </div>
+                <div class="post-caption">
+                  <strong>${post.likes || 0} curtidas</strong><br>
+                  <span style="font-weight:bold; margin-right:5px;">${user.username}</span> ${post.caption}
+                </div>
+              </div>
             `;
-        }
+            feedDiv.innerHTML += html;
+          });
+        });
+      });
+    }
 
-        async function handleLogin() {
-            const email = document.getElementById('email-input').value;
-            const statusEl = document.getElementById('auth-status');
-            
-            if (!email || !email.includes('@')) {
-                statusEl.style.display = 'block';
-                statusEl.className = 'status-msg status-error';
-                statusEl.innerHTML = 'Por favor, insira um e-mail válido.';
-                return;
-            }
+    function likePost(postId) {
+      db.ref(`posts/${postId}/likes`).transaction(likes => (likes || 0) + 1);
+    }
 
-            statusEl.style.display = 'block';
-            statusEl.className = 'status-msg';
-            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando link...';
+    // ================= UPLOAD DE FOTO =================
+    function openUpload() { document.getElementById('modalUpload').style.display = 'flex'; }
+    function closeUpload() { document.getElementById('modalUpload').style.display = 'none'; }
 
-            const actionCodeSettings = {
-                url: SITE_URL,
-                handleCodeInApp: true
-            };
+    async function uploadPost() {
+      const fileInput = document.getElementById('fileInput');
+      const caption = document.getElementById('captionInput').value;
+      
+      if(!fileInput.files[0]) return alert("Escolha uma imagem");
 
-            try {
-                await auth.sendSignInLinkToEmail(email, actionCodeSettings);
-                window.localStorage.setItem('emailForSignIn', email);
-                statusEl.className = 'status-msg status-success';
-                statusEl.innerHTML = 'Link enviado! Verifique seu e-mail para entrar.';
-            } catch (error) {
-                statusEl.className = 'status-msg status-error';
-                statusEl.innerHTML = `Erro: ${error.message}`;
-            }
-        }
-
-        // Verifica e finaliza o login se o usuário chegou por um Magic Link
-        if (auth.isSignInWithEmailLink(window.location.href)) {
-            let email = window.localStorage.getItem('emailForSignIn');
-            if (!email) {
-                email = prompt('Por favor, confirme seu e-mail para finalizar o login:');
-            }
-            if (email) {
-                auth.signInWithEmailLink(email, window.location.href)
-                    .then(() => {
-                        window.localStorage.removeItem('emailForSignIn');
-                        window.history.replaceState({}, document.title, SITE_URL); // Limpa o link na URL
-                    }).catch(error => {
-                        alert("Erro ao finalizar o login: " + error.message);
-                        renderAuthUI();
-                    });
-            }
-        }
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+      
+      try {
+        // Chave da API ImgBB (A mesma que você forneceu anteriormente)
+        const res = await fetch('https://api.imgbb.com/1/upload?key=599411b1c02c7129d1b0da9bd4634c09', {
+            method: 'POST', body: formData 
+        });
+        const data = await res.json();
         
-        // --- UI do Feed Principal e Lógica ---
+        if(data.success) {
+          await db.ref('posts').push({
+            uid: auth.currentUser.uid,
+            imageUrl: data.data.url,
+            caption: caption,
+            likes: 0,
+            timestamp: Date.now()
+          });
+          closeUpload();
+          navTo('home');
+        } else {
+          alert('Erro no upload da imagem');
+        }
+      } catch (e) {
+        alert('Erro: ' + e.message);
+      }
+    }
 
-        function renderFeedUI() {
-            const avatar = currentProfile?.avatar_url;
+    // ================= BUSCA DE USUÁRIOS =================
+    function searchUsers(query) {
+      const resultsDiv = document.getElementById('search-results');
+      resultsDiv.innerHTML = '';
+      if(query.length < 2) return;
 
-            appContainer.innerHTML = `
-                <div class="sticky-header">
-                    <div class="logo">Z-Rede (F)</div>
-                    <div style="display:flex; gap: 10px;">
-                        <button class="action-btn" onclick="renderSearchUI()" title="Pesquisar"><i class="fas fa-search"></i></button> 
-                        <button class="action-btn" onclick="renderProfileUI(currentUser.uid)" title="Meu Perfil">
-                             <img src="${avatar}" class="avatar" style="width: 24px; height: 24px; padding: 0; border: none;">
-                        </button>
-                        <button class="action-btn" onclick="auth.signOut()" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
-                    </div>
-                </div>
+      query = query.toLowerCase();
 
-                <div id="main-content">
-                    <div class="compose-area">
-                        <textarea id="post-input" class="compose-input" placeholder="O que você está pensando?" oninput="togglePostButton()"></textarea>
-                        <input type="file" id="image-upload" accept="image/*" style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem;" disabled title="Upload de Imagem requer Firebase Storage">
-                        <button id="post-btn" class="btn btn-post" onclick="handlePost()" disabled>Postar</button>
-                        <div style="clear: both;"></div>
-                    </div>
-                    <div id="feed-container">
-                        <div class="loader"><i class="fas fa-circle-notch fa-spin"></i> Carregando Feed...</div>
-                    </div>
-                </div>
+      db.ref('users').orderByChild('username').startAt(query).endAt(query + "\uf8ff")
+        .once('value', snapshot => {
+          snapshot.forEach(child => {
+            const u = child.val();
+            const html = `
+              <div class="user-list-item" onclick="viewUserProfile('${u.uid}')">
+                <img src="${u.profilePic}" class="user-avatar">
+                <span>${u.username}</span>
+              </div>
             `;
-            loadFeed();
-        }
+            resultsDiv.innerHTML += html;
+          });
+        });
+    }
+
+    // ================= PERFIL =================
+    function viewUserProfile(uid) {
+      loadProfile(uid);
+      navTo('profile');
+      
+      const isMe = uid === auth.currentUser.uid;
+      document.getElementById('btn-logout-action').style.display = isMe ? 'block' : 'none';
+    }
+
+    function loadProfile(uid) {
+      db.ref('users/' + uid).once('value', snap => {
+        const u = snap.val();
+        document.getElementById('p-username').innerText = u.username;
+        document.getElementById('p-avatar').src = u.profilePic;
+      });
+
+      const grid = document.getElementById('profile-posts-grid');
+      grid.innerHTML = '<p style="padding:10px">Carregando...</p>';
+      
+      db.ref('posts').orderByChild('uid').equalTo(uid).once('value', snap => {
+        grid.innerHTML = '';
+        const posts = [];
+        snap.forEach(c => posts.push(c.val()));
+        posts.reverse();
         
-        function togglePostButton() {
-            const input = document.getElementById('post-input');
-            document.getElementById('post-btn').disabled = !input?.value.trim();
-        }
+        document.getElementById('p-posts-count').innerText = posts.length;
 
-        async function handlePost() {
-            const content = document.getElementById('post-input').value.trim();
-            if (!content) return;
-
-            const postBtn = document.getElementById('post-btn');
-            postBtn.disabled = true;
-
-            try {
-                // Adiciona um novo documento na coleção 'posts'
-                await db.collection('posts').add({
-                    uid: currentUser.uid,
-                    username: currentProfile.username,
-                    avatar_url: currentProfile.avatar_url,
-                    content: content,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    likes_count: 0
-                    // image_url: (Upload Firebase Storage seria necessário aqui)
-                });
-                
-                document.getElementById('post-input').value = '';
-                togglePostButton();
-                loadFeed(); 
-                
-            } catch (error) {
-                alert("Erro ao postar: " + error.message);
-            } finally {
-                postBtn.disabled = false;
-            }
-        }
-
-        async function loadFeed() {
-            const container = document.getElementById('feed-container');
-            container.innerHTML = `<div class="loader"><i class="fas fa-circle-notch fa-spin"></i> Carregando Feed...</div>`;
-            
-            try {
-                // Consulta o Firestore, ordenando por timestamp
-                const snapshot = await db.collection('posts')
-                    .orderBy('timestamp', 'desc')
-                    .limit(20)
-                    .get();
-
-                const posts = await Promise.all(snapshot.docs.map(async doc => {
-                    const postData = doc.data();
-                    const postId = doc.id;
-                    
-                    // Busca curtidas separadamente para saber se o usuário curtiu
-                    const likeSnapshot = await db.collection('posts').doc(postId).collection('likes').doc(currentUser.uid).get();
-                    const liked = likeSnapshot.exists;
-
-                    return {
-                        id: postId,
-                        ...postData,
-                        liked: liked,
-                        likes_count: postData.likes_count || 0,
-                        username: postData.username || 'Usuário Desconhecido',
-                        avatar_url: postData.avatar_url || `https://ui-avatars.com/api/?name=U&background=0095F6&color=fff&size=36`
-                    };
-                }));
-
-                container.innerHTML = posts.map(post => `
-                <div class="post-card" data-post-id="${post.id}">
-                    <div class="post-header" onclick="renderProfileUI('${post.uid}')" style="cursor:pointer;">
-                        <img src="${post.avatar_url}" class="avatar" alt="${post.username}">
-                        <div>
-                            <span class="username">${post.username}</span>
-                        </div>
-                    </div>
-
-                    ${post.image_url ? `<img src="${post.image_url}" class="post-image" alt="Post Image">` : ''}
-
-                    <div class="post-actions">
-                        <button class="action-btn" onclick="toggleLike('${post.id}', ${post.liked})">
-                            <i class="fas fa-heart ${post.liked ? 'liked' : ''}"></i>
-                        </button>
-                        <button class="action-btn" onclick="alert('Comentários não implementados. ID: ${post.id}')">
-                            <i class="far fa-comment"></i>
-                        </button>
-                    </div>
-
-                    <div class="post-details">
-                        <div class="likes-count">${post.likes_count} curtidas</div>
-                        <div class="post-caption"><span class="username">${post.username}</span> ${escapeHtml(post.content)}</div>
-                        <div class="post-time">${post.timestamp ? timeDiff(post.timestamp.toDate()) : 'agora'}</div>
-                    </div>
-                </div>
-                `).join('') || `<div style="padding:40px; text-align:center; color:var(--text-secondary)">Seja o primeiro a postar!</div>`;
-            
-            } catch (error) {
-                container.innerHTML = `<div class="status-msg status-error">Erro ao carregar feed: ${error.message}</div>`;
-                console.error("Erro no loadFeed:", error);
-            }
-        }
-
-        async function toggleLike(postId, currentlyLiked) {
-            const likeRef = db.collection('posts').doc(postId).collection('likes').doc(currentUser.uid);
-            const postRef = db.collection('posts').doc(postId);
-            const batch = db.batch();
-
-            try {
-                if (currentlyLiked) {
-                    // Descurtir: Deleta o documento de like e decrementa o contador no post.
-                    batch.delete(likeRef);
-                    batch.update(postRef, {
-                        likes_count: firebase.firestore.FieldValue.increment(-1)
-                    });
-                } else {
-                    // Curtir: Cria o documento de like e incrementa o contador no post.
-                    batch.set(likeRef, { uid: currentUser.uid });
-                    batch.update(postRef, {
-                        likes_count: firebase.firestore.FieldValue.increment(1)
-                    });
-                }
-                
-                await batch.commit();
-                loadFeed(); 
-                
-            } catch (error) {
-                console.error("Erro ao curtir/descurtir:", error);
-                alert("Erro na ação de curtir/descurtir: " + error.message);
-            }
-        }
-
-        // --- Lógica de Perfil e Seguir ---
-
-        async function renderProfileUI(targetUid) {
-            const isOwnProfile = targetUid === currentUser.uid;
-            
-            // 1. Obter Perfil
-            const profileDoc = await db.collection('profiles').doc(targetUid).get();
-            if (!profileDoc.exists) {
-                alert('Perfil não encontrado.');
-                return;
-            }
-            const profile = profileDoc.data();
-            
-            // 2. Obter Dados de Interação
-            const postsSnapshot = await db.collection('posts').where('uid', '==', targetUid).get();
-            const followersCount = profile.followers ? profile.followers.length : 0;
-            const followingCount = profile.following ? profile.following.length : 0;
-            const isFollowing = profile.followers ? profile.followers.includes(currentUser.uid) : false;
-
-            document.getElementById('main-content').innerHTML = `
-                <div style="padding: 1rem; background-color: var(--bg-card);">
-                    <div style="text-align: center; margin-bottom: 1.5rem;">
-                        <img src="${profile.avatar_url}" class="avatar" style="width: 80px; height: 80px; margin: 0 auto; padding: 2px;">
-                        <h2 class="username" style="font-size: 1.2rem; margin-top: 0.5rem;">@${profile.username}</h2>
-                        <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">${profile.full_name || ''}</p>
-                        <p>${profile.bio || 'Nenhuma biografia ainda.'}</p>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-around; text-align: center; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 0.5rem 0; margin-bottom: 1rem;">
-                        <div><span style="font-weight: 600;">${postsSnapshot.size}</span> posts</div>
-                        <div><span style="font-weight: 600;">${followersCount}</span> seguidores</div>
-                        <div><span style="font-weight: 600;">${followingCount}</span> seguindo</div>
-                    </div>
-                    
-                    <div style="text-align: center;">
-                        ${isOwnProfile ? 
-                            `<button class="btn" style="background: #EFEFEF; color: var(--text-primary);" onclick="alert('Edição de Perfil...')">Editar Perfil</button>` :
-                            `<button class="btn btn-primary" onclick="toggleFollowFirebase('${targetUid}', ${isFollowing})" style="width: 80%; max-width: 300px; background: ${isFollowing ? '#EFEFEF' : 'var(--accent-color)'}; color: ${isFollowing ? 'var(--text-primary)' : 'white'};">
-                                ${isFollowing ? 'Seguindo' : 'Seguir'}
-                            </button>`
-                        }
-                        <button class="btn" style="background: none; color: var(--text-secondary); margin-top: 1rem; display:block; width: 100%;" onclick="renderFeedUI()">Voltar ao Feed</button>
-                    </div>
-                    <div id="user-posts" style="margin-top: 20px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
-                        ${postsSnapshot.docs.map(post => {
-                            // Exibe um grid simples de posts (como no Instagram)
-                            const data = post.data();
-                            return `<div style="aspect-ratio: 1/1; background: #EEE; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px solid #CCC; font-size: 0.8rem; color: var(--text-secondary); padding: 5px;">
-                                ${data.image_url ? `<img src="${data.image_url}" style="width: 100%; height: 100%; object-fit: cover;">` : escapeHtml(data.content.substring(0, 50)) + '...'}
-                            </div>`
-                        }).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        async function toggleFollowFirebase(targetUid, isFollowing) {
-            const userProfileRef = db.collection('profiles').doc(currentUser.uid); // Quem está seguindo/deixando de seguir
-            const targetProfileRef = db.collection('profiles').doc(targetUid);   // Quem está sendo seguido/deixado de seguir
-            const batch = db.batch();
-
-            try {
-                if (isFollowing) {
-                    // DEIXAR DE SEGUIR
-                    batch.update(userProfileRef, {
-                        following: firebase.firestore.FieldValue.arrayRemove(targetUid)
-                    });
-                    batch.update(targetProfileRef, {
-                        followers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                    });
-                } else {
-                    // SEGUIR
-                    batch.update(userProfileRef, {
-                        following: firebase.firestore.FieldValue.arrayUnion(targetUid)
-                    });
-                    batch.update(targetProfileRef, {
-                        followers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                    });
-                }
-                await batch.commit();
-                renderProfileUI(targetUid); // Recarrega o perfil para atualizar o botão
-            } catch (error) {
-                console.error("Erro ao seguir/deixar de seguir:", error);
-                alert("Erro: " + error.message);
-            }
-        }
+        posts.forEach(p => {
+          grid.innerHTML += `<img src="${p.imageUrl}" class="grid-img">`;
+        });
         
-        // --- Lógica de Pesquisa ---
+        if(posts.length === 0) grid.innerHTML = '<p style="padding:20px; grid-column:span 3; text-align:center; color:#555">Sem publicações.</p>';
+      });
+    }
 
-        async function renderSearchUI() {
-            document.getElementById('main-content').innerHTML = `
-                <div style="padding: 1rem; background-color: var(--bg-card); border-bottom: 1px solid var(--border-color);">
-                    <input type="text" id="search-input" placeholder="Pesquisar usuários por @username" style="width: 100%; padding: 10px; border: 1px solid #DBDBDB; border-radius: 4px;" oninput="searchUsers(this.value)">
-                </div>
-                <div id="search-results" style="padding: 1rem;">
-                    <p style="color: var(--text-secondary); text-align: center;">Comece a digitar para encontrar usuários.</p>
-                </div>
-                <button class="btn" style="background: none; color: var(--text-secondary); margin-top: 1rem; display:block; width: 100%;" onclick="renderFeedUI()">Voltar ao Feed</button>
-            `;
-        }
-
-        async function searchUsers(query) {
-            const resultsDiv = document.getElementById('search-results');
-            const queryLower = query.toLowerCase();
-            
-            if (query.length < 3) {
-                resultsDiv.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Digite pelo menos 3 caracteres.</p>';
-                return;
-            }
-            
-            resultsDiv.innerHTML = '<div class="loader"><i class="fas fa-circle-notch fa-spin"></i> Buscando...</div>';
-
-            try {
-                // No Firestore, a pesquisa por substring é limitada.
-                // Usamos o método startAt/endAt para simular um ILIKE
-                const snapshot = await db.collection('profiles')
-                    .orderBy('username')
-                    .startAt(queryLower)
-                    .endAt(queryLower + '\uf8ff') // Truque para pesquisa "prefix" no Firestore
-                    .limit(10)
-                    .get();
-
-                const data = snapshot.docs.map(doc => doc.data());
-
-                if (data.length === 0) {
-                    resultsDiv.innerHTML = `<p style="color: var(--text-secondary); text-align: center;">Nenhum usuário encontrado com "@${query}".</p>`;
-                    return;
-                }
-
-                resultsDiv.innerHTML = data.map(user => `
-                    <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #EFEFEF; cursor: pointer;" onclick="renderProfileUI('${user.uid}')">
-                        <img src="${user.avatar_url}" class="avatar" style="width: 40px; height: 40px; margin-right: 1rem; padding: 0; border: 1px solid #C7C7C7;">
-                        <div>
-                            <span class="username">@${user.username}</span>
-                            <p style="color: var(--text-secondary); font-size: 0.8rem;">${user.full_name || ''}</p>
-                        </div>
-                    </div>
-                `).join('');
-
-            } catch (error) {
-                resultsDiv.innerHTML = `<div class="status-msg status-error">Erro na pesquisa: ${error.message}</div>`;
-            }
-        }
-
-
-        // Funções Utilitárias (Mantidas)
-        function timeDiff(date) {
-            const diffMin = Math.floor((new Date() - date) / 60000);
-            if (diffMin < 1) return 'agora';
-            if (diffMin < 60) return `${diffMin}m`;
-            if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h`;
-            return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
-        }
-
-        function escapeHtml(text) {
-            if (!text) return "";
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-        
-        // Iniciar a aplicação
-        initApp();
-    </script>
+  </script>
 </body>
 </html>
