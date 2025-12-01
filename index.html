@@ -214,7 +214,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // ================= CONFIGURAÇÃO DO FIREBASE (DADOS APLICADOS) =================
+    // ================= CONFIGURAÇÃO DO FIREBASE =================
     const firebaseConfig = {
       apiKey: "AIzaSyCHpunrtbhlIvLEev6fkZDNRvTieEQt1Hg",
       authDomain: "sske-9ff9f.firebaseapp.com",
@@ -225,7 +225,6 @@
       appId: "1:464070910654:web:b8b87b1835fe309630f4ef"
     };
 
-    // CORREÇÃO: Usando a sintaxe de API antiga (v8) para inicializar
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
@@ -262,28 +261,33 @@
       }
     }
 
+    // FUNÇÃO DE CADASTRO COM DEBUGGING APLICADO
     async function handleRegister() {
-      const email = document.getElementById('reg-email').value;
-      const password = document.getElementById('reg-password').value;
-      const username = document.getElementById('reg-username').value.trim().toLowerCase();
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-password').value;
+        const username = document.getElementById('reg-username').value.trim().toLowerCase();
 
-      if(!username) return alert("Digite um nome de usuário");
+        if(!username) return alert("Digite um nome de usuário");
+        if(password.length < 6) return alert("A senha deve ter pelo menos 6 caracteres.");
 
-      try {
-        const userCred = await auth.createUserWithEmailAndPassword(email, password);
-        const uid = userCred.user.uid;
+        try {
+            // 1. Cria autenticação
+            const userCred = await auth.createUserWithEmailAndPassword(email, password);
+            const uid = userCred.user.uid;
 
-        await db.ref('users/' + uid).set({
-          username: username,
-          email: email,
-          uid: uid,
-          profilePic: `https://ui-avatars.com/api/?name=${username}&background=random`
-        });
+            // 2. Salva no banco de dados (Perfil)
+            await db.ref('users/' + uid).set({
+                username: username,
+                email: email,
+                uid: uid,
+                profilePic: `https://ui-avatars.com/api/?name=${username}&background=random`
+            });
 
-        alert("Conta criada com sucesso!");
-      } catch (error) {
-        alert("Erro ao cadastrar: " + error.message);
-      }
+            alert("✅ SUCESSO! Conta criada. Tente postar agora.");
+        } catch (error) {
+            // MOSTRA O ERRO EXATO DO FIREBASE NA TELA
+            alert("❌ ERRO NO CADASTRO: " + error.message);
+        }
     }
 
     function handleLogin() {
@@ -291,7 +295,8 @@
       const password = document.getElementById('login-password').value;
 
       auth.signInWithEmailAndPassword(email, password)
-        .catch(error => alert("Erro ao entrar: " + error.message));
+        // MOSTRA O ERRO EXATO DO FIREBASE NA TELA
+        .catch(error => alert("❌ ERRO AO FAZER LOGIN: " + error.message));
     }
 
     function logout() {
@@ -315,7 +320,6 @@
     function loadFeed() {
       const feedDiv = document.getElementById('screen-home');
       
-      // Remove o listener anterior para evitar duplicação em desenvolvimento
       db.ref('posts').off(); 
 
       db.ref('posts').limitToLast(50).on('value', (snapshot) => {
@@ -325,7 +329,6 @@
         posts.reverse(); 
 
         posts.forEach(post => {
-          // Busca foto do dono do post
           db.ref('users/' + post.uid).once('value').then(uSnap => {
             const user = uSnap.val() || { username: 'Desconhecido', profilePic: 'https://via.placeholder.com/30' };
             
@@ -348,6 +351,11 @@
             feedDiv.innerHTML += html;
           });
         });
+      }, (error) => {
+          // Captura erros de leitura (permissão negada no feed)
+          if(error.code !== 'PERMISSION_DENIED') {
+             alert("❌ ERRO NO CARREGAMENTO DO FEED: " + error.message);
+          }
       });
     }
 
@@ -359,10 +367,16 @@
     function openUpload() { document.getElementById('modalUpload').style.display = 'flex'; }
     function closeUpload() { document.getElementById('modalUpload').style.display = 'none'; }
 
+    // FUNÇÃO DE POSTAGEM COM DEBUGGING APLICADO
     async function uploadPost() {
       const fileInput = document.getElementById('fileInput');
       const caption = document.getElementById('captionInput').value;
       
+      // Checa se o usuário está logado antes de tentar qualquer coisa
+      if (!auth.currentUser) {
+          return alert("❌ ERRO: Você precisa estar logado para postar! Por favor, faça login novamente.");
+      }
+
       if(!fileInput.files[0]) return alert("Escolha uma imagem");
 
       const formData = new FormData();
@@ -375,20 +389,27 @@
         const data = await res.json();
         
         if(data.success) {
-          await db.ref('posts').push({
-            uid: auth.currentUser.uid,
-            imageUrl: data.data.url,
-            caption: caption,
-            likes: 0,
-            timestamp: Date.now()
-          });
-          closeUpload();
-          navTo('home');
+          try {
+             await db.ref('posts').push({
+                uid: auth.currentUser.uid,
+                imageUrl: data.data.url,
+                caption: caption,
+                likes: 0,
+                timestamp: Date.now()
+              });
+              alert("✅ Postagem feita com sucesso!");
+              closeUpload();
+              navTo('home');
+          } catch (e) {
+              // MOSTRA ERRO DE PERMISSÃO DO FIREBASE NA TELA
+              alert("❌ ERRO AO SALVAR POST: " + e.message + " (Geralmente falha nas regras de escrita)");
+          }
+
         } else {
-          alert('Erro no upload da imagem');
+          alert('❌ ERRO NO UPLOAD DA IMAGEM: ' + data.status_txt);
         }
       } catch (e) {
-        alert('Erro: ' + e.message);
+        alert('❌ ERRO GERAL NO UPLOAD: ' + e.message);
       }
     }
 
@@ -412,6 +433,9 @@
             `;
             resultsDiv.innerHTML += html;
           });
+        }, (error) => {
+            // Captura erros na busca (principalmente se faltar a regra .indexOn)
+            alert("❌ ERRO NA BUSCA: " + error.message + " (Verifique .indexOn nas regras)");
         });
     }
 
@@ -420,17 +444,24 @@
       loadProfile(uid);
       navTo('profile');
       
-      const isMe = uid === auth.currentUser.uid;
+      const isMe = auth.currentUser && uid === auth.currentUser.uid;
       document.getElementById('btn-logout-action').style.display = isMe ? 'block' : 'none';
     }
 
     function loadProfile(uid) {
+      // 1. Carrega dados do usuário
       db.ref('users/' + uid).once('value', snap => {
         const u = snap.val();
-        document.getElementById('p-username').innerText = u.username;
-        document.getElementById('p-avatar').src = u.profilePic;
+        // Checa se o usuário existe antes de tentar preencher os dados
+        if (u) {
+            document.getElementById('p-username').innerText = u.username;
+            document.getElementById('p-avatar').src = u.profilePic;
+        } else {
+            document.getElementById('p-username').innerText = "Usuário não encontrado";
+        }
       });
 
+      // 2. Carrega posts DESSE usuário
       const grid = document.getElementById('profile-posts-grid');
       grid.innerHTML = '<p style="padding:10px">Carregando...</p>';
       
