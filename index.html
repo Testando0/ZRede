@@ -395,7 +395,7 @@
       db.ref(`posts/${postId}/likes`).transaction(likes => (likes || 0) + 1);
     }
 
-    // ================= UPLOAD DE FOTO (USANDO ZERO-TWO.INFO) =================
+    // ================= UPLOAD DE FOTO (REVERTIDO PARA IMGBB + DIAGNÓSTICO) =================
     function openUpload() { 
         if (!auth.currentUser) {
             return alert("❌ Você precisa estar logado para abrir o uploader.");
@@ -417,20 +417,20 @@
       }
 
       const formData = new FormData();
-      // O nome do campo de arquivo deve ser 'file', conforme a API zero-two.info
-      formData.append('file', fileInput.files[0]);
+      // O ImgBB espera o campo 'image'
+      formData.append('image', fileInput.files[0]);
       
       try {
-        // Alerta de Diagnóstico
-        alert("✅ INICIANDO UPLOAD: Tentando enviar arquivo para zero-two.info..."); 
+        // Revertendo para a API ImgBB (com a key anterior) que geralmente tem CORS liberado
+        const IMGBB_API_KEY = '599411b1c02c7129d1b0da9bd4634c09'; 
+        alert("✅ INICIANDO UPLOAD: Revertendo para ImgBB. Aguarde o envio...");
         
-        const res = await fetch('https://zero-two.info/upload', {
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
             method: 'POST', 
             body: formData,
-            // Header 'Content-Type' não é necessário para FormData no fetch do navegador
         });
         
-        // Se a requisição falhar (erro de rede ou CORS), o código irá para o catch
+        // Se a requisição falhar (erro de rede, mas não "Failed to fetch")
         if (!res.ok) {
             const errorText = await res.text();
             throw new Error(`Falha na requisição (Status: ${res.status}): ${errorText}`);
@@ -438,14 +438,14 @@
 
         const data = await res.json();
         
-        const imageUrl = data.fileUrl; // Captura a URL do campo fileUrl
+        const imageUrl = data.data && data.data.url; // Caminho correto para URL no ImgBB
         
-        if (imageUrl) {
+        if (data.success && imageUrl) {
           // SALVANDO NO FIREBASE
           try {
              await db.ref('posts').push({
                 uid: auth.currentUser.uid,
-                imageUrl: imageUrl, // Usando a URL da zero-two.info
+                imageUrl: imageUrl, 
                 caption: caption,
                 likes: 0,
                 timestamp: Date.now()
@@ -458,13 +458,15 @@
           }
 
         } else {
-          alert('❌ ERRO NO UPLOAD DA IMAGEM (zero-two.info): Sem fileUrl na resposta. Resposta: ' + JSON.stringify(data));
+          // Captura erros específicos do ImgBB (ex: arquivo muito grande)
+          alert('❌ ERRO NO UPLOAD DA IMAGEM (ImgBB): ' + (data.error ? data.error.message : 'Resposta inválida.'));
         }
       } catch (e) {
         // Erros de rede, CORS, ou falha de requisição.
-        alert('❌ ERRO GERAL NO UPLOAD (zero-two.info): ' + e.message);
+        alert('❌ ERRO GERAL NO UPLOAD (FATAL): ' + e.message);
       }
     }
+
 
     // ================= BUSCA DE USUÁRIOS =================
     function searchUsers(query) {
@@ -537,11 +539,11 @@
     }
 
 
-    // ================= REGISTRO DE EVENTO (CORREÇÃO DE CLIQUE) =================
+    // ================= REGISTRO DE EVENTO (CORREÇÃO FINAL DO CLIQUE) =================
     document.addEventListener('DOMContentLoaded', () => {
         const shareButton = document.getElementById('btn-share-post');
         if (shareButton) {
-            // Revertendo para a chamada da função real, já que o clique funciona
+            // Usa o listener, provado ser funcional
             shareButton.addEventListener('click', (event) => {
                 event.preventDefault(); 
                 uploadPost();
