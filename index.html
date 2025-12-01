@@ -134,7 +134,16 @@
     
     /* --- MODAL UPLOAD --- */
     .upload-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; justify-content: center; align-items: center; flex-direction: column;}
-    .upload-box { background: #222; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
+    .upload-box { 
+        background: #222; 
+        padding: 20px; 
+        border-radius: 10px; 
+        width: 90%; 
+        max-width: 400px; 
+        text-align: center; 
+        position: relative; /* CRÍTICO: Contexto de empilhamento */
+        z-index: 5;
+    }
     
     /* Garante que o <a> estilizado se comporte como botão */
     .btn-primary-link {
@@ -150,6 +159,8 @@
         text-decoration: none; /* Remove sublinhado do link */
         display: block;
         text-align: center;
+        position: relative; /* CRÍTICO: Coloca este botão à frente de tudo no modal */
+        z-index: 10;
     }
   </style>
 </head>
@@ -219,7 +230,10 @@
         <input type="file" id="fileInput" class="auth-input" accept="image/*" style="margin-top:15px;">
         <input type="text" id="captionInput" class="auth-input" placeholder="Legenda...">
         
-        <a href="javascript:void(0)" id="btn-share-post" class="btn-primary-link">Compartilhar</a>
+        <a href="javascript:void(0)" class="btn-primary-link" 
+           onclick="alert('✅ CLIQUE REGISTRADO! O PROBLEMA É O JS DE UPLOAD.');">
+            Compartilhar (TESTE)
+        </a>
         
         <button style="background:transparent; border:none; color:red; margin-top:10px; cursor:pointer;" onclick="closeUpload()">Cancelar</button>
       </div>
@@ -384,7 +398,7 @@
       db.ref(`posts/${postId}/likes`).transaction(likes => (likes || 0) + 1);
     }
 
-    // ================= UPLOAD DE FOTO (Função de Debug/Postagem) =================
+    // ================= UPLOAD DE FOTO (Função original, mas não é chamada neste teste) =================
     function openUpload() { 
         if (!auth.currentUser) {
             return alert("❌ Você precisa estar logado para abrir o uploader.");
@@ -393,51 +407,10 @@
     }
     function closeUpload() { document.getElementById('modalUpload').style.display = 'none'; }
 
-    async function uploadPost() {
-      // ESTE É O BLOCO DE DEBUG: Se funcionar, deve gerar um ALERT
-      
-      const fileInput = document.getElementById('fileInput');
-      const caption = document.getElementById('captionInput').value;
-      
-      if (!auth.currentUser) {
-          return alert("❌ ERRO: Você precisa estar logado para postar! Faça login novamente.");
-      }
-
-      if(!fileInput.files[0]) {
-          return alert("❌ ERRO: Nenhum arquivo de imagem foi selecionado.");
-      }
-
-      const formData = new FormData();
-      formData.append('image', fileInput.files[0]);
-      
-      try {
-        const res = await fetch('https://api.imgbb.com/1/upload?key=599411b1c02c7129d1b0da9bd4634c09', {
-            method: 'POST', body: formData 
-        });
-        const data = await res.json();
-        
-        if(data.success) {
-          try {
-             await db.ref('posts').push({
-                uid: auth.currentUser.uid,
-                imageUrl: data.data.url,
-                caption: caption,
-                likes: 0,
-                timestamp: Date.now()
-              });
-              alert("✅ Postagem feita com sucesso!");
-              closeUpload();
-              navTo('home');
-          } catch (e) {
-              alert("❌ ERRO AO SALVAR POST: " + e.message + " (Regras de Escrita 'posts' falharam!)");
-          }
-
-        } else {
-          alert('❌ ERRO NO UPLOAD DA IMAGEM (ImgBB): ' + (data.status_txt || 'Desconhecido'));
-        }
-      } catch (e) {
-        alert('❌ ERRO GERAL NO UPLOAD: ' + e.message);
-      }
+    // Esta função NÃO está sendo chamada no teste cego. O clique está no HTML.
+    async function uploadPost() { 
+      // ... (código da função uploadPost() original)
+      // Se você decidir reverter para chamar esta função, use o código da resposta anterior.
     }
 
     // ================= BUSCA DE USUÁRIOS =================
@@ -509,19 +482,6 @@
         if(posts.length === 0) grid.innerHTML = '<p style="padding:20px; grid-column:span 3; text-align:center; color:#555">Sem publicações.</p>';
       });
     }
-
-
-    // ================= NOVO BLOCO DE REGISTRO DE EVENTO (CORREÇÃO DE CLIQUE) =================
-    document.addEventListener('DOMContentLoaded', () => {
-        const shareButton = document.getElementById('btn-share-post');
-        if (shareButton) {
-            // Usa o addEventListener para um registro de clique mais robusto em celular
-            shareButton.addEventListener('click', (event) => {
-                event.preventDefault(); // Impede o comportamento padrão do link
-                uploadPost();
-            });
-        }
-    });
 
   </script>
 </body>
