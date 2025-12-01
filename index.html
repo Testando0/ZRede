@@ -141,7 +141,7 @@
         width: 90%; 
         max-width: 400px; 
         text-align: center; 
-        position: relative; /* CRÍTICO: Contexto de empilhamento */
+        position: relative;
         z-index: 5;
     }
     
@@ -156,10 +156,10 @@
         font-weight: bold;
         cursor: pointer;
         margin-top: 10px;
-        text-decoration: none; /* Remove sublinhado do link */
+        text-decoration: none;
         display: block;
         text-align: center;
-        position: relative; /* CRÍTICO: Coloca este botão à frente de tudo no modal */
+        position: relative;
         z-index: 10;
     }
   </style>
@@ -230,10 +230,7 @@
         <input type="file" id="fileInput" class="auth-input" accept="image/*" style="margin-top:15px;">
         <input type="text" id="captionInput" class="auth-input" placeholder="Legenda...">
         
-        <a href="javascript:void(0)" class="btn-primary-link" 
-           onclick="alert('✅ CLIQUE REGISTRADO! O PROBLEMA É O JS DE UPLOAD.');">
-            Compartilhar (TESTE)
-        </a>
+        <a href="javascript:void(0)" id="btn-share-post" class="btn-primary-link">Compartilhar</a>
         
         <button style="background:transparent; border:none; color:red; margin-top:10px; cursor:pointer;" onclick="closeUpload()">Cancelar</button>
       </div>
@@ -398,7 +395,7 @@
       db.ref(`posts/${postId}/likes`).transaction(likes => (likes || 0) + 1);
     }
 
-    // ================= UPLOAD DE FOTO (Função original, mas não é chamada neste teste) =================
+    // ================= UPLOAD DE FOTO (USANDO ZERO-TWO.INFO) =================
     function openUpload() { 
         if (!auth.currentUser) {
             return alert("❌ Você precisa estar logado para abrir o uploader.");
@@ -407,10 +404,66 @@
     }
     function closeUpload() { document.getElementById('modalUpload').style.display = 'none'; }
 
-    // Esta função NÃO está sendo chamada no teste cego. O clique está no HTML.
-    async function uploadPost() { 
-      // ... (código da função uploadPost() original)
-      // Se você decidir reverter para chamar esta função, use o código da resposta anterior.
+    async function uploadPost() {
+      const fileInput = document.getElementById('fileInput');
+      const caption = document.getElementById('captionInput').value;
+      
+      if (!auth.currentUser) {
+          return alert("❌ ERRO: Você precisa estar logado para postar!");
+      }
+
+      if(!fileInput.files[0]) {
+          return alert("❌ ERRO: Nenhum arquivo de imagem foi selecionado.");
+      }
+
+      const formData = new FormData();
+      // O nome do campo de arquivo deve ser 'file', conforme a API zero-two.info
+      formData.append('file', fileInput.files[0]);
+      
+      try {
+        // Alerta de Diagnóstico
+        alert("✅ INICIANDO UPLOAD: Tentando enviar arquivo para zero-two.info..."); 
+        
+        const res = await fetch('https://zero-two.info/upload', {
+            method: 'POST', 
+            body: formData,
+            // Header 'Content-Type' não é necessário para FormData no fetch do navegador
+        });
+        
+        // Se a requisição falhar (erro de rede ou CORS), o código irá para o catch
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Falha na requisição (Status: ${res.status}): ${errorText}`);
+        }
+
+        const data = await res.json();
+        
+        const imageUrl = data.fileUrl; // Captura a URL do campo fileUrl
+        
+        if (imageUrl) {
+          // SALVANDO NO FIREBASE
+          try {
+             await db.ref('posts').push({
+                uid: auth.currentUser.uid,
+                imageUrl: imageUrl, // Usando a URL da zero-two.info
+                caption: caption,
+                likes: 0,
+                timestamp: Date.now()
+              });
+              alert("✅ SUCESSO FINAL: Postagem completa!");
+              closeUpload();
+              navTo('home');
+          } catch (e) {
+              alert("❌ ERRO AO SALVAR POST NO FIREBASE: " + e.message);
+          }
+
+        } else {
+          alert('❌ ERRO NO UPLOAD DA IMAGEM (zero-two.info): Sem fileUrl na resposta. Resposta: ' + JSON.stringify(data));
+        }
+      } catch (e) {
+        // Erros de rede, CORS, ou falha de requisição.
+        alert('❌ ERRO GERAL NO UPLOAD (zero-two.info): ' + e.message);
+      }
     }
 
     // ================= BUSCA DE USUÁRIOS =================
@@ -482,6 +535,19 @@
         if(posts.length === 0) grid.innerHTML = '<p style="padding:20px; grid-column:span 3; text-align:center; color:#555">Sem publicações.</p>';
       });
     }
+
+
+    // ================= REGISTRO DE EVENTO (CORREÇÃO DE CLIQUE) =================
+    document.addEventListener('DOMContentLoaded', () => {
+        const shareButton = document.getElementById('btn-share-post');
+        if (shareButton) {
+            // Revertendo para a chamada da função real, já que o clique funciona
+            shareButton.addEventListener('click', (event) => {
+                event.preventDefault(); 
+                uploadPost();
+            });
+        }
+    });
 
   </script>
 </body>
