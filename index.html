@@ -219,7 +219,7 @@
         <input type="file" id="fileInput" class="auth-input" accept="image/*" style="margin-top:15px;">
         <input type="text" id="captionInput" class="auth-input" placeholder="Legenda...">
         
-        <a href="javascript:void(0)" class="btn-primary-link" onclick="uploadPost()">Compartilhar</a>
+        <a href="javascript:void(0)" id="btn-share-post" class="btn-primary-link">Compartilhar</a>
         
         <button style="background:transparent; border:none; color:red; margin-top:10px; cursor:pointer;" onclick="closeUpload()">Cancelar</button>
       </div>
@@ -252,14 +252,13 @@
     
     let currentUserData = null; 
 
-    // ================= SISTEMA DE AUTH (Com tratamento de erro de carregamento) =================
+    // ================= SISTEMA DE AUTH =================
     
     auth.onAuthStateChanged(user => {
       if (user) {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('app-screen').style.display = 'block';
         
-        // Desbloqueia a interface chamando o loadFeed no final
         db.ref('users/' + user.uid).once('value').then(snap => {
           currentUserData = snap.val();
           loadFeed(); 
@@ -284,7 +283,6 @@
       }
     }
 
-    // FUNÇÃO DE CADASTRO COM DEBUGGING
     async function handleRegister() {
         const email = document.getElementById('reg-email').value;
         const password = document.getElementById('reg-password').value;
@@ -335,7 +333,7 @@
       if(screenName === 'profile') loadProfile(auth.currentUser ? auth.currentUser.uid : null);
     }
 
-    // ================= FEED & POSTS (Com tratamento de erro) =================
+    // ================= FEED & POSTS =================
     function loadFeed() {
       const feedDiv = document.getElementById('screen-home');
       feedDiv.innerHTML = '<p style="text-align:center; padding-top: 20px;">A carregar publicações...</p>';
@@ -386,7 +384,7 @@
       db.ref(`posts/${postId}/likes`).transaction(likes => (likes || 0) + 1);
     }
 
-    // ================= UPLOAD DE FOTO (Com debugging completo) =================
+    // ================= UPLOAD DE FOTO (Função de Debug/Postagem) =================
     function openUpload() { 
         if (!auth.currentUser) {
             return alert("❌ Você precisa estar logado para abrir o uploader.");
@@ -396,8 +394,8 @@
     function closeUpload() { document.getElementById('modalUpload').style.display = 'none'; }
 
     async function uploadPost() {
-      // alert("✅ INÍCIO DA FUNÇÃO DE UPLOAD"); // TESTE: Se nem isso aparecer, o problema é no botão HTML.
-
+      // ESTE É O BLOCO DE DEBUG: Se funcionar, deve gerar um ALERT
+      
       const fileInput = document.getElementById('fileInput');
       const caption = document.getElementById('captionInput').value;
       
@@ -511,6 +509,19 @@
         if(posts.length === 0) grid.innerHTML = '<p style="padding:20px; grid-column:span 3; text-align:center; color:#555">Sem publicações.</p>';
       });
     }
+
+
+    // ================= NOVO BLOCO DE REGISTRO DE EVENTO (CORREÇÃO DE CLIQUE) =================
+    document.addEventListener('DOMContentLoaded', () => {
+        const shareButton = document.getElementById('btn-share-post');
+        if (shareButton) {
+            // Usa o addEventListener para um registro de clique mais robusto em celular
+            shareButton.addEventListener('click', (event) => {
+                event.preventDefault(); // Impede o comportamento padrão do link
+                uploadPost();
+            });
+        }
+    });
 
   </script>
 </body>
