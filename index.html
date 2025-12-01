@@ -342,18 +342,16 @@
       document.querySelectorAll('.nav-btn')[btnIndex].classList.add('active');
 
       if(screenName === 'profile') loadProfile(auth.currentUser ? auth.currentUser.uid : null);
-      if(screenName === 'home') loadFeed(); // Garante que o feed recarregue ao navegar
+      if(screenName === 'home') loadFeed(); 
     }
 
     // ================= FEED & POSTS =================
     function loadFeed() {
       const feedDiv = document.getElementById('screen-home');
-      // Limpa e mostra carregando
       feedDiv.innerHTML = '<p style="text-align:center; padding-top: 20px;">A carregar publicações...</p>';
       
       db.ref('posts').off(); 
 
-      // Usa .on para escutar mudanças em tempo real
       db.ref('posts').limitToLast(50).on('value', (snapshot) => {
         feedDiv.innerHTML = '';
         const posts = [];
@@ -398,14 +396,16 @@
       db.ref(`posts/${postId}/likes`).transaction(likes => (likes || 0) + 1);
     }
 
-    // ================= UPLOAD DE FOTO (CORREÇÃO FINAL DE FLUXO E CONGELAMENTO) =================
+    // ================= UPLOAD DE FOTO (CORREÇÃO DE COMPRESSÃO E FLUXO) =================
     function openUpload() { 
         if (!auth.currentUser) {
             return alert("❌ Você precisa estar logado para abrir o uploader.");
         }
         document.getElementById('modalUpload').style.display = 'flex'; 
     }
-    function closeUpload() { document.getElementById('modalUpload').style.display = 'none'; }
+    function closeUpload() { 
+        document.getElementById('modalUpload').style.display = 'none'; 
+    }
 
     async function uploadPost() {
         const fileInput = document.getElementById('fileInput');
@@ -419,15 +419,53 @@
             return alert("❌ ERRO: Nenhum arquivo de imagem foi selecionado.");
         }
 
-        const formData = new FormData();
-        formData.append('image', fileInput.files[0]);
-        
-        alert("✅ INICIANDO UPLOAD: Revertendo para ImgBB. Aguarde a resposta do servidor...");
-        
+        const originalFile = fileInput.files[0];
         const IMGBB_API_KEY = '599411b1c02c7129d1b0da9bd4634c09'; 
+        
+        alert("✅ INICIANDO OTIMIZAÇÃO: Comprimindo imagem localmente...");
 
         try {
-            // Envio da imagem: Usamos .then() para evitar que o await do fetch congele a UI
+            // --- 1. COMPRESSÃO (REDUÇÃO DE TAMANHO) ---
+            const compressedBlob = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const MAX_WIDTH = 1000; // Largura máxima para redesenho
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height = height * (MAX_WIDTH / width);
+                            width = MAX_WIDTH;
+                        }
+                        
+                        // Cria o canvas e desenha a imagem redimensionada
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Exporta como Blob JPEG com 70% de qualidade
+                        // Se toBlob falhar, tenta usar toDataURL e converter para Blob.
+                        canvas.toBlob(resolve, 'image/jpeg', 0.7); 
+                    };
+                    img.onerror = () => reject(new Error("Falha ao carregar a imagem para compressão."));
+                    reader.readAsDataURL(originalFile);
+                };
+                reader.onerror = () => reject(new Error("Falha na leitura do arquivo."));
+            });
+
+            if (!compressedBlob) throw new Error("Falha ao comprimir a imagem (Blob nulo).");
+
+            const formData = new FormData();
+            formData.append('image', compressedBlob, originalFile.name); 
+
+            // --- 2. UPLOAD PARA IMGBB ---
+            alert("✅ INICIANDO UPLOAD: Transferindo o arquivo comprimido. Aguarde a resposta do servidor...");
+
+            // Usamos fetch().then() para não congelar o navegador durante o upload
             fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
                 method: 'POST', 
                 body: formData,
@@ -440,7 +478,7 @@
                 }
                 return res.json();
             })
-            .then(async data => { // Usando async aqui para poder usar await no Firebase
+            .then(async data => { 
                 const imageUrl = data.data && data.data.url; 
                 
                 if (data.success && imageUrl) {
@@ -454,9 +492,9 @@
                             timestamp: Date.now()
                         });
 
-                        // FINALIZAÇÃO: Fecha o modal, força a navegação para Home e avisa
+                        // FINALIZAÇÃO
                         closeUpload();
-                        navTo('home'); 
+                        navTo('home'); // Força a recarga
                         alert("✅ SUCESSO FINAL: Postagem completa e feed atualizado!");
                         
 
@@ -465,18 +503,18 @@
                     }
 
                 } else {
-                    // Erros do ImgBB
+                    // Erros do ImgBB (ex: arquivo muito grande mesmo comprimido)
                     alert('❌ ERRO NO UPLOAD DA IMAGEM (ImgBB): ' + (data.error ? data.error.message : 'Resposta inválida.'));
                 }
             })
             .catch(e => {
-                // Erros de rede ou CORS
+                // Erros de rede, CORS, ou falha de requisição
                 alert('❌ ERRO GERAL NO UPLOAD (FATAL): ' + e.message);
             });
 
         } catch (e) {
-            // Erro de lógica (muito improvável)
-            alert('❌ ERRO GERAL NO UPLOAD (FATAL - CATCH EXTERNO): ' + e.message);
+            // Erro capturado durante a compressão
+            alert('❌ ERRO NO PROCESSAMENTO DA IMAGEM: ' + e.message);
         }
     }
 
@@ -556,7 +594,6 @@
     document.addEventListener('DOMContentLoaded', () => {
         const shareButton = document.getElementById('btn-share-post');
         if (shareButton) {
-            // Listener final do botão de compartilhamento
             shareButton.addEventListener('click', (event) => {
                 event.preventDefault(); 
                 uploadPost();
