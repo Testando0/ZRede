@@ -3,170 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>InstaClone Pro (Texto Final)</title>
+  <title>InstaClone Pro (Verificação Final)</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   
   <style>
-    /* --- CSS GERAL --- */
+    /* ... (CSS MANTIDO) ... */
     * { box-sizing: border-box; margin: 0; padding: 0; outline: none; font-family: 'Inter', sans-serif; }
-    
-    body {
-      background-color: #000;
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* --- TELAS (SPA) --- */
+    body { background-color: #000; color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
     .screen { display: none; padding-bottom: 70px; width: 100%; max-width: 500px; margin: 0 auto; }
     .active-screen { display: block; }
-
-    /* --- AUTH SCREEN (LOGIN/CADASTRO) --- */
-    #auth-screen {
-      height: 100vh;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      padding: 20px;
-      text-align: center;
-      background: linear-gradient(135deg, #1a1a1a, #000);
-    }
-
-    .auth-box {
-      width: 100%;
-      max-width: 350px;
-    }
-
-    .logo {
-      font-family: 'Segoe UI', cursive;
-      font-size: 3rem;
-      margin-bottom: 30px;
-      background: linear-gradient(90deg, #FF7D05F7, #7f00ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .auth-input {
-      width: 100%;
-      padding: 15px;
-      margin-bottom: 10px;
-      background: #333;
-      border: 1px solid #444;
-      border-radius: 5px;
-      color: white;
-      resize: none; 
-    }
-
-    .btn-primary {
-      width: 100%;
-      padding: 15px;
-      background: #0095f6;
-      border: none;
-      border-radius: 5px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .toggle-auth {
-      margin-top: 20px;
-      color: #aaa;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
+    #auth-screen { height: 100vh; display: none; justify-content: center; align-items: center; flex-direction: column; padding: 20px; text-align: center; background: linear-gradient(135deg, #1a1a1a, #000); }
+    .auth-box { width: 100%; max-width: 350px; }
+    .logo { font-family: 'Segoe UI', cursive; font-size: 3rem; margin-bottom: 30px; background: linear-gradient(90deg, #FF7D05F7, #7f00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .auth-input { width: 100%; padding: 15px; margin-bottom: 10px; background: #333; border: 1px solid #444; border-radius: 5px; color: white; resize: none; }
+    .btn-primary { width: 100%; padding: 15px; background: #0095f6; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .toggle-auth { margin-top: 20px; color: #aaa; font-size: 0.9rem; cursor: pointer; }
     .toggle-auth span { color: #0095f6; font-weight: bold; }
-
-    /* --- HEADER & NAV --- */
-    header {
-      padding: 15px;
-      border-bottom: 1px solid #333;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      background: #000;
-      z-index: 100;
-    }
-
+    header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #000; z-index: 100; }
     .header-logo { font-family: 'Segoe UI', cursive; font-size: 1.5rem; }
-
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: #000;
-      border-top: 1px solid #333;
-      display: flex;
-      justify-content: space-around;
-      padding: 15px 0;
-      z-index: 200;
-    }
-
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 1px solid #333; display: flex; justify-content: space-around; padding: 15px 0; z-index: 200; }
     .nav-btn { font-size: 1.5rem; color: #fff; cursor: pointer; background: none; border: none; }
     .nav-btn.active { color: #FF7D05F7; }
-
-    /* --- FEED & POSTS --- */
     .post-card { margin-bottom: 20px; border: 1px solid #333; border-radius: 8px; background: #1a1a1a; }
-    
-    .post-text-content { 
-        padding: 20px; 
-        font-size: 1.1rem;
-        line-height: 1.4;
-        min-height: 100px;
-        color: #ddd;
-        white-space: pre-wrap;
-    }
-    
+    .post-text-content { padding: 20px; font-size: 1.1rem; line-height: 1.4; min-height: 100px; color: #ddd; white-space: pre-wrap; }
     .post-header { padding: 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; }
     .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; object-fit: cover;}
     .post-img { width: 100%; height: auto; max-height: 500px; object-fit: cover; }
     .post-actions { padding: 10px; display: flex; gap: 15px; font-size: 1.5rem; border-top: 1px solid #333;}
     .post-caption-small { padding: 0 10px 10px; color: #aaa; font-size: 0.9rem;}
-    
-    /* --- PERFIL --- */
     .profile-header { padding: 20px; display: flex; align-items: center; gap: 20px; }
     .profile-pic-lg { width: 80px; height: 80px; border-radius: 50%; background: #333; object-fit: cover; border: 2px solid #FF7D05F7; }
     .profile-stats { flex: 1; }
     .profile-name { font-size: 1.2rem; font-weight: bold; display: block; }
     .btn-logout { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; margin-top: 5px; cursor: pointer; font-size: 0.8rem;}
-    
     .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
     .grid-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; background: #222; } 
-
-    /* --- MODAL UPLOAD --- */
     .upload-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; justify-content: center; align-items: center; flex-direction: column;}
-    .upload-box { 
-        background: #222; 
-        padding: 20px; 
-        border-radius: 10px; 
-        width: 90%; 
-        max-width: 400px; 
-        text-align: center; 
-        position: relative;
-        z-index: 5;
-    }
-    
-    .btn-primary-link {
-        width: 100%;
-        padding: 15px;
-        background: #0095f6;
-        border: none;
-        border-radius: 5px;
-        color: white;
-        font-weight: bold;
-        cursor: pointer;
-        margin-top: 10px;
-        text-decoration: none;
-        display: block;
-        text-align: center;
-        position: relative;
-        z-index: 10;
-    }
+    .upload-box { background: #222; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; position: relative; z-index: 5;}
+    .btn-primary-link { width: 100%; padding: 15px; background: #0095f6; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; text-decoration: none; display: block; text-align: center; position: relative; z-index: 10;}
   </style>
 </head>
 <body>
@@ -199,16 +73,13 @@
       <button onclick="openUpload()" style="background:none; border:none; color:white; font-size:1.5rem;"><i class="far fa-plus-square"></i></button>
     </header>
 
-    <div id="screen-home" class="screen active-screen">
-      </div>
-
+    <div id="screen-home" class="screen active-screen"></div>
     <div id="screen-search" class="screen">
       <div class="search-container">
         <input type="text" class="search-bar" placeholder="Pesquisar usuários..." oninput="searchUsers(this.value)">
         <div id="search-results"></div>
       </div>
     </div>
-
     <div id="screen-profile" class="screen">
       <div class="profile-header">
         <img src="https://via.placeholder.com/150" id="p-avatar" class="profile-pic-lg">
@@ -232,11 +103,8 @@
     <div class="upload-modal" id="modalUpload">
       <div class="upload-box">
         <h3>Nova Publicação de Texto</h3>
-        
         <textarea id="captionInput" class="auth-input" placeholder="O que você está pensando? (Máx. 500 caracteres)" maxlength="500" rows="6" style="margin-top:15px;"></textarea>
-        
         <a href="javascript:void(0)" id="btn-share-post" class="btn-primary-link">Publicar Texto</a>
-        
         <button style="background:transparent; border:none; color:red; margin-top:10px; cursor:pointer;" onclick="closeUpload()">Cancelar</button>
       </div>
     </div>
@@ -248,11 +116,12 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // ================= CONFIGURAÇÃO DO FIREBASE =================
+    // ================= 🚨 PASSO 1: CONFIGURAÇÃO DO FIREBASE (CRÍTICO) 🚨 =================
+    // Verifique se estas chaves correspondem EXATAMENTE às chaves do seu projeto.
     const firebaseConfig = {
       apiKey: "AIzaSyCHpunrtbhlIvLEev6fkZDNRvTieEQt1Hg",
       authDomain: "sske-9ff9f.firebaseapp.com",
-      databaseURL: "https://sske-9ff9f-default-rtdb.firebaseio.com",
+      databaseURL: "https://sske-9ff9f-default-rtdb.firebaseio.com", // ESTA URL DEVE SER EXATA
       projectId: "sske-9ff9f",
       storageBucket: "sske-9ff9f.firebasestorage.app",
       messagingSenderId: "464070910654",
@@ -268,8 +137,68 @@
     
     let currentUserData = null; 
 
-    // ================= FUNÇÕES DE FLUXO GERAL =================
+    // ================= FUNÇÕES DE PUBLICAÇÃO (MAXIMIZANDO O TRATAMENTO DE ERRO) =================
 
+    function openUpload() { 
+        if (!auth.currentUser) {
+            return alert("❌ Você precisa estar logado para abrir o uploader.");
+        }
+        document.getElementById('modalUpload').style.display = 'flex'; 
+    }
+    
+    function closeUpload() { 
+        document.getElementById('modalUpload').style.display = 'none'; 
+        document.getElementById('captionInput').value = ''; 
+    }
+
+    async function publishTextPost() {
+        // 1. Coleta e Validação (Rigorosa)
+        const caption = document.getElementById('captionInput').value.trim();
+        const user = auth.currentUser;
+        
+        if (!user) {
+            // Este alerta é CRÍTICO se a autenticação falhou
+            return alert("❌ ERRO CRÍTICO: Não foi possível identificar o usuário logado. Faça login novamente.");
+        }
+        if (caption.length < 5) {
+            return alert("❌ ERRO: Sua publicação deve ter pelo menos 5 caracteres.");
+        }
+
+        alert(`✅ 1/2 - TENTANDO POSTAR COMO USUÁRIO: ${user.uid.substring(0, 8)}...`);
+
+        try {
+            // 2. Tenta salvar o post no Firebase 
+            await db.ref('posts').push({
+                uid: user.uid, 
+                caption: caption,
+                isText: true,
+                likes: 0,
+                timestamp: Date.now()
+            });
+
+            // 3. SUCESSO FINAL
+            closeUpload();
+            navTo('home'); 
+            alert("✅ 2/2 - SUCESSO FINAL: Publicação efetuada com sucesso!");
+
+        } catch (e) {
+            // 4. Tratamento de Erro (Detalhado)
+            console.error("Firebase Push Error:", e);
+            
+            let errorMessage = `❌ ERRO FATAL NO ENVIO: ${e.message}.`;
+
+            if (e.message.includes("permission_denied") || e.message.includes("Permission denied")) {
+                errorMessage += "\n\nAVISO CRÍTICO: O SERVIDOR DO FIREBASE NEGOU A ESCRITA (Permission denied). O problema está nas SUAS REGRAS DE SEGURANÇA. Verifique se o .write está correto no nó 'posts'.";
+            } else if (e.message.includes("Failed to fetch")) {
+                errorMessage += "\n\nAVISO CRÍTICO: FALHA DE REDE. O aplicativo não consegue se conectar à URL do Firebase. Verifique sua conexão ou a 'databaseURL' na configuração.";
+            }
+
+            alert(errorMessage);
+        }
+    }
+
+    // ================= FUNÇÕES DE FLUXO E AUTENTICAÇÃO (MANTIDAS) =================
+    
     auth.onAuthStateChanged(user => {
       if (user) {
         document.getElementById('auth-screen').style.display = 'none';
@@ -306,7 +235,6 @@
       auth.signOut();
     }
 
-    // ================= FEED & POSTS =================
     function loadFeed() {
       const feedDiv = document.getElementById('screen-home');
       feedDiv.innerHTML = '<p style="text-align:center; padding-top: 20px;">A carregar publicações...</p>';
@@ -331,10 +259,8 @@
             let contentHTML = '';
             
             if(post.imageUrl) {
-                // Post antigo (Com imagem, se existir no DB)
                 contentHTML = `<img src="${post.imageUrl}" class="post-img" ondblclick="likePost('${post.id}')">`;
             } else {
-                // Novo Post de Texto (isText ou sem imageUrl)
                 contentHTML = `
                     <div class="post-text-content">
                         ${post.caption.replace(/\n/g, '<br>')}
@@ -364,8 +290,8 @@
           });
         });
       }, (error) => {
-          alert("❌ ERRO GRAVE AO CARREGAR FEED: Verifique as Regras do Firebase. Mensagem: " + error.message);
-          feedDiv.innerHTML = '<p style="text-align:center; padding-top: 50px; color:red;">FALHA AO CARREGAR. Verifique as regras do Firebase.</p>';
+          console.error("Erro ao carregar feed:", error);
+          feedDiv.innerHTML = '<p style="text-align:center; padding-top: 50px; color:red;">FALHA AO CARREGAR. Verifique a consola para detalhes.</p>';
       });
     }
 
@@ -373,67 +299,6 @@
       db.ref(`posts/${postId}/likes`).transaction(likes => (likes || 0) + 1);
     }
 
-    // ================= FUNÇÃO DE PUBLICAÇÃO DE TEXTO (FINAL) =================
-    
-    function openUpload() { 
-        if (!auth.currentUser) {
-            return alert("❌ Você precisa estar logado para abrir o uploader.");
-        }
-        document.getElementById('modalUpload').style.display = 'flex'; 
-    }
-    
-    function closeUpload() { 
-        document.getElementById('modalUpload').style.display = 'none'; 
-        document.getElementById('captionInput').value = ''; 
-    }
-
-    async function publishTextPost() {
-        // 1. Coleta e Validação Inicial
-        const caption = document.getElementById('captionInput').value.trim();
-        const user = auth.currentUser;
-        
-        if (!user) {
-            return alert("❌ ERRO: Sua sessão expirou. Por favor, faça login novamente.");
-        }
-        if (caption.length < 5) {
-            return alert("❌ ERRO: Sua publicação deve ter pelo menos 5 caracteres.");
-        }
-
-        alert("✅ 1/2 - INICIANDO PUBLICAÇÃO: Salvando texto no Firebase...");
-
-        try {
-            // 2. Tenta salvar o post no Firebase (Requer: ".write": "auth != null" na regra 'posts')
-            await db.ref('posts').push({
-                uid: user.uid, 
-                caption: caption,
-                isText: true,
-                likes: 0,
-                timestamp: Date.now()
-            });
-
-            // 3. SUCESSO FINAL
-            closeUpload();
-            navTo('home'); 
-            alert("✅ 2/2 - SUCESSO FINAL: Publicação de texto efetuada!");
-
-        } catch (e) {
-            // 4. Tratamento de Erro de Escrita
-            console.error("Firebase Push Error:", e);
-            
-            let errorMessage = `❌ ERRO FATAL AO SALVAR POST: ${e.message}.`;
-
-            if (e.message.includes("permission_denied") || e.message.includes("Permission denied")) {
-                errorMessage += "\n\n(Aviso do Servidor: A escrita foi negada. Verifique se as regras do Firebase 'posts' estão corretas: \".write\": \"auth != null\".)";
-            } else {
-                errorMessage += "\n\n(Aviso: O erro não é de permissão, é de rede ou configuração do projeto.)";
-            }
-
-            alert(errorMessage);
-        }
-    }
-
-    // ================= FUNÇÕES DE AUTENTICAÇÃO E PERFIL (Mantidas) =================
-    
     function toggleAuth(type) {
       if(type === 'register') {
         document.getElementById('login-form').style.display = 'none';
