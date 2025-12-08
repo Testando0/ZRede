@@ -1,38 +1,40 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Gerador de Imagem IA (SDXL Real)</title>
+    <meta charset="UTF-8">
+    <title>Gerar Imagem com DALL·E</title>
 </head>
-<body style="background:#111;color:#fff;text-align:center;font-family:sans-serif">
+<body>
 
-  <h2>Gerar Imagem IA (SDXL - API sem key)</h2>
+    <h1>Gerador de Imagens DALL·E</h1>
 
-  <input id="prompt" placeholder="Descreva sua imagem..." size="40">
-  <button onclick="gerar()">Gerar</button>
+    <input id="prompt" placeholder="Descreva a imagem" style="width:300px;">
+    <button onclick="gerarImagem()">Gerar</button>
 
-  <div id="resultado" style="margin-top:20px;"></div>
+    <br><br>
+    <img id="resultado" width="400" />
 
-  <script>
-    async function gerar() {
-      const prompt = document.getElementById("prompt").value;
-      const resDiv = document.getElementById("resultado");
+<script>
+async function gerarImagem() {
+    const prompt = document.getElementById("prompt").value;
 
-      resDiv.innerHTML = "Gerando imagem...";
+    const resposta = await fetch("/api/gerar", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prompt })
+    });
 
-      const req = await fetch("https://ai.arkoapi.com/sdxl?prompt=" + encodeURIComponent(prompt));
+    const data = await resposta.json();
 
-      if (!req.ok) {
-        resDiv.innerHTML = "Erro ao gerar imagem.";
-        return;
-      }
-
-      const blob = await req.blob();
-      const url = URL.createObjectURL(blob);
-
-      resDiv.innerHTML = `<img src="${url}" width="450" style="border-radius:12px;">`;
+    if (data.image) {
+        document.getElementById("resultado").src = data.image;
+    } else {
+        alert("Erro ao gerar imagem.");
     }
-  </script>
+}
+</script>
 
 </body>
 </html>
