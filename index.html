@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Gerador de Imagens IA - Subnp Free</title>
+<title>Gerador de Imagens IA - Subnp (CORS FIX)</title>
 <style>
     body { background:#111; color:white; font-family:Arial; text-align:center; padding:30px; }
     input, button { padding:10px; font-size:16px; }
@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<h2>Gerar Imagem com IA (API Free)</h2>
+<h2>Gerar Imagem com IA (CORS Corrigido)</h2>
 
 <input type="text" id="prompt" placeholder="Descreva a imagem..." size="40">
 <button onclick="gerarImagem()">Gerar</button>
@@ -26,12 +26,12 @@ async function gerarImagem() {
     div.innerHTML = "<p>Gerando imagem, aguarde...</p>";
 
     try {
-        const response = await fetch("https://t2i.mcpcore.xyz", {
+        const response = await fetch("https://cors.zimjs.com/https://t2i.mcpcore.xyz/api/free/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 prompt: prompt,
-                model: "flux", // pode usar: flux, sdxl, realistic, anime
+                model: "flux",
                 steps: 25
             })
         });
@@ -43,7 +43,7 @@ async function gerarImagem() {
             return;
         }
 
-        div.innerHTML = `<img src="${data.image}" alt="Gerada">`;
+        div.innerHTML = `<img src="${data.image}" alt="Imagem gerada">`;
 
     } catch (error) {
         console.error(error);
