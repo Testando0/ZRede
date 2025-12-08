@@ -1,38 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Gerar Imagem com DALL·E</title>
+<meta charset="UTF-8">
+<title>Gerador DALL·E</title>
+
+<style>
+    body {
+        background: #0d0d0d;
+        color: white;
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        text-align: center;
+    }
+
+    h1 {
+        color: #ff1c1c;
+        margin-bottom: 20px;
+    }
+
+    input {
+        padding: 12px;
+        width: 350px;
+        border: none;
+        border-radius: 6px;
+        outline: none;
+        margin-bottom: 10px;
+        background: #1e1e1e;
+        color: white;
+    }
+
+    button {
+        padding: 12px 25px;
+        background: #ff1c1c;
+        border: none;
+        border-radius: 6px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    button:disabled {
+        background: #803030;
+        cursor: not-allowed;
+    }
+
+    button:hover {
+        background: #d40000;
+    }
+
+    #resultado {
+        margin-top: 20px;
+        width: 450px;
+        border-radius: 10px;
+        display: none;
+    }
+
+    #erroBox {
+        margin-top: 20px;
+        padding: 10px;
+        background: #330000;
+        color: #ff4a4a;
+        border-left: 4px solid #ff1c1c;
+        width: 60%;
+        margin-left: auto;
+        margin-right: auto;
+        display: none;
+        text-align: left;
+        white-space: pre-line;
+        border-radius: 6px;
+    }
+
+    #loading {
+        margin-top: 15px;
+        display: none;
+        color: #ff1c1c;
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
 </head>
+
 <body>
 
-    <h1>Gerador de Imagens DALL·E</h1>
+<h1>Gerador de Imagens DALL·E</h1>
 
-    <input id="prompt" placeholder="Descreva a imagem" style="width:300px;">
-    <button onclick="gerarImagem()">Gerar</button>
+<input id="prompt" placeholder="Descreva a imagem...">
+<br>
+<button id="btn" onclick="gerarImagem()">Gerar</button>
 
-    <br><br>
-    <img id="resultado" width="400" />
+<div id="loading">🔄 Gerando imagem, aguarde...</div>
+
+<img id="resultado">
+
+<div id="erroBox"></div>
 
 <script>
 async function gerarImagem() {
     const prompt = document.getElementById("prompt").value;
+    const erroBox = document.getElementById("erroBox");
+    const img = document.getElementById("resultado");
+    const loading = document.getElementById("loading");
+    const button = document.getElementById("btn");
 
-    const resposta = await fetch("/api/gerar", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ prompt })
-    });
+    erroBox.style.display = "none";
+    erroBox.innerHTML = "";
+    img.style.display = "none";
+    loading.style.display = "block";
+    button.disabled = true;
 
-    const data = await resposta.json();
-
-    if (data.image) {
-        document.getElementById("resultado").src = data.image;
-    } else {
-        alert("Erro ao gerar imagem.");
+    if (!prompt.trim()) {
+        showError("O prompt está vazio.\nDigite algo para gerar a imagem.");
+        return;
     }
+
+    try {
+        const resposta = await fetch("/api/gerar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt })
+        });
+
+        if (!resposta.ok) {
+            const text = await resposta.text();
+            showError("❌ Erro HTTP da API (/api/gerar)\nCódigo: " + resposta.status + "\nResposta:\n" + text);
+            return;
+        }
+
+        const data = await resposta.json();
+
+        if (!data.image) {
+            showError("❌ A API respondeu, mas não retornou uma imagem.\nResposta recebida:\n" + JSON.stringify(data, null, 2));
+            return;
+        }
+
+        // Exibe a imagem
+        img.src = data.image;
+        img.style.display = "block";
+
+    } catch (e) {
+        showError(
+            "❌ Erro ao conectar com o servidor local (/api/gerar).\n" +
+            "Possíveis causas:\n" +
+            "• A rota /api/gerar não existe na Vercel\n" +
+            "• Erro no código do backend\n" +
+            "• Falha de conexão\n\n" +
+            "Erro técnico:\n" + e.message
+        );
+    }
+
+    loading.style.display = "none";
+    button.disabled = false;
+}
+
+function showError(msg) {
+    const erroBox = document.getElementById("erroBox");
+    const loading = document.getElementById("loading");
+    const button = document.getElementById("btn");
+
+    erroBox.style.display = "block";
+    erroBox.innerHTML = msg;
+    loading.style.display = "none";
+    button.disabled = false;
 }
 </script>
 
