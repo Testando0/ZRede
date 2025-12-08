@@ -2,212 +2,53 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kuromi Search</title>
-
+<title>Gerador de Imagens IA - Subnp Free</title>
 <style>
-    body {
-        margin: 0;
-        background: #0a0a0a;
-        font-family: Arial, sans-serif;
-        color: white;
-    }
-
-    header {
-        background: #8b0000;
-        padding: 20px;
-        text-align: center;
-        font-size: 28px;
-        font-weight: bold;
-        letter-spacing: 2px;
-        color: white;
-    }
-
-    .search-box {
-        display: flex;
-        justify-content: center;
-        padding: 20px;
-        gap: 10px;
-    }
-
-    .search-box input {
-        width: 70%;
-        padding: 12px;
-        border-radius: 8px;
-        border: none;
-        font-size: 18px;
-        outline: none;
-        background: #1b1b1b;
-        color: white;
-    }
-
-    .search-box button {
-        padding: 12px 20px;
-        font-size: 18px;
-        border: none;
-        border-radius: 8px;
-        background: #b30000;
-        color: white;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-
-    .search-box button:hover {
-        background: #e60000;
-    }
-
-    .results {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        padding: 20px;
-    }
-
-    .card {
-        background: #111;
-        padding: 10px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px #900;
-        cursor: pointer;
-        transition: transform .2s;
-    }
-
-    .card:hover {
-        transform: scale(1.05);
-    }
-
-    .thumb {
-        width: 100%;
-        height: 160px;
-        border-radius: 10px;
-        object-fit: cover;
-    }
-
-    .title {
-        margin-top: 10px;
-        font-size: 18px;
-        font-weight: bold;
-    }
-
-    .duration {
-        margin-top: 5px;
-        font-size: 14px;
-        color: #ff4d4d;
-    }
-
-    /* Modal de vídeo */
-    #videoModal {
-        display: none;
-        justify-content: center;
-        align-items: center;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.9);
-        z-index: 9999;
-    }
-
-    #videoModal video {
-        width: 90%;
-        max-height: 90%;
-    }
-
-    #closeBtn {
-        position: absolute;
-        top: 20px;
-        right: 30px;
-        font-size: 30px;
-        cursor: pointer;
-        color: white;
-    }
+    body { background:#111; color:white; font-family:Arial; text-align:center; padding:30px; }
+    input, button { padding:10px; font-size:16px; }
+    img { margin-top:20px; max-width:90%; border:2px solid #333; }
 </style>
 </head>
-
 <body>
 
-<header>KUROMI VIDEO SEARCH</header>
+<h2>Gerar Imagem com IA (API Free)</h2>
 
-<div class="search-box">
-    <input type="text" id="searchTerm" placeholder="Pesquisar vídeos...">
-    <button onclick="search()">Pesquisar</button>
-</div>
+<input type="text" id="prompt" placeholder="Descreva a imagem..." size="40">
+<button onclick="gerarImagem()">Gerar</button>
 
-<div id="results" class="results"></div>
-
-<!-- Modal de vídeo -->
-<div id="videoModal">
-    <span id="closeBtn" onclick="closeVideo()">✖</span>
-    <video id="videoPlayer" controls autoplay></video>
-</div>
+<div id="resultado"></div>
 
 <script>
-async function search() {
-    const termo = document.getElementById("searchTerm").value.trim();
-    if (!termo) return alert("Digite algo para pesquisar!");
+async function gerarImagem() {
+    const prompt = document.getElementById("prompt").value;
+    const div = document.getElementById("resultado");
 
-    document.getElementById("results").innerHTML = "<h2>Carregando...</h2>";
+    div.innerHTML = "<p>Gerando imagem, aguarde...</p>";
 
     try {
-        const res = await fetch(`https://kuromi-system-tech.onrender.com/api/xvideos?termo=${encodeURIComponent(termo)}`);
-        const data = await res.json();
-
-        if (!Array.isArray(data) || data.length === 0) {
-            document.getElementById("results").innerHTML = "<h2>Nenhum resultado encontrado.</h2>";
-            return;
-        }
-
-        document.getElementById("results").innerHTML = "";
-
-        data.forEach(video => {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.onclick = () => openVideo(video.link);
-
-            card.innerHTML = `
-                <img class="thumb" src="${video.profile || 'https://via.placeholder.com/300x180'}">
-                <div class="title">${video.title}</div>
-                <div class="duration">⏱ ${video.duration}</div>
-            `;
-
-            document.getElementById("results").appendChild(card);
+        const response = await fetch("https://t2i.mcpcore.xyz", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: prompt,
+                model: "flux", // pode usar: flux, sdxl, realistic, anime
+                steps: 25
+            })
         });
 
-    } catch (err) {
-        document.getElementById("results").innerHTML = "<h2>Erro ao buscar resultados</h2>";
-        console.error(err);
-    }
-}
+        const data = await response.json();
 
-async function openVideo(url) {
-    try {
-        const res = await fetch(`https://kuromi-system-tech.onrender.com/api/xvideosdow?url=${encodeURIComponent(url)}`);
-        const data = await res.json();
-
-        if (!data.videoUrl) {
-            alert("Erro ao carregar vídeo.");
+        if (!data.image) {
+            div.innerHTML = "<p>Erro ao gerar imagem.</p>";
             return;
         }
 
-        const videoPlayer = document.getElementById("videoPlayer");
-        videoPlayer.src = data.videoUrl;
+        div.innerHTML = `<img src="${data.image}" alt="Gerada">`;
 
-        document.getElementById("videoModal").style.display = "flex";
-
-        videoPlayer.play();
-
-    } catch (e) {
-        alert("Erro ao abrir vídeo.");
-        console.error(e);
+    } catch (error) {
+        console.error(error);
+        div.innerHTML = "<p>Erro ao conectar com a API.</p>";
     }
-}
-
-function closeVideo() {
-    const videoPlayer = document.getElementById("videoPlayer");
-    videoPlayer.pause();
-    videoPlayer.src = "";
-    document.getElementById("videoModal").style.display = "none";
 }
 </script>
 
