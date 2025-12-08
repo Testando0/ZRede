@@ -1,44 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Gerar Imagem</title>
-<style>
-body { background:#111; color:white; font-family:Arial; text-align:center; padding:30px; }
-input { width:350px; padding:10px; border:none; border-radius:6px; }
-button { padding:10px 20px; margin-top:10px; border:none; background:#c40000; color:white; border-radius:6px; cursor:pointer; }
-img { width:350px; margin-top:20px; display:none; border-radius:10px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Imagens DALL·E Mini (Craiyon)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #textoInput { width: 300px; padding: 8px; margin-right: 10px; }
+        #imagemResultado { max-width: 100%; height: auto; margin-top: 20px; border: 1px solid #ccc; }
+        #status { font-weight: bold; margin-top: 10px; color: #333; }
+    </style>
 </head>
 <body>
 
-<h1>Gerador de Imagens (SEM KEY)</h1>
+    <h2>🎨 Gerador de Imagens AI</h2>
+    
+    <input type="text" id="textoInput" placeholder="Descreva sua imagem (ex: gato astronauta em marte)">
+    <button onclick="gerarImagem()">Gerar Imagem</button>
+    
+    <p id="status">Aguardando comando...</p>
+    
+    <img id="imagemResultado" src="" alt="A imagem gerada aparecerá aqui" width="300" />
 
-<input id="prompt" placeholder="Digite o prompt...">
-<button onclick="gerar()">Gerar</button>
+    <script>
+        async function gerarImagem() {
+            const prompt = document.getElementById('textoInput').value;
+            const imgTag = document.getElementById('imagemResultado');
+            const status = document.getElementById('status');
+            
+            if (!prompt) {
+                status.innerText = "Por favor, insira um texto para gerar a imagem.";
+                return;
+            }
 
-<img id="img">
+            // O SEU TOKEN DE ACESSO DA HUGGING FACE:
+            const TOKEN = "Hf_KLNZyabIzKPHkSMAJaPpXWBTjaViOyrGgX"; 
+            
+            // O modelo DALL·E Mini é grande e pode demorar.
+            status.innerText = "Gerando... pode levar até 60 segundos. Por favor, aguarde...";
+            imgTag.src = ""; // Limpa a imagem anterior
 
-<script>
-async function gerar() {
-    const prompt = document.getElementById("prompt").value;
-    const img = document.getElementById("img");
-    img.style.display = "none";
+            try {
+                // Endpoint da API de Inferência da Hugging Face para o modelo DALL·E Mini
+                const response = await fetch(
+                    "https://api-inference.huggingface.co/models/dalle-mini/dalle-mini",
+                    {
+                        headers: { 
+                            Authorization: `Bearer ${TOKEN}`,
+                            // Adiciona Content-Type para garantir que o corpo seja JSON
+                            "Content-Type": "application/json" 
+                        },
+                        method: "POST",
+                        body: JSON.stringify({ inputs: prompt }),
+                    }
+                );
 
-    try {
-        const r = await fetch(`https://api.devguy.xyz/v1/image/generate?prompt=${encodeURIComponent(prompt)}`);
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(`Erro na API: ${response.status} - ${errorBody.error || 'Erro desconhecido'}`);
+                }
 
-        if (!r.ok) throw new Error("Erro ao gerar imagem");
-
-        const blob = await r.blob();
-        img.src = URL.createObjectURL(blob);
-        img.style.display = "block";
-
-    } catch (err) {
-        alert("❌ Erro ao gerar imagem: " + err.message);
-    }
-}
-</script>
-
+                // A API retorna a imagem como um "Blob" binário
+                const result = await response.blob();
+                
+                // Cria uma URL temporária para exibir a imagem no navegador
+                const imageUrl = URL.createObjectURL(result);
+                imgTag.src = imageUrl;
+                
+                status.innerText = "Pronto! Imagem gerada com sucesso.";
+                
+            } catch (error) {
+                console.error("Erro durante a geração da imagem:", error);
+                status.innerText = `Erro ao gerar imagem. Verifique o console. (Possível causa: limite de uso da API ou erro do modelo.)`;
+            }
+        }
+    </script>
 </body>
 </html>
