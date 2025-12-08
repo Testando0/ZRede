@@ -1,28 +1,38 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="utf-8"><title>Puter.js Test</title></head>
-<body style="background:#111;color:#fff;font-family:Arial;text-align:center;padding:30px">
-  <h2>Teste Puter.js (sem API key)</h2>
-  <input id="prompt" placeholder="Descreva aqui..." size="50"/>
-  <button onclick="gerar()">Gerar</button>
-  <div id="out" style="margin-top:20px"></div>
+<head>
+  <meta charset="UTF-8">
+  <title>Gerador de Imagem IA (SDXL Real)</title>
+</head>
+<body style="background:#111;color:#fff;text-align:center;font-family:sans-serif">
 
-  <script src="https://js.puter.com/v2/"></script>
+  <h2>Gerar Imagem IA (SDXL - API sem key)</h2>
+
+  <input id="prompt" placeholder="Descreva sua imagem..." size="40">
+  <button onclick="gerar()">Gerar</button>
+
+  <div id="resultado" style="margin-top:20px;"></div>
+
   <script>
-    async function gerar(){
-      const p = document.getElementById('prompt').value;
-      const out = document.getElementById('out');
-      out.innerText = 'Gerando...';
-      try {
-        // modelo de exemplo; troque por "stable-diffusion-3" ou "flux" se disponível
-        const imgEl = await puter.ai.txt2img(p, { model: "stable-diffusion-3-medium" });
-        out.innerHTML = '';
-        out.appendChild(imgEl);
-      } catch(e){
-        console.error(e);
-        out.innerText = 'Erro ao gerar — veja console.';
+    async function gerar() {
+      const prompt = document.getElementById("prompt").value;
+      const resDiv = document.getElementById("resultado");
+
+      resDiv.innerHTML = "Gerando imagem...";
+
+      const req = await fetch("https://ai.arkoapi.com/sdxl?prompt=" + encodeURIComponent(prompt));
+
+      if (!req.ok) {
+        resDiv.innerHTML = "Erro ao gerar imagem.";
+        return;
       }
+
+      const blob = await req.blob();
+      const url = URL.createObjectURL(blob);
+
+      resDiv.innerHTML = `<img src="${url}" width="450" style="border-radius:12px;">`;
     }
   </script>
+
 </body>
 </html>
