@@ -150,7 +150,7 @@ async function search() {
     document.getElementById("results").innerHTML = "<h2>Carregando...</h2>";
 
     try {
-        const res = await fetch(`https://kuromi-system-tech.onrender.com/api/apipesquisas?termo=${encodeURIComponent(termo)}`);
+        const res = await fetch(`https://kuromi-system-tech.onrender.com/api/xvideos?termo=${encodeURIComponent(termo)}`);
         const data = await res.json();
 
         if (!Array.isArray(data) || data.length === 0) {
@@ -182,7 +182,7 @@ async function search() {
 
 async function openVideo(url) {
     try {
-        const res = await fetch(`https://kuromi-system-tech.onrender.com/api/apidowload?url=${encodeURIComponent(url)}`);
+        const res = await fetch(`https://kuromi-system-tech.onrender.com/api/xvideosdow?url=${encodeURIComponent(url)}`);
         const data = await res.json();
 
         if (!data.videoUrl) {
