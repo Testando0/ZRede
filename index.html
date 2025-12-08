@@ -1,56 +1,26 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Gerador IA - Funcional</title>
-<style>
-    body { background:#111; color:white; font-family:Arial; text-align:center; padding:30px; }
-    input, button { padding:10px; font-size:16px; }
-    img { margin-top:20px; max-width:90%; border:2px solid #333; }
-</style>
-</head>
+<head><meta charset="UTF-8"><title>IA → Imagem com Puter.js</title></head>
 <body>
+  <h2>Gerar imagem via IA (Puter.js)</h2>
+  <input type="text" id="prompt" placeholder="Digite seu prompt aqui" size="50"/>
+  <button onclick="gerar()">Gerar</button>
+  <div id="res"></div>
 
-<h2>Gerar Imagem IA - Sem API Key</h2>
-
-<input type="text" id="prompt" placeholder="Digite seu prompt..." size="40">
-<button onclick="gerarImagem()">Gerar</button>
-
-<div id="resultado"></div>
-
-<script>
-async function gerarImagem() {
-    const prompt = document.getElementById("prompt").value;
-    const div = document.getElementById("resultado");
-
-    div.innerHTML = "<p>Gerando imagem...</p>";
-
-    try {
-        const response = await fetch("https://api.deepinfra.com/v1/inference/stabilityai/stable-diffusion-xl", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                prompt: prompt
-            })
-        });
-
-        const data = await response.json();
-
-        if (!data?.images?.[0]) {
-            div.innerHTML = "<p>Erro ao gerar imagem.</p>";
-            return;
-        }
-
-        div.innerHTML = `<img src="data:image/png;base64,${data.images[0]}" />`;
-
-    } catch (error) {
-        console.error(error);
-        div.innerHTML = "<p>Erro ao conectar com a API.</p>";
+  <script src="https://js.puter.com/v2/"></script>
+  <script>
+    async function gerar() {
+      const prompt = document.getElementById("prompt").value;
+      document.getElementById("res").innerText = "Gerando...";
+      try {
+        const img = await puter.ai.txt2img(prompt, { model: "stable-diffusion-xl", disable_safety_checker: true });
+        document.getElementById("res").innerHTML = "";
+        document.getElementById("res").appendChild(img);
+      } catch (err) {
+        console.error(err);
+        document.getElementById("res").innerText = "Erro ao gerar.";
+      }
     }
-}
-</script>
-
+  </script>
 </body>
 </html>
