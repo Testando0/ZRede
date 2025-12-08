@@ -1,26 +1,30 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head><meta charset="UTF-8"><title>IA → Imagem com Puter.js</title></head>
+<html>
+<head>
+  <title>Gerar Imagem</title>
+</head>
 <body>
-  <h2>Gerar imagem via IA (Puter.js)</h2>
-  <input type="text" id="prompt" placeholder="Digite seu prompt aqui" size="50"/>
-  <button onclick="gerar()">Gerar</button>
-  <div id="res"></div>
+  <h2>Gerador de Imagem IA (HTML Puro)</h2>
 
-  <script src="https://js.puter.com/v2/"></script>
+  <input id="prompt" placeholder="Descreva a imagem..." size="40">
+  <button onclick="gerar()">Gerar</button>
+
+  <div id="resultado"></div>
+
   <script>
     async function gerar() {
       const prompt = document.getElementById("prompt").value;
-      document.getElementById("res").innerText = "Gerando...";
-      try {
-        const img = await puter.ai.txt2img(prompt, { model: "stable-diffusion-xl", disable_safety_checker: true });
-        document.getElementById("res").innerHTML = "";
-        document.getElementById("res").appendChild(img);
-      } catch (err) {
-        console.error(err);
-        document.getElementById("res").innerText = "Erro ao gerar.";
-      }
+
+      document.getElementById("resultado").innerHTML = "Gerando...";
+
+      const res = await fetch("https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt));
+
+      const url = res.url;
+
+      document.getElementById("resultado").innerHTML =
+        `<img src="${url}" width="400">`;
     }
   </script>
+
 </body>
 </html>
