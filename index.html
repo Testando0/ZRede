@@ -1,46 +1,42 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Gerar Imagem - FLUX</title>
+<title>Gerar Imagem</title>
 <style>
-    body { background:#111; color:white; font-family:Arial; text-align:center; padding:30px; }
-    input { width:350px; padding:10px; margin-top:10px; border-radius:6px; border:none; }
-    button { padding:10px 20px; border:none; background:#d40000; color:white; border-radius:6px; cursor:pointer; margin-top:10px; }
-    img { margin-top:20px; width:400px; border-radius:10px; display:none; }
+body { background:#111; color:white; font-family:Arial; text-align:center; padding:30px; }
+input { width:350px; padding:10px; border:none; border-radius:6px; }
+button { padding:10px 20px; margin-top:10px; border:none; background:#c40000; color:white; border-radius:6px; cursor:pointer; }
+img { width:350px; margin-top:20px; display:none; border-radius:10px; }
 </style>
 </head>
 <body>
 
-<h1>Gerador de Imagens FLUX (Sem Key)</h1>
+<h1>Gerador de Imagens (SEM KEY)</h1>
 
-<input id="prompt" placeholder="Descreva a imagem...">
-<br>
+<input id="prompt" placeholder="Digite o prompt...">
 <button onclick="gerar()">Gerar</button>
 
-<br>
 <img id="img">
 
 <script>
 async function gerar() {
     const prompt = document.getElementById("prompt").value;
     const img = document.getElementById("img");
-
     img.style.display = "none";
 
-    const resposta = await fetch("https://image.pollinations.ai/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            model: "flux",
-            prompt: prompt
-        })
-    });
+    try {
+        const r = await fetch(`https://api.devguy.xyz/v1/image/generate?prompt=${encodeURIComponent(prompt)}`);
 
-    const blob = await resposta.blob();
-    const url = URL.createObjectURL(blob);
-    img.src = url;
-    img.style.display = "block";
+        if (!r.ok) throw new Error("Erro ao gerar imagem");
+
+        const blob = await r.blob();
+        img.src = URL.createObjectURL(blob);
+        img.style.display = "block";
+
+    } catch (err) {
+        alert("❌ Erro ao gerar imagem: " + err.message);
+    }
 }
 </script>
 
