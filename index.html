@@ -1,427 +1,215 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>InstaClone Pro (Verificação Final)</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  
-  <style>
-    /* ... (CSS MANTIDO) ... */
-    * { box-sizing: border-box; margin: 0; padding: 0; outline: none; font-family: 'Inter', sans-serif; }
-    body { background-color: #000; color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
-    .screen { display: none; padding-bottom: 70px; width: 100%; max-width: 500px; margin: 0 auto; }
-    .active-screen { display: block; }
-    #auth-screen { height: 100vh; display: none; justify-content: center; align-items: center; flex-direction: column; padding: 20px; text-align: center; background: linear-gradient(135deg, #1a1a1a, #000); }
-    .auth-box { width: 100%; max-width: 350px; }
-    .logo { font-family: 'Segoe UI', cursive; font-size: 3rem; margin-bottom: 30px; background: linear-gradient(90deg, #FF7D05F7, #7f00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .auth-input { width: 100%; padding: 15px; margin-bottom: 10px; background: #333; border: 1px solid #444; border-radius: 5px; color: white; resize: none; }
-    .btn-primary { width: 100%; padding: 15px; background: #0095f6; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    .toggle-auth { margin-top: 20px; color: #aaa; font-size: 0.9rem; cursor: pointer; }
-    .toggle-auth span { color: #0095f6; font-weight: bold; }
-    header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #000; z-index: 100; }
-    .header-logo { font-family: 'Segoe UI', cursive; font-size: 1.5rem; }
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 1px solid #333; display: flex; justify-content: space-around; padding: 15px 0; z-index: 200; }
-    .nav-btn { font-size: 1.5rem; color: #fff; cursor: pointer; background: none; border: none; }
-    .nav-btn.active { color: #FF7D05F7; }
-    .post-card { margin-bottom: 20px; border: 1px solid #333; border-radius: 8px; background: #1a1a1a; }
-    .post-text-content { padding: 20px; font-size: 1.1rem; line-height: 1.4; min-height: 100px; color: #ddd; white-space: pre-wrap; }
-    .post-header { padding: 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; }
-    .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; object-fit: cover;}
-    .post-img { width: 100%; height: auto; max-height: 500px; object-fit: cover; }
-    .post-actions { padding: 10px; display: flex; gap: 15px; font-size: 1.5rem; border-top: 1px solid #333;}
-    .post-caption-small { padding: 0 10px 10px; color: #aaa; font-size: 0.9rem;}
-    .profile-header { padding: 20px; display: flex; align-items: center; gap: 20px; }
-    .profile-pic-lg { width: 80px; height: 80px; border-radius: 50%; background: #333; object-fit: cover; border: 2px solid #FF7D05F7; }
-    .profile-stats { flex: 1; }
-    .profile-name { font-size: 1.2rem; font-weight: bold; display: block; }
-    .btn-logout { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; margin-top: 5px; cursor: pointer; font-size: 0.8rem;}
-    .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
-    .grid-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; background: #222; } 
-    .upload-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; justify-content: center; align-items: center; flex-direction: column;}
-    .upload-box { background: #222; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; position: relative; z-index: 5;}
-    .btn-primary-link { width: 100%; padding: 15px; background: #0095f6; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; text-decoration: none; display: block; text-align: center; position: relative; z-index: 10;}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuromi Search</title>
+
+<style>
+    body {
+        margin: 0;
+        background: #0a0a0a;
+        font-family: Arial, sans-serif;
+        color: white;
+    }
+
+    header {
+        background: #8b0000;
+        padding: 20px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        color: white;
+    }
+
+    .search-box {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        gap: 10px;
+    }
+
+    .search-box input {
+        width: 70%;
+        padding: 12px;
+        border-radius: 8px;
+        border: none;
+        font-size: 18px;
+        outline: none;
+        background: #1b1b1b;
+        color: white;
+    }
+
+    .search-box button {
+        padding: 12px 20px;
+        font-size: 18px;
+        border: none;
+        border-radius: 8px;
+        background: #b30000;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .search-box button:hover {
+        background: #e60000;
+    }
+
+    .results {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .card {
+        background: #111;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #900;
+        cursor: pointer;
+        transition: transform .2s;
+    }
+
+    .card:hover {
+        transform: scale(1.05);
+    }
+
+    .thumb {
+        width: 100%;
+        height: 160px;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+
+    .title {
+        margin-top: 10px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .duration {
+        margin-top: 5px;
+        font-size: 14px;
+        color: #ff4d4d;
+    }
+
+    /* Modal de vídeo */
+    #videoModal {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        z-index: 9999;
+    }
+
+    #videoModal video {
+        width: 90%;
+        max-height: 90%;
+    }
+
+    #closeBtn {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        font-size: 30px;
+        cursor: pointer;
+        color: white;
+    }
+</style>
 </head>
+
 <body>
 
-  <div id="auth-screen">
-    <div class="auth-box">
-      <h1 class="logo">InstaClone</h1>
-      
-      <div id="login-form">
-        <input type="email" id="login-email" class="auth-input" placeholder="E-mail">
-        <input type="password" id="login-password" class="auth-input" placeholder="Senha">
-        <button class="btn-primary" onclick="handleLogin()">Entrar</button>
-        <p class="toggle-auth" onclick="toggleAuth('register')">Não tem uma conta? <span>Cadastre-se</span></p>
-      </div>
+<header>KUROMI VIDEO SEARCH</header>
 
-      <div id="register-form" style="display: none;">
-        <input type="text" id="reg-username" class="auth-input" placeholder="Nome de Usuário (ex: joao123)">
-        <input type="email" id="reg-email" class="auth-input" placeholder="E-mail">
-        <input type="password" id="reg-password" class="auth-input" placeholder="Senha">
-        <button class="btn-primary" onclick="handleRegister()">Cadastrar</button>
-        <p class="toggle-auth" onclick="toggleAuth('login')">Já tem conta? <span>Entrar</span></p>
-      </div>
-    </div>
-  </div>
+<div class="search-box">
+    <input type="text" id="searchTerm" placeholder="Pesquisar vídeos...">
+    <button onclick="search()">Pesquisar</button>
+</div>
 
-  <div id="app-screen" style="display: none;">
-    
-    <header>
-      <div class="header-logo">InstaClone</div>
-      <button onclick="openUpload()" style="background:none; border:none; color:white; font-size:1.5rem;"><i class="far fa-plus-square"></i></button>
-    </header>
+<div id="results" class="results"></div>
 
-    <div id="screen-home" class="screen active-screen"></div>
-    <div id="screen-search" class="screen">
-      <div class="search-container">
-        <input type="text" class="search-bar" placeholder="Pesquisar usuários..." oninput="searchUsers(this.value)">
-        <div id="search-results"></div>
-      </div>
-    </div>
-    <div id="screen-profile" class="screen">
-      <div class="profile-header">
-        <img src="https://via.placeholder.com/150" id="p-avatar" class="profile-pic-lg">
-        <div class="profile-stats">
-          <span class="profile-name" id="p-username">Carregando...</span>
-          <div style="margin: 10px 0;">
-            <strong id="p-posts-count">0</strong> publicações
-          </div>
-          <button class="btn-logout" id="btn-logout-action" onclick="logout()">Sair</button>
-        </div>
-      </div>
-      <div class="profile-grid" id="profile-posts-grid"></div>
-    </div>
+<!-- Modal de vídeo -->
+<div id="videoModal">
+    <span id="closeBtn" onclick="closeVideo()">✖</span>
+    <video id="videoPlayer" controls autoplay></video>
+</div>
 
-    <nav class="bottom-nav">
-      <button class="nav-btn active" onclick="navTo('home')"><i class="fas fa-home"></i></button>
-      <button class="nav-btn" onclick="navTo('search')"><i class="fas fa-search"></i></button>
-      <button class="nav-btn" onclick="navTo('profile')"><i class="fas fa-user"></i></button>
-    </nav>
+<script>
+async function search() {
+    const termo = document.getElementById("searchTerm").value.trim();
+    if (!termo) return alert("Digite algo para pesquisar!");
 
-    <div class="upload-modal" id="modalUpload">
-      <div class="upload-box">
-        <h3>Nova Publicação de Texto</h3>
-        <textarea id="captionInput" class="auth-input" placeholder="O que você está pensando? (Máx. 500 caracteres)" maxlength="500" rows="6" style="margin-top:15px;"></textarea>
-        <a href="javascript:void(0)" id="btn-share-post" class="btn-primary-link">Publicar Texto</a>
-        <button style="background:transparent; border:none; color:red; margin-top:10px; cursor:pointer;" onclick="closeUpload()">Cancelar</button>
-      </div>
-    </div>
+    document.getElementById("results").innerHTML = "<h2>Carregando...</h2>";
 
-  </div>
+    try {
+        const res = await fetch(`https://kuromi-system-tech.onrender.com/api/apipesquisas?termo=${encodeURIComponent(termo)}`);
+        const data = await res.json();
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-  <script>
-    // ================= 🚨 PASSO 1: CONFIGURAÇÃO DO FIREBASE (CRÍTICO) 🚨 =================
-    // Verifique se estas chaves correspondem EXATAMENTE às chaves do seu projeto.
-    const firebaseConfig = {
-      apiKey: "AIzaSyCHpunrtbhlIvLEev6fkZDNRvTieEQt1Hg",
-      authDomain: "sske-9ff9f.firebaseapp.com",
-      databaseURL: "https://sske-9ff9f-default-rtdb.firebaseio.com", // ESTA URL DEVE SER EXATA
-      projectId: "sske-9ff9f",
-      storageBucket: "sske-9ff9f.firebasestorage.app",
-      messagingSenderId: "464070910654",
-      appId: "1:464070910654:web:b8b87b1835fe309630f4ef"
-    };
-
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    
-    const auth = firebase.auth();
-    const db = firebase.database();
-    
-    let currentUserData = null; 
-
-    // ================= FUNÇÕES DE PUBLICAÇÃO (MAXIMIZANDO O TRATAMENTO DE ERRO) =================
-
-    function openUpload() { 
-        if (!auth.currentUser) {
-            return alert("❌ Você precisa estar logado para abrir o uploader.");
-        }
-        document.getElementById('modalUpload').style.display = 'flex'; 
-    }
-    
-    function closeUpload() { 
-        document.getElementById('modalUpload').style.display = 'none'; 
-        document.getElementById('captionInput').value = ''; 
-    }
-
-    async function publishTextPost() {
-        // 1. Coleta e Validação (Rigorosa)
-        const caption = document.getElementById('captionInput').value.trim();
-        const user = auth.currentUser;
-        
-        if (!user) {
-            // Este alerta é CRÍTICO se a autenticação falhou
-            return alert("❌ ERRO CRÍTICO: Não foi possível identificar o usuário logado. Faça login novamente.");
-        }
-        if (caption.length < 5) {
-            return alert("❌ ERRO: Sua publicação deve ter pelo menos 5 caracteres.");
+        if (!Array.isArray(data) || data.length === 0) {
+            document.getElementById("results").innerHTML = "<h2>Nenhum resultado encontrado.</h2>";
+            return;
         }
 
-        alert(`✅ 1/2 - TENTANDO POSTAR COMO USUÁRIO: ${user.uid.substring(0, 8)}...`);
+        document.getElementById("results").innerHTML = "";
 
-        try {
-            // 2. Tenta salvar o post no Firebase 
-            await db.ref('posts').push({
-                uid: user.uid, 
-                caption: caption,
-                isText: true,
-                likes: 0,
-                timestamp: Date.now()
-            });
+        data.forEach(video => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.onclick = () => openVideo(video.link);
 
-            // 3. SUCESSO FINAL
-            closeUpload();
-            navTo('home'); 
-            alert("✅ 2/2 - SUCESSO FINAL: Publicação efetuada com sucesso!");
-
-        } catch (e) {
-            // 4. Tratamento de Erro (Detalhado)
-            console.error("Firebase Push Error:", e);
-            
-            let errorMessage = `❌ ERRO FATAL NO ENVIO: ${e.message}.`;
-
-            if (e.message.includes("permission_denied") || e.message.includes("Permission denied")) {
-                errorMessage += "\n\nAVISO CRÍTICO: O SERVIDOR DO FIREBASE NEGOU A ESCRITA (Permission denied). O problema está nas SUAS REGRAS DE SEGURANÇA. Verifique se o .write está correto no nó 'posts'.";
-            } else if (e.message.includes("Failed to fetch")) {
-                errorMessage += "\n\nAVISO CRÍTICO: FALHA DE REDE. O aplicativo não consegue se conectar à URL do Firebase. Verifique sua conexão ou a 'databaseURL' na configuração.";
-            }
-
-            alert(errorMessage);
-        }
-    }
-
-    // ================= FUNÇÕES DE FLUXO E AUTENTICAÇÃO (MANTIDAS) =================
-    
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('app-screen').style.display = 'block';
-        
-        db.ref('users/' + user.uid).once('value').then(snap => {
-          currentUserData = snap.val();
-          loadFeed(); 
-        }).catch(error => {
-            console.error("Erro ao carregar dados do perfil:", error);
-            loadFeed(); 
-        });
-
-      } else {
-        document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('app-screen').style.display = 'none';
-      }
-    });
-
-    function navTo(screenName) {
-      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active-screen'));
-      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-
-      document.getElementById('screen-' + screenName).classList.add('active-screen');
-      
-      const btnIndex = screenName === 'home' ? 0 : screenName === 'search' ? 1 : 2;
-      document.querySelectorAll('.nav-btn')[btnIndex].classList.add('active');
-
-      if(screenName === 'profile') loadProfile(auth.currentUser ? auth.currentUser.uid : null);
-      if(screenName === 'home') loadFeed(); 
-    }
-    
-    function logout() {
-      auth.signOut();
-    }
-
-    function loadFeed() {
-      const feedDiv = document.getElementById('screen-home');
-      feedDiv.innerHTML = '<p style="text-align:center; padding-top: 20px;">A carregar publicações...</p>';
-      
-      db.ref('posts').off(); 
-
-      db.ref('posts').limitToLast(50).on('value', (snapshot) => {
-        feedDiv.innerHTML = '';
-        const posts = [];
-        snapshot.forEach(child => posts.push({id: child.key, ...child.val()}));
-        posts.reverse(); 
-        
-        if(posts.length === 0) {
-           feedDiv.innerHTML = '<p style="text-align:center; padding-top: 50px; color:#555;">Não há publicações no feed.</p>';
-           return;
-        }
-
-        posts.forEach(post => {
-          db.ref('users/' + post.uid).once('value').then(uSnap => {
-            const user = uSnap.val() || { username: 'Desconhecido', profilePic: 'https://via.placeholder.com/30' };
-            
-            let contentHTML = '';
-            
-            if(post.imageUrl) {
-                contentHTML = `<img src="${post.imageUrl}" class="post-img" ondblclick="likePost('${post.id}')">`;
-            } else {
-                contentHTML = `
-                    <div class="post-text-content">
-                        ${post.caption.replace(/\n/g, '<br>')}
-                    </div>
-                `;
-            }
-
-            const html = `
-              <div class="post-card">
-                <div class="post-header" onclick="viewUserProfile('${post.uid}')" style="cursor:pointer">
-                  <img src="${user.profilePic}" class="user-avatar">
-                  <strong>${user.username}</strong>
-                </div>
-                
-                ${contentHTML}
-
-                <div class="post-actions">
-                  <i class="far fa-heart" onclick="likePost('${post.id}')"></i>
-                </div>
-                <div class="post-caption-small">
-                  <strong>${post.likes || 0} curtidas</strong>
-                  ${post.imageUrl ? `<br><span style="font-weight:bold; margin-right:5px; color:white;">${user.username}</span> ${post.caption}` : ''}
-                </div>
-              </div>
+            card.innerHTML = `
+                <img class="thumb" src="${video.profile || 'https://via.placeholder.com/300x180'}">
+                <div class="title">${video.title}</div>
+                <div class="duration">⏱ ${video.duration}</div>
             `;
-            feedDiv.innerHTML += html;
-          });
+
+            document.getElementById("results").appendChild(card);
         });
-      }, (error) => {
-          console.error("Erro ao carregar feed:", error);
-          feedDiv.innerHTML = '<p style="text-align:center; padding-top: 50px; color:red;">FALHA AO CARREGAR. Verifique a consola para detalhes.</p>';
-      });
+
+    } catch (err) {
+        document.getElementById("results").innerHTML = "<h2>Erro ao buscar resultados</h2>";
+        console.error(err);
     }
+}
 
-    function likePost(postId) {
-      db.ref(`posts/${postId}/likes`).transaction(likes => (likes || 0) + 1);
-    }
+async function openVideo(url) {
+    try {
+        const res = await fetch(`https://kuromi-system-tech.onrender.com/api/apidowload?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
 
-    function toggleAuth(type) {
-      if(type === 'register') {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('register-form').style.display = 'block';
-      } else {
-        document.getElementById('login-form').style.display = 'block';
-        document.getElementById('register-form').style.display = 'none';
-      }
-    }
-
-    async function handleRegister() {
-        const email = document.getElementById('reg-email').value;
-        const password = document.getElementById('reg-password').value;
-        const username = document.getElementById('reg-username').value.trim().toLowerCase();
-
-        if(!username) return alert("Digite um nome de usuário");
-        if(password.length < 6) return alert("A senha deve ter pelo menos 6 caracteres.");
-
-        try {
-            const userCred = await auth.createUserWithEmailAndPassword(email, password);
-            const uid = userCred.user.uid;
-
-            await db.ref('users/' + uid).set({
-                username: username,
-                email: email,
-                uid: uid,
-                profilePic: `https://ui-avatars.com/api/?name=${username}&background=random`
-            });
-
-            alert("✅ SUCESSO! Conta criada.");
-        } catch (error) {
-            alert("❌ ERRO NO CADASTRO: " + error.message);
+        if (!data.videoUrl) {
+            alert("Erro ao carregar vídeo.");
+            return;
         }
+
+        const videoPlayer = document.getElementById("videoPlayer");
+        videoPlayer.src = data.videoUrl;
+
+        document.getElementById("videoModal").style.display = "flex";
+
+        videoPlayer.play();
+
+    } catch (e) {
+        alert("Erro ao abrir vídeo.");
+        console.error(e);
     }
+}
 
-    function handleLogin() {
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
+function closeVideo() {
+    const videoPlayer = document.getElementById("videoPlayer");
+    videoPlayer.pause();
+    videoPlayer.src = "";
+    document.getElementById("videoModal").style.display = "none";
+}
+</script>
 
-      auth.signInWithEmailAndPassword(email, password)
-        .catch(error => alert("❌ ERRO AO FAZER LOGIN: " + error.message));
-    }
-    
-    function searchUsers(query) {
-      const resultsDiv = document.getElementById('search-results');
-      resultsDiv.innerHTML = '';
-      if(query.length < 2) return;
-
-      query = query.toLowerCase();
-
-      db.ref('users').orderByChild('username').startAt(query).endAt(query + "\uf8ff")
-        .once('value', snapshot => {
-          snapshot.forEach(child => {
-            const u = child.val();
-            const html = `
-              <div class="user-list-item" onclick="viewUserProfile('${u.uid}')">
-                <img src="${u.profilePic}" class="user-avatar">
-                <span>${u.username}</span>
-              </div>
-            `;
-            resultsDiv.innerHTML += html;
-          });
-        }, (error) => {
-            alert("❌ ERRO NA BUSCA: " + error.message + " (Verifique a regra .indexOn: 'username'!)");
-        });
-    }
-    
-    function viewUserProfile(uid) {
-      loadProfile(uid);
-      navTo('profile');
-      
-      const isMe = auth.currentUser && uid === auth.currentUser.uid;
-      document.getElementById('btn-logout-action').style.display = isMe ? 'block' : 'none';
-    }
-
-    function loadProfile(uid) {
-      if (!uid) {
-          return document.getElementById('p-username').innerText = "Erro: Faça Login";
-      }
-
-      db.ref('users/' + uid).once('value', snap => {
-        const u = snap.val();
-        if (u) {
-            document.getElementById('p-username').innerText = u.username;
-            document.getElementById('p-avatar').src = u.profilePic;
-        } else {
-            document.getElementById('p-username').innerText = "Usuário não encontrado";
-        }
-      });
-
-      const grid = document.getElementById('profile-posts-grid');
-      grid.innerHTML = '<p style="padding:10px">Carregando posts...</p>';
-      
-      db.ref('posts').orderByChild('uid').equalTo(uid).once('value', snap => {
-        grid.innerHTML = '';
-        const posts = [];
-        snap.forEach(c => posts.push(c.val()));
-        posts.reverse();
-        
-        document.getElementById('p-posts-count').innerText = posts.length;
-
-        posts.forEach(p => {
-            const content = p.isText ? p.caption.substring(0, 50) + '...' : `<img src="${p.imageUrl}" class="grid-img">`;
-            const style = p.isText ? 'background: #333; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; padding: 10px; text-align: center; overflow: hidden;' : '';
-            
-            grid.innerHTML += `<div class="grid-img" style="${style}">${p.imageUrl ? `<img src="${p.imageUrl}" class="grid-img">` : content}</div>`;
-        });
-        
-        if(posts.length === 0) grid.innerHTML = '<p style="padding:20px; grid-column:span 3; text-align:center; color:#555">Sem publicações.</p>';
-      });
-    }
-
-    // ================= REGISTRO DE EVENTO =================
-    document.addEventListener('DOMContentLoaded', () => {
-        const shareButton = document.getElementById('btn-share-post');
-        if (shareButton) {
-            shareButton.addEventListener('click', (event) => {
-                event.preventDefault(); 
-                publishTextPost(); 
-            });
-        }
-    });
-
-  </script>
 </body>
 </html>
