@@ -1,30 +1,28 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <title>Gerar Imagem</title>
-</head>
-<body>
-  <h2>Gerador de Imagem IA (HTML Puro)</h2>
-
-  <input id="prompt" placeholder="Descreva a imagem..." size="40">
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Puter.js Test</title></head>
+<body style="background:#111;color:#fff;font-family:Arial;text-align:center;padding:30px">
+  <h2>Teste Puter.js (sem API key)</h2>
+  <input id="prompt" placeholder="Descreva aqui..." size="50"/>
   <button onclick="gerar()">Gerar</button>
+  <div id="out" style="margin-top:20px"></div>
 
-  <div id="resultado"></div>
-
+  <script src="https://js.puter.com/v2/"></script>
   <script>
-    async function gerar() {
-      const prompt = document.getElementById("prompt").value;
-
-      document.getElementById("resultado").innerHTML = "Gerando...";
-
-      const res = await fetch("https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt));
-
-      const url = res.url;
-
-      document.getElementById("resultado").innerHTML =
-        `<img src="${url}" width="400">`;
+    async function gerar(){
+      const p = document.getElementById('prompt').value;
+      const out = document.getElementById('out');
+      out.innerText = 'Gerando...';
+      try {
+        // modelo de exemplo; troque por "stable-diffusion-3" ou "flux" se disponível
+        const imgEl = await puter.ai.txt2img(p, { model: "stable-diffusion-3-medium" });
+        out.innerHTML = '';
+        out.appendChild(imgEl);
+      } catch(e){
+        console.error(e);
+        out.innerText = 'Erro ao gerar — veja console.';
+      }
     }
   </script>
-
 </body>
 </html>
