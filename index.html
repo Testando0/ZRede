@@ -1,46 +1,260 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Gerador de Imagens HTML Puro</title>
+  <meta charset="utf-8" />
+  <title>Teste AI Horde — Geração de Imagem</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, Arial; background:#0f1724; color:#e6eef8; display:flex; align-items:flex-start; justify-content:center; padding:30px; }
+    .card { background:linear-gradient(180deg,#111827 0%, #0b1220 100%); border-radius:12px; padding:20px; width:720px; box-shadow:0 8px 30px rgba(2,6,23,0.6); }
+    h1 { margin:0 0 12px 0; font-size:20px; }
+    label { display:block; font-size:13px; margin-top:12px; color:#9fb0d6; }
+    input[type=text], textarea, select { width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:#071029; color:#dfefff; font-size:14px; box-sizing:border-box; }
+    textarea { min-height:90px; resize:vertical; }
+    button { margin-top:12px; padding:10px 14px; border-radius:10px; border:0; background:#ef4444; color:white; cursor:pointer; font-weight:600; }
+    .muted { color:#88a0c6; font-size:13px; margin-top:8px; }
+    .status { margin-top:12px; padding:10px; background:rgba(255,255,255,0.02); border-radius:8px; font-size:13px; color:#bfe1ff; }
+    .preview { margin-top:14px; display:flex; gap:12px; flex-wrap:wrap; }
+    .preview img { max-width:320px; border-radius:10px; box-shadow:0 6px 20px rgba(2,6,23,0.6); }
+    .small { font-size:12px; color:#9fb0d6; }
+    footer { margin-top:14px; font-size:12px; color:#87a0c2; }
+  </style>
 </head>
-<body style="background:#111; color:white; font-family:Arial; padding:20px;">
-  <h2>Gerador de Imagens (HTML Puro)</h2>
+<body>
+  <div class="card">
+    <h1>Gerador de imagem — AI Horde (teste sem token)</h1>
 
-  <input id="prompt" placeholder="Descreva a imagem..."
-         style="width:350px; padding:10px;">
-  <button onclick="gerar()">Gerar</button>
+    <label>Prompt (descreva a imagem):
+      <textarea id="prompt" placeholder="Ex: um robô pintando um mural em estilo cyberpunk ao pôr do sol"></textarea>
+    </label>
 
-  <div id="resultado" style="margin-top:20px;"></div>
+    <label>Tamanho (px)
+      <select id="size">
+        <option value="512">512 × 512</option>
+        <option value="768">768 × 768</option>
+        <option value="1024">1024 × 1024</option>
+      </select>
+    </label>
+
+    <label>Passes (steps)
+      <input type="text" id="steps" value="20" />
+    </label>
+
+    <div style="display:flex; gap:8px;">
+      <button id="generateBtn">Gerar imagem</button>
+      <button id="cancelBtn" style="background:#6b7280">Cancelar</button>
+    </div>
+
+    <div class="status" id="statusBox">Pronto — digite um prompt e clique em "Gerar imagem".</div>
+
+    <div class="preview" id="preview"></div>
+
+    <footer>
+      <div class="muted">Observação: este exemplo usa o cabeçalho <code>apikey: 0000000000</code> para modo anônimo. Se a requisição falhar por CORS, rode um pequeno proxy. Se a fila estiver ocupada, a geração pode demorar.</div>
+    </footer>
+  </div>
 
 <script>
-async function gerar() {
-  const prompt = document.getElementById("prompt").value;
-  const out = document.getElementById("resultado");
+(async function(){
+  const generateBtn = document.getElementById('generateBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const statusBox = document.getElementById('statusBox');
+  const preview = document.getElementById('preview');
 
-  out.innerHTML = "Gerando imagem...";
+  let currentRequestId = null;
+  let polling = false;
+  let abortPolling = false;
 
-  // API pública do HuggingFace Space (sem key, sem CORS)
-  const url = "https://hf.space/embed/nitrosocke/pony-diffusion/api/predict/";
+  // Endpoint da AI Horde (Stable Horde)
+  const API_BASE = 'https://aihorde.net/api/v2';
+  // chave anônima usada por muitos para testes (valor público / de exemplo)
+  const API_KEY = '0000000000';
 
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { 
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      data: [prompt]
-    })
+  function setStatus(txt) {
+    statusBox.textContent = txt;
+  }
+
+  function b64ToDataUrl(b64) {
+    // a imagem retornada pelo Horde costuma vir em base64 sem prefixo; assumimos PNG/JPEG possível
+    // Tentamos detectar se já tem data: prefix; se não, retornamos data:image/jpeg;base64,...
+    if (b64.startsWith('data:')) return b64;
+    return 'data:image/png;base64,' + b64;
+  }
+
+  async function postGenerate(prompt, size, steps) {
+    // Corpo usado (tentativa compatível com doc/community examples)
+    const body = {
+      "prompt": prompt,
+      "params": {
+        "width": parseInt(size,10),
+        "height": parseInt(size,10),
+        "steps": parseInt(steps,10),
+        "sampler_name": "k_euler_a",
+        "cfg_scale": 7.0
+      },
+      // modelos comumente aceitos: "stable_diffusion", "sdxl" etc.
+      "models": ["stable_diffusion"],
+      // "nsfw": false,
+      // "r2": false
+    };
+
+    const resp = await fetch(API_BASE + '/generate/async', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': API_KEY
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error('Erro ao enviar geração: ' + resp.status + ' — ' + text);
+    }
+    const json = await resp.json();
+    // formatos possíveis: { id: 'xxxx' } ou { request_id: '...' } ou { job: '...' }
+    return json;
+  }
+
+  async function checkStatus(id) {
+    // tenta vários formatos de endpoint de status; a forma padrão é /generate/status?id=
+    const url = API_BASE + '/generate/status?id=' + encodeURIComponent(id);
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: { 'apikey': API_KEY }
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error('Erro no status: ' + resp.status + ' — ' + text);
+    }
+    return resp.json();
+  }
+
+  function displayImageFromBase64(b64, alt='Imagem') {
+    const img = document.createElement('img');
+    img.src = b64ToDataUrl(b64);
+    img.alt = alt;
+    preview.prepend(img);
+  }
+
+  function clearPreview() {
+    preview.innerHTML = '';
+  }
+
+  async function pollForResult(requestId) {
+    polling = true;
+    abortPolling = false;
+    setStatus('Gerando... aguardando worker (id: ' + requestId + ') — polling iniciado.');
+    let attempts = 0;
+    // Polling com backoff simples
+    while (!abortPolling && attempts < 60) {
+      attempts++;
+      try {
+        const st = await checkStatus(requestId);
+        // Exemplos de formas de retorno:
+        // 1) { done: true, images: [ { img: "<base64>" } ], status: 'done' }
+        // 2) { status: 'completed', generations: [ { img: "<base64>" } ] }
+        // 3) { done: true, result: '...' }
+        // Vamos checar campos possíveis:
+        if (st && (st.done === true || st.status === 'completed' || st.state === 'done')) {
+          setStatus('Geração concluída — processando imagem...');
+          // buscar a imagem em vários caminhos prováveis
+          let b64 = null;
+          if (st.images && st.images.length) b64 = st.images[0].img || st.images[0].base64 || st.images[0];
+          if (!b64 && st.generations && st.generations.length) b64 = st.generations[0].img || st.generations[0].base64 || st.generations[0];
+          if (!b64 && st.result) b64 = st.result;
+          // alguns endpoints retornam um campo "img" direto
+          if (!b64 && st.img) b64 = st.img;
+          if (b64) {
+            displayImageFromBase64(b64, 'Resultado');
+            setStatus('Imagem recebida — veja a pré-visualização acima.');
+            polling = false;
+            return;
+          } else {
+            // algumas vezes o server entrega um link em st.url ou st.data
+            if (st.url) {
+              displayImageFromUrl(st.url);
+              setStatus('Imagem (link) recebida — veja a pré-visualização acima.');
+              polling = false;
+              return;
+            }
+            setStatus('Geração concluída mas sem imagem embutida na resposta. Resposta: ' + JSON.stringify(st).slice(0,300));
+            polling = false;
+            return;
+          }
+        } else {
+          // ainda em fila/processing
+          // alguns retornos trazem "progress" ou "queue_position"
+          let info = [];
+          if (st.queue_position !== undefined) info.push('pos na fila: ' + st.queue_position);
+          if (st.progress !== undefined) info.push('progresso: ' + st.progress);
+          setStatus('Aguardando conclusão... ' + info.join(' | ') + ' (tentativa ' + attempts + '/60)');
+        }
+      } catch (err) {
+        setStatus('Erro ao checar status: ' + err.message);
+        // se for erro de CORS ou 4xx/5xx, parar polling
+        polling = false;
+        return;
+      }
+      // backoff: 2s, 3s, 4s... até 10s
+      await new Promise(r => setTimeout(r, Math.min(2000 + attempts * 500, 10000)));
+    }
+    if (abortPolling) setStatus('Polling cancelado pelo usuário.');
+    else setStatus('Tempo de polling excedido (tentativas esgotadas).');
+    polling = false;
+  }
+
+  async function displayImageFromUrl(url) {
+    // cria <img> apontando para url (pode falhar por CORS se o servidor bloquear)
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'Resultado (URL)';
+    preview.prepend(img);
+  }
+
+  generateBtn.addEventListener('click', async () => {
+    const prompt = document.getElementById('prompt').value.trim();
+    const size = document.getElementById('size').value;
+    const steps = document.getElementById('steps').value || '20';
+
+    if (!prompt) {
+      setStatus('Escreva um prompt válido antes de gerar.');
+      return;
+    }
+
+    clearPreview();
+    setStatus('Enviando pedido de geração...');
+
+    try {
+      const sendResp = await postGenerate(prompt, size, steps);
+      // tentar extrair id do retorno
+      let requestId = sendResp.id || sendResp.request_id || sendResp.requestId || sendResp.job || sendResp.gid || sendResp.uid || sendResp.request || sendResp.data?.id;
+      if (!requestId) {
+        // em alguns casos a API pode retornar um objeto detalhado; mostramos e abortamos
+        setStatus('Resposta inesperada do endpoint: ' + JSON.stringify(sendResp).slice(0,300));
+        return;
+      }
+      currentRequestId = requestId;
+      setStatus('Pedido aceito. request id: ' + requestId + ' — iniciando polling...');
+      // iniciar polling
+      pollForResult(requestId);
+    } catch (err) {
+      setStatus('Falha ao enviar pedido: ' + err.message);
+      console.error(err);
+    }
   });
 
-  const json = await r.json();
+  cancelBtn.addEventListener('click', () => {
+    abortPolling = true;
+    if (currentRequestId) {
+      setStatus('Cancelado — id anterior: ' + currentRequestId);
+      currentRequestId = null;
+    } else {
+      setStatus('Nada em andamento para cancelar.');
+    }
+  });
 
-  // A imagem vem em base64
-  const base64 = json.data[0];
-
-  out.innerHTML = `<img src="data:image/png;base64,${base64}" style="max-width:100%;">`;
-}
+})();
 </script>
-
 </body>
-</html>
+  </html>
