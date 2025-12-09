@@ -3,196 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Imagens IA - AI Horde (Grátis & Sem Erros - 08/12/2025)</title>
+    <title>Gerador de Imagens Craiyon (Sem Key, Ilimitado!)</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
-            color: #fff;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-        }
-        h1 {
-            text-align: center;
-            color: #00ff88;
-            margin-bottom: 5px;
-        }
-        h1 + p { text-align: center; color: #ccc; margin-top: 0; font-size: 16px; }
-        label { display: block; margin: 20px 0 8px; font-size: 18px; }
-        #prompt {
-            width: 100%;
-            padding: 16px;
-            border: 2px solid #00ff88;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            font-size: 18px;
-            box-sizing: border-box;
-        }
-        #prompt::placeholder { color: #888; }
-        button {
-            width: 100%;
-            padding: 18px;
-            margin-top: 15px;
-            background: #00ff88;
-            color: #000;
-            border: none;
-            border-radius: 12px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        button:hover { background: #00cc66; transform: scale(1.02); }
-        button:disabled { background: #444; cursor: not-allowed; transform: none; }
-        #loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            font-size: 20px;
-            color: #00ff88;
-        }
-        #erro {
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff6666;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            display: none;
-            border: 1px solid #ff0000;
-        }
-        #resultado {
-            margin-top: 30px;
-            text-align: center;
-        }
-        #imagem {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4);
-            transition: transform 0.3s;
-        }
-        #imagem:hover { transform: scale(1.02); }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, button { padding: 10px; margin: 5px; }
+        #status { color: blue; }
+        .imagens { display: flex; flex-wrap: wrap; margin-top: 20px; }
+        .imagens img { width: 200px; height: 200px; object-fit: cover; margin: 5px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
+    <h1>Gerador de Imagens com IA (Craiyon - Gratuito e Rápido)</h1>
+    <input type="text" id="prompt" placeholder="Digite o prompt, ex: 'um gato voando no espaço'" style="width: 300px;">
+    <button onclick="gerarImagem()">Gerar 9 Imagens</button>
+    <p id="status"></p>
+    <div id="imagens" class="imagens" style="display: none;"></div>
 
-<div class="container">
-    <h1>GERADOR DE IMAGENS IA</h1>
-    <p>Stable Diffusion via AI Horde • Sem key • Sem limite • 100% funcional em 08/12/2025</p>
+    <script>
+        async function gerarImagem() {
+            const prompt = document.getElementById('prompt').value;
+            if (!prompt) {
+                alert('Digite um prompt!');
+                return;
+            }
 
-    <label for="prompt">Digite sua ideia (detalhes como "estilo realista, 8k" melhoram):</label>
-    <input type="text" id="prompt" placeholder="Ex: um castelo medieval flutuando em nuvens, estilo fantasia épica" 
-           value="um dragão flamejante atacando uma cidade cyberpunk à noite, arte digital">
+            const status = document.getElementById('status');
+            const container = document.getElementById('imagens');
+            status.textContent = 'Gerando... Pode demorar 50-60s (API processa no server)!';
+            container.style.display = 'none';
+            container.innerHTML = '';
 
-    <button onclick="gerarImagem()">GERAR IMAGEM AGORA</button>
-
-    <div id="loading">⏳ Enviando para a rede Horde... 5-20 segundos</div>
-    <div id="erro"></div>
-    <div id="resultado"></div>
-</div>
-
-<script>
-    let kudosId = null;  // ID da geração async
-
-    async function gerarImagem() {
-        const prompt = document.getElementById('prompt').value.trim();
-        if (!prompt) return alert("Digite uma descrição!");
-
-        const btn = document.querySelector('button');
-        const loading = document.getElementById('loading');
-        const erro = document.getElementById('erro');
-        const resultado = document.getElementById('resultado');
-
-        btn.disabled = true;
-        btn.textContent = "ENVIANDO...";
-        loading.style.display = "block";
-        erro.style.display = "none";
-        resultado.innerHTML = "";
-
-        try {
-            // Passo 1: Cria job async na AI Horde (sem key real)
-            const createRes = await fetch('https://aihorde.net/api/v2/generate/async', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    apikey: '0000000000',  // Placeholder público – funciona sem signup
-                    prompt: prompt,
-                    params: {
-                        sampler_name: 'k_euler_a',
-                        width: 512,
-                        height: 512,
-                        seed: -1,  // Aleatório
-                        steps: 20,
-                        cfg_scale: 7.5,
-                        negative_prompt: 'borrado, feio, deformado, baixa qualidade',
-                        k_sampler_name: 'k_euler_a',
-                        n: 1  // 1 imagem
-                    }
-                })
-            });
-
-            if (!createRes.ok) throw new Error(`Erro ${createRes.status}: Fila cheia? Tente em 10s.`);
-
-            const createData = await createRes.json();
-            kudosId = createData.kudos;  // Salva ID para status
-
-            // Passo 2: Polla status até pronto (evita "no image")
-            const pollInterval = setInterval(async () => {
-                const statusRes = await fetch(`https://aihorde.net/api/v2/generate/check/${kudosId}`, {
-                    headers: { 'apikey': '0000000000' }
+            try {
+                // POST pra API do Craiyon v3 (sem key!)
+                const response = await fetch('https://api.craiyon.com/v3', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
                 });
 
-                const statusData = await statusRes.json();
-                if (statusData.generations && statusData.generations.length > 0) {
-                    clearInterval(pollInterval);
-                    const imgData = statusData.generations[0].img;  // Base64 da imagem
-                    const imgSrc = `data:image/png;base64,${imgData}`;
-                    resultado.innerHTML = `
-                        <p style="font-size:20px; color:#00ff88;">GERADO! Aqui está sua imagem:</p>
-                        <img id="imagem" src="${imgSrc}" alt="Imagem gerada por IA">
-                        <p style="color:#ccc; margin-top:15px;">
-                            💡 Clique direito > "Salvar como..." para baixar. Gere mais!
-                        </p>
-                    `;
-                    loading.style.display = "none";
-                    btn.disabled = false;
-                    btn.textContent = "GERAR OUTRA";
-                } else if (statusData.done) {
-                    clearInterval(pollInterval);
-                    throw new Error('Geração falhou – tente prompt simples.');
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
                 }
-            }, 2000);  // Checa a cada 2s
 
-            // Timeout de segurança: 60s
-            setTimeout(() => {
-                if (loading.style.display !== 'none') {
-                    clearInterval(pollInterval);
-                    throw new Error('Timeout: Fila demorada – rede global lotada? Tente de novo.');
+                const data = await response.json();
+                if (!data.images || data.images.length === 0) {
+                    throw new Error('Nenhuma imagem gerada. Tente um prompt diferente.');
                 }
-            }, 60000);
 
-        } catch (e) {
-            erro.textContent = "Ops! " + e.message + " (AI Horde é open-source e estável; cheque net ou VPN)";
-            erro.style.display = "block";
-            loading.style.display = "none";
-            btn.disabled = false;
-            btn.textContent = "GERAR IMAGEM AGORA";
+                // Pega as URLs das 9 imagens (Craiyon retorna links prontos)
+                data.images.forEach((imgUrl, index) => {
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.alt = `Imagem ${index + 1}`;
+                    container.appendChild(img);
+                });
+
+                container.style.display = 'flex';
+                status.textContent = '9 imagens geradas com sucesso! (Craiyon)';
+            } catch (error) {
+                console.error(error);
+                status.textContent = 'Erro: ' + error.message + '. Cheque conexão ou tente de novo (sem VPN se possível).';
+            }
         }
-    }
-
-    // Gera ao carregar? Descomente: window.onload = gerarImagem;
-</script>
-
+    </script>
 </body>
 </html>
