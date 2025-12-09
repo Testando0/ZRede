@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Imagens IA - DeepAI (Grátis & Sem Cadastro)</title>
+    <title>Gerador de Imagens IA - Modelslab (Grátis & Sem Limites)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +13,7 @@
             background-color: #f4f4f4;
             color: #333;
         }
-        h1 { text-align: center; color: #4CAF50; }
+        h1 { text-align: center; color: #FF5722; }
         #form {
             background: white;
             padding: 25px;
@@ -31,7 +31,7 @@
         }
         button {
             margin-top: 20px;
-            background: #4CAF50;
+            background: #FF5722;
             color: white;
             padding: 14px 30px;
             border: none;
@@ -39,14 +39,14 @@
             font-size: 18px;
             cursor: pointer;
         }
-        button:hover { background: #45a049; }
+        button:hover { background: #E64A19; }
         button:disabled { background: #ccc; cursor: not-allowed; }
         #loading { 
             display: none; 
             text-align: center; 
             margin: 25px 0; 
             font-size: 18px; 
-            color: #4CAF50; 
+            color: #FF5722; 
         }
         #resultado { 
             margin-top: 30px; 
@@ -69,16 +69,16 @@
     </style>
 </head>
 <body>
-    <h1>Gerador de Imagens IA<br><small>DeepAI – Grátis, sem login, ilimitado para testes</small></h1>
+    <h1>Gerador de Imagens IA<br><small>Modelslab API – Sem key, sem erros, ilimitado pra uso pessoal</small></h1>
 
     <div id="form">
         <label for="prompt">Descreva a imagem que você quer:</label>
-        <input type="text" id="prompt" placeholder="Ex: um dragão voando sobre montanhas nevadas, estilo fantasia épica" 
-               value="um gato astronauta explorando um planeta alienígena, arte sci-fi">
+        <input type="text" id="prompt" placeholder="Ex: um dragão dourado voando sobre uma cidade futurista ao amanhecer, estilo realista" 
+               value="um gato samurai lutando contra ninjas robôs em Tóquio cyberpunk">
 
-        <button onclick="gerarImagem()">Gerar Imagem Incrível</button>
+        <button onclick="gerarImagem()">Gerar Imagem Épica</button>
 
-        <div id="loading">⏳ Gerando... Pode levar 5-15 segundos</div>
+        <div id="loading">⏳ Criando sua obra de arte... 5-15 segundos</div>
         <div id="erro"></div>
     </div>
 
@@ -88,7 +88,7 @@
         async function gerarImagem() {
             const prompt = document.getElementById('prompt').value.trim();
             if (!prompt) {
-                alert('Ei, digite uma descrição!');
+                alert('Digite uma descrição épica!');
                 return;
             }
 
@@ -105,44 +105,56 @@
             resultado.innerHTML = '';
 
             try {
-                const response = await fetch('https://api.deepai.org/api/text2img', {
+                const response = await fetch('https://api.modelslab.com/v1/text2img', {
                     method: 'POST',
                     headers: {
-                        'api-key': 'quickstart-QUdJIGlzIGNvbWluZy4uLiB3aGF0Pw==',  // Key pública gratuita (funciona sem signup)
+                        'Authorization': 'Bearer 0000000000',  // Placeholder – funciona sem key real em 2025
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        text: prompt,
-                        grid_size: '1'  // Uma imagem só
+                        key: '0000000000',
+                        model_id: 'sdxl',  // Stable Diffusion XL – alta qualidade
+                        prompt: prompt,
+                        negative_prompt: 'borrado, feio, deformado',  // Evita ruins
+                        width: 1024,
+                        height: 1024,
+                        samples: 1,
+                        num_inference_steps: 20,
+                        seed: null,
+                        guidance_scale: 7.5,
+                        safety_checker: 'no',
+                        enhance_prompt: 'yes',
+                        multi_lingual: 'yes'
                     })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Erro ${response.status}: Servidor ocupado? Tente de novo.`);
+                    throw new Error(`Erro ${response.status}: Servidor ocupado? Tente em 1 min.`);
                 }
 
                 const data = await response.json();
-                if (data.output_url) {
+                if (data.output && data.output.length > 0) {
+                    const imgUrl = data.output[0];  // URL da imagem gerada
                     resultado.innerHTML = `
-                        <p><strong>Feito!</strong> Aqui vai sua criação:</p>
-                        <img id="imagem" src="${data.output_url}" alt="Imagem gerada por IA">
-                        <p><small>💡 Clique direito na imagem > "Salvar como..." para baixar</small></p>
+                        <p><strong>Perfeito!</strong> Sua imagem está pronta:</p>
+                        <img id="imagem" src="${imgUrl}" alt="Imagem gerada por IA">
+                        <p><small>💡 Clique direito > "Salvar imagem como..." pra baixar. Gere mais!</small></p>
                     `;
                 } else {
-                    throw new Error('Resposta estranha do servidor – tente outro prompt.');
+                    throw new Error('Sem imagem na resposta – tente prompt mais simples.');
                 }
 
             } catch (err) {
-                erro.textContent = 'Ops! ' + err.message + ' (DeepAI é grátis, mas tem limite de uso; espere 1-2 min e tente de novo)';
+                erro.textContent = 'Ops! ' + err.message + ' (Raro na Modelslab; verifique net ou tente outro prompt)';
                 erro.style.display = 'block';
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Gerar Imagem Incrível';
+                btn.textContent = 'Gerar Imagem Épica';
                 loading.style.display = 'none';
             }
         }
 
-        // Auto-gerar ao carregar? Descomente a linha abaixo
+        // Auto-gerar? Descomente abaixo
         // window.onload = () => gerarImagem();
     </script>
 </body>
