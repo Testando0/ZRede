@@ -1,86 +1,150 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Imagens AI (Stable Diffusion)</title>
+    <title>Gerador de Imagens com PicLumen API</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; background-color: #f4f4f4; }
-        #textoInput { width: 80%; max-width: 400px; padding: 10px; margin-right: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 10px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; margin-top: 10px; }
-        #imagemResultado { max-width: 90%; height: auto; margin-top: 25px; border: 3px solid #007bff; min-height: 150px; background-color: #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        #status { font-weight: bold; margin-top: 15px; color: #333; }
-        .aviso { color: #CC0000; font-size: 0.9em; margin-top: 5px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #007bff;
+        }
+        #form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        #prompt {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            color: #007bff;
+        }
+        #resultado {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #imagem {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #erro {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
-
-    <h2>🖼️ Gerador Stable Diffusion 2.1</h2>
-    
-    <input type="text" id="textoInput" placeholder="Descreva sua imagem (Recomendado: em inglês, ex: 'a beautiful futuristic city')">
-    <button onclick="gerarImagem()">Gerar Imagem</button>
-    
-    <p class="aviso">A geração do Stable Diffusion também pode levar até 40 segundos na API gratuita.</p>
-    <p id="status">Aguardando seu prompt...</p>
-    
-    <img id="imagemResultado" src="" alt="A imagem gerada aparecerá aqui" />
+    <h1>🖼️ Gerador de Imagens IA</h1>
+    <div id="form">
+        <label for="prompt">Digite o prompt (descrição da imagem):</label>
+        <input type="text" id="prompt" placeholder="Ex: um gato astronauta no espaço, estilo cyberpunk" value="um dragão voando sobre montanhas, estilo fantasia">
+        <br>
+        <button onclick="gerarImagem()">Gerar Imagem</button>
+        <div id="erro"></div>
+        <div id="loading">⏳ Gerando imagem... Aguarde (pode demorar 20-30s)!</div>
+    </div>
+    <div id="resultado"></div>
 
     <script>
         async function gerarImagem() {
-            const prompt = document.getElementById('textoInput').value;
-            const imgTag = document.getElementById('imagemResultado');
-            const status = document.getElementById('status');
-            
+            const prompt = document.getElementById('prompt').value.trim();
             if (!prompt) {
-                status.innerText = "🚨 Por favor, insira um texto para gerar a imagem.";
+                alert('Digite um prompt!');
                 return;
             }
 
-            // SEU TOKEN DE ACESSO DA HUGGING FACE:
-            const TOKEN = "Hf_KLNZyabIzKPHkSMAJaPpXWBTjaViOyrGgX"; 
-            
-            status.style.color = '#CC0000';
-            status.innerText = "⏳ GERANDO... (PODE LEVAR ATÉ 40 SEGUNDOS). POR FAVOR, NÃO INTERROMPA.";
-            imgTag.src = ""; // Limpa a imagem anterior
+            const btn = document.querySelector('button');
+            const loading = document.getElementById('loading');
+            const erro = document.getElementById('erro');
+            const resultado = document.getElementById('resultado');
+
+            // Reset UI
+            btn.disabled = true;
+            btn.textContent = 'Gerando...';
+            loading.style.display = 'block';
+            erro.style.display = 'none';
+            resultado.innerHTML = '';
 
             try {
-                // NOVO ENDPOINT: Usando Stable Diffusion 2.1 (mais estável que o DALL-E Mini)
-                const response = await fetch(
-                    "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
-                    {
-                        headers: { 
-                            Authorization: `Bearer ${TOKEN}`,
-                            "Content-Type": "application/json" 
-                        },
-                        method: "POST",
-                        body: JSON.stringify({ inputs: prompt }),
-                    }
-                );
+                const response = await fetch('https://api.piclumen.com/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        width: 512,  // Largura da imagem
+                        height: 512, // Altura da imagem
+                        steps: 20    // Passos de qualidade (20-50, mais = melhor mas mais lento)
+                    })
+                });
 
                 if (!response.ok) {
-                    status.style.color = 'red';
-                    status.innerText = `🚨 ERRO (${response.status}). Causa provável: Limite de uso ou Timeout. Tente novamente em 5 minutos.`;
-                    
-                    const errorBody = await response.text();
-                    console.error("Erro na API:", errorBody);
-                    throw new Error(`API Error: ${response.status}`);
+                    throw new Error(`Erro na API: ${response.status} - ${response.statusText}`);
                 }
 
-                // Cria a URL da imagem
-                const result = await response.blob();
-                const imageUrl = URL.createObjectURL(result);
-                imgTag.src = imageUrl;
-                
-                status.style.color = 'green';
-                status.innerText = "✅ PRONTO! Imagem gerada com sucesso.";
-                
-            } catch (error) {
-                if (status.innerText.includes("GERANDO")) {
-                     status.innerText = "🚨 FALHA POR TEMPO LIMITE (TIMEOUT). A API gratuita do Stable Diffusion também falhou. Considere o site craiyon.com.";
+                const data = await response.json();
+                if (data.images && data.images.length > 0) {
+                    const imgUrl = data.images[0]; // Pega a primeira imagem gerada
+                    resultado.innerHTML = `<img id="imagem" src="${imgUrl}" alt="Imagem gerada: ${prompt}">`;
+                } else {
+                    throw new Error('Nenhuma imagem gerada. Tente outro prompt.');
                 }
-                console.error("Erro fatal:", error);
+            } catch (error) {
+                erro.textContent = `Ops! Erro: ${error.message}. Pode ser rate limit (tente em 1h) ou problema na API.`;
+                erro.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Gerar Imagem';
+                loading.style.display = 'none';
             }
         }
+
+        // Gera imagem ao carregar a página (opcional, com o prompt default)
+        window.onload = () => gerarImagem();
     </script>
 </body>
 </html>
