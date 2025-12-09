@@ -5,10 +5,9 @@
   <title>Gerador de Imagens HTML Puro</title>
 </head>
 <body style="background:#111; color:white; font-family:Arial; padding:20px;">
+  <h2>Gerador de Imagens (HTML Puro)</h2>
 
-  <h2>Gerador de Imagens (HTML puro)</h2>
-
-  <input id="prompt" placeholder="Descreva a imagem..." 
+  <input id="prompt" placeholder="Descreva a imagem..."
          style="width:350px; padding:10px;">
   <button onclick="gerar()">Gerar</button>
 
@@ -16,30 +15,30 @@
 
 <script>
 async function gerar() {
-  let prompt = document.getElementById("prompt").value;
-  let out = document.getElementById("resultado");
+  const prompt = document.getElementById("prompt").value;
+  const out = document.getElementById("resultado");
+
   out.innerHTML = "Gerando imagem...";
 
-  // Proxy CORS que funciona PARA HUGGINGFACE
-  const proxy = "https://corsproxy.io/?";
+  // API pública do HuggingFace Space (sem key, sem CORS)
+  const url = "https://hf.space/embed/nitrosocke/pony-diffusion/api/predict/";
 
-  // API pública sem key
-  const apiURL =
-    "https://huggingface.co/api/models/hogiahien/cog-view-2.0-mini";
-
-  // Fazendo a requisição
-  let response = await fetch(proxy + apiURL, {
+  const r = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
-      inputs: prompt
+      data: [prompt]
     })
   });
 
-  const blob = await response.blob();
+  const json = await r.json();
 
-  const url = URL.createObjectURL(blob);
-  out.innerHTML = `<img src="${url}" style="max-width:100%;">`;
+  // A imagem vem em base64
+  const base64 = json.data[0];
+
+  out.innerHTML = `<img src="data:image/png;base64,${base64}" style="max-width:100%;">`;
 }
 </script>
 
