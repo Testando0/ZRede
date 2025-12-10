@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Imagens com Proxy CORS (Revisado)</title>
+    <title>Gerador de Imagens Stable Diffusion (Hugging Face)</title>
     
     <style>
         body { 
@@ -65,14 +65,14 @@
 </head>
 <body>
 
-    <h1>✨ Gerador de Imagens com Proxy CORS (Estável)</h1>
-    <p style="text-align: center; color: #555;">Usando corsproxy.io com tratamento de erro robusto.</p>
+    <h1>✨ Gerador de Imagens Stable Diffusion XL (Hugging Face)</h1>
+    <p style="text-align: center; color: #cc0000; font-weight: bold;">AVISO: O endpoint público pode ser lento ou falhar por estar sobrecarregado.</p>
     
     <form id="image-form">
         <input 
             id="prompt-input" 
             type="text" 
-            placeholder="Ex: Um tigre cyberpunk com fones de ouvido, luzes neon" 
+            placeholder="Ex: Um dragão azul de armadura dourada em um vulcão ativo, arte digital" 
             required
         >
         <button type="submit" id="generate-button">Gerar Imagem</button>
@@ -80,18 +80,12 @@
 
     <p id="status-message" aria-live="polite"></p>
 
-    <img id="result-image" src="" alt="Imagem gerada pela Inteligência Artificial">
+    <img id="result-image" src="" alt="Imagem gerada por Stable Diffusion">
 
     <script>
-        // 🚨 CHAVE DE API: Substitua pela sua chave VÁLIDA do Google.
-        // LEMBRETE: Sua chave fica exposta na URL do proxy.
-        const API_KEY = "AIzaSyBO0SVSuu32UHnPj3lt50Jsb74FZ6hk8IE"; 
-        
-        // Endpoint base do Google para Geração de Imagens
-        const GOOGLE_API_URL_BASE = 'https://generativelanguage.googleapis.com/v1/images:generate';
-        
-        // URL do Proxy CORS
-        const PROXY_URL_PREFIX = 'https://corsproxy.io/?'; 
+        // Endpoint PÚBLICO do Stable Diffusion XL (SDXL) no Hugging Face
+        // Não requer chave/token, mas a estabilidade não é garantida.
+        const INFERENCE_URL = 'https://stabilityai-stable-diffusion-xl.hf.space/run/predict'; 
         
         const form = document.getElementById('image-form');
         const promptInput = document.getElementById('prompt-input');
@@ -101,84 +95,62 @@
 
         async function generateImage(prompt) {
             
-            statusMessage.textContent = "Gerando imagem... por favor, aguarde.";
+            statusMessage.textContent = "Gerando imagem... AGUARDE (Pode levar até 30s no servidor público).";
             generateButton.disabled = true;
             resultImage.style.display = 'none';
 
-            // 1. Constrói o corpo da requisição (JSON CORRETO)
+            // Corpo da requisição no formato esperado pelo endpoint do Hugging Face Spaces
             const requestBody = {
-                prompt: prompt, 
-                numberOfImages: 1, 
-                quality: "medium", 
-                aspectRatio: "1:1"
+                data: [
+                    prompt,                             // [0] Prompt principal
+                    'low quality, worst quality, blurry, bad anatomy', // [1] Prompt negativo (para evitar erros)
+                    '1024x1024',                        // [2] Resolução (SDXL usa 1024x1024)
+                    '50',                               // [3] Passos (Steps)
+                    '7.0',                              // [4] Guia de escala (Guidance Scale)
+                    '0',                                // [5] Seed (0 = aleatória)
+                ]
             };
             
-            // 2. Constrói a URL do Google COMPLETA (com a chave)
-            const finalGoogleApiUrl = `${GOOGLE_API_URL_BASE}?key=${API_KEY}`;
-            
-            // 3. Constrói a URL do Proxy: PROXY + URL do Google CODIFICADA
-            const PROXY_ENDPOINT = PROXY_URL_PREFIX + encodeURIComponent(finalGoogleApiUrl);
-            
             try {
-                // 4. Envia a requisição para o Proxy
-                const response = await fetch(PROXY_ENDPOINT, {
+                // 1. Envia a requisição para o endpoint público
+                const response = await fetch(INFERENCE_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        // Nenhuma chave/token é necessária
                     },
                     body: JSON.stringify(requestBody)
                 });
-                
-                // 5. TRATAMENTO DE ERRO ROBUSTO:
-                
-                // Clona a resposta para que possamos tentar ler como texto se o JSON falhar
-                const responseClone = response.clone(); 
-                let data;
 
-                // Tenta ler o JSON. Se falhar, é o erro que você está tendo (Unexpected end of JSON)
-                try {
-                    data = await response.json();
-                } catch (e) {
-                    // Se a leitura JSON falhar, lê a resposta como texto (provavelmente HTML/Erro do proxy)
-                    const errorText = await responseClone.text(); 
-                    statusMessage.textContent = `🚨 Erro de Proxy/JSON: A resposta não foi um JSON válido. Verifique se a chave está correta, ou se o proxy público falhou.`;
-                    console.error("Resposta não-JSON (RAW):", errorText.substring(0, 500) + '...');
-                    return; 
-                }
-
-                // 6. Trata a resposta HTTP (erros 4xx/5xx retornados pelo Google via Proxy)
                 if (!response.ok) {
-                    const errorMessage = data.error 
-                        ? (data.error.message || "Erro desconhecido da API.")
-                        : `Erro HTTP ${response.status} retornado pelo Proxy.`;
-                        
-                    statusMessage.textContent = `❌ Erro ao gerar imagem: ${errorMessage}`;
-                    console.error("Erro da API:", data);
-                    return;
+                    throw new Error(`Erro HTTP ${response.status}. O servidor público está sobrecarregado ou inativo.`);
                 }
-                
-                // 7. Processar resposta OK
-                if (data && data.generated_images && data.generated_images.length > 0) {
-                    // O caminho para o Base64 está correto
-                    const base64Image = data.generated_images[0].image.imageBytes;
-                    
-                    resultImage.src = `data:image/jpeg;base64,${base64Image}`;
-                    resultImage.style.display = 'block';
-                    statusMessage.textContent = "✅ Imagem gerada com sucesso!";
 
-                } else if (data.error) {
-                    // Erro da API do Google, mas retornado como JSON (ex: chave inválida)
-                    statusMessage.textContent = `❌ Erro da API: ${data.error.message}`;
-                    console.error("Erro da API:", data.error);
+                const data = await response.json();
+                
+                // 2. Processa o resultado
+                // O resultado do Hugging Face vem aninhado: data[0] -> [0] -> data (base64)
+                if (data.data && 
+                    data.data.length > 0 && 
+                    data.data[0].length > 0 && 
+                    data.data[0][0].includes('data:image/png;base64,')) 
+                {
+                    
+                    const base64Url = data.data[0][0];
+                    
+                    resultImage.src = base64Url;
+                    resultImage.style.display = 'block';
+                    statusMessage.textContent = "✅ Imagem gerada com sucesso via Stable Diffusion XL!";
+
                 } else {
-                    statusMessage.textContent = "⚠️ Resposta inesperada da API. Verifique o console para detalhes.";
-                    console.error("Resposta inesperada:", data);
+                    statusMessage.textContent = "⚠️ Resposta da API incompleta. O servidor pode ter falhado ao gerar a imagem.";
+                    console.error("Resposta Incompleta:", data);
                 }
 
             } catch (error) {
-                // 8. Tratar erros de rede (Failed to fetch)
-                statusMessage.textContent = `🚨 Erro de conexão de rede (Failed to fetch): ${error.message}.`;
-                console.error("Erro de rede:", error);
+                // 3. Tratar erros
+                statusMessage.textContent = `🚨 Falha na Conexão/API: ${error.message}.`;
+                console.error("Erro completo:", error);
             } finally {
                 generateButton.disabled = false;
             }
