@@ -1,40 +1,126 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerar Imagem com LAHgen</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-    #imagem {
-      width: 50%;
-      height: 50%;
-      border: 1px solid #ccc;
-      margin: 20px auto;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Nano Banana (Gemini Image) API em HTML</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; text-align: center; }
+        input[type="text"], button { padding: 10px; width: 100%; margin-bottom: 10px; box-sizing: border-box; }
+        #result-image { border: 1px solid #ccc; max-width: 100%; height: auto; margin-top: 20px; display: none; }
+        #loading-message { color: #007bff; }
+    </style>
 </head>
 <body>
-  <h1>Gerar Imagem com LAHgen</h1>
-  <input type="text" id="prompt" placeholder="Digite o que você quer gerar">
-  <button id="gerar">Gerar Imagem</button>
-  <div id="imagem"></div>
 
-  <script>
-    const promptInput = document.getElementById('prompt');
-    const gerarButton = document.getElementById('gerar');
-    const imagemDiv = document.getElementById('imagem');
+    <h1>Gerador de Imagens Nano Banana (Gemini API)</h1>
+    <p>Insira um prompt e clique em "Gerar" para criar uma imagem.</p>
+    
+    <form id="image-form">
+        <input 
+            id="prompt-input" 
+            type="text" 
+            placeholder="Ex: Um gato usando óculos de sol, estilo pop art" 
+            required
+        >
+        <button type="submit" id="generate-button">Gerar Imagem</button>
+    </form>
 
-    gerarButton.addEventListener('click', () => {
-      const prompt = promptInput.value;
-      const url = `https://kuromi-system-tech.onrender.com/api/dalle?texto=${prompt}`;
-      const img = document.createElement('img');
-      img.src = url;
-      imagemDiv.innerHTML = '';
-      imagemDiv.appendChild(img);
-    });
-  </script>
+    <p id="status-message" aria-live="polite"></p>
+
+    <img id="result-image" src="" alt="Imagem gerada pela Inteligência Artificial">
+
+    <script>
+        // ⚠️ ALERTA DE SEGURANÇA: Esta chave está visível no código-fonte.
+        // USE APENAS PARA TESTES! Em produção, use um servidor de backend.
+        const API_KEY = "5UUL8DwlhczGzNUa834cD3Af-2D6C-4dE9-a3d9-Dd959bF2";
+        
+        // O modelo para geração de imagens é a variante Flash Image (conhecida como Nano Banana)
+        const MODEL_NAME = "gemini-2-5-flash-image"; 
+        
+        const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+        
+        const form = document.getElementById('image-form');
+        const promptInput = document.getElementById('prompt-input');
+        const resultImage = document.getElementById('result-image');
+        const statusMessage = document.getElementById('status-message');
+        const generateButton = document.getElementById('generate-button');
+
+        async function generateImage(prompt) {
+            
+            // 1. Configurar o estado de carregamento
+            statusMessage.textContent = "Gerando imagem... aguarde.";
+            generateButton.disabled = true;
+            resultImage.style.display = 'none';
+
+            // 2. Construir o corpo da requisição (payload JSON)
+            const requestBody = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            { text: prompt }
+                        ]
+                    }
+                ],
+                config: {
+                    // Parâmetros específicos para geração de imagem
+                    imageGenerationConfig: {
+                        numberOfImages: 1, // Gerar uma única imagem
+                        quality: "medium", // Qualidade da imagem
+                        aspectRatio: "1:1" // Proporção da imagem (pode ser "3:4", "4:3", "16:9" etc.)
+                    }
+                }
+            };
+
+            try {
+                // 3. Enviar a requisição para a API
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 4. Processar a resposta
+                    
+                    // O dado da imagem é retornado em Base64
+                    const base64Image = data.candidates[0].image.image.imageBytes;
+                    
+                    // 5. Exibir a imagem
+                    // Criamos um Data URI para ser exibido diretamente no HTML
+                    resultImage.src = `data:image/jpeg;base64,${base64Image}`;
+                    resultImage.style.display = 'block';
+                    statusMessage.textContent = "Imagem gerada com sucesso!";
+
+                } else {
+                    // 6. Tratar erros da API
+                    const errorMessage = data.error ? data.error.message : "Erro desconhecido na requisição.";
+                    statusMessage.textContent = `Erro ao gerar imagem: ${errorMessage}`;
+                    console.error("Erro da API:", data);
+                }
+
+            } catch (error) {
+                // 7. Tratar erros de rede ou processamento
+                statusMessage.textContent = `Erro de conexão: ${error.message}`;
+                console.error("Erro de rede:", error);
+            } finally {
+                // 8. Restaurar o botão
+                generateButton.disabled = false;
+            }
+        }
+
+        // Adicionar o listener para o envio do formulário
+        form.addEventListener('submit', (e) => {
+            e.preventDefault(); // Impedir o recarregamento da página
+            const prompt = promptInput.value.trim();
+            if (prompt) {
+                generateImage(prompt);
+            }
+        });
+    </script>
 </body>
 </html>
