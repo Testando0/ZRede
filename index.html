@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Imagens com Proxy CORS</title>
+    <title>Gerador de Imagens com Proxy CORS (Revisado)</title>
     
     <style>
         body { 
@@ -59,14 +59,14 @@
             margin-top: 20px; 
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            display: none; /* Inicia oculto */
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <h1>✨ Gerador de Imagens com Proxy CORS</h1>
-    <p style="text-align: center; color: #555;">Usando corsproxy.io para resolver o erro de origem cruzada.</p>
+    <h1>✨ Gerador de Imagens com Proxy CORS (Estável)</h1>
+    <p style="text-align: center; color: #555;">Usando corsproxy.io com tratamento de erro robusto.</p>
     
     <form id="image-form">
         <input 
@@ -83,11 +83,11 @@
     <img id="result-image" src="" alt="Imagem gerada pela Inteligência Artificial">
 
     <script>
-        // 🚨 CHAVE DE API: Substitua pela sua chave VÁLIDA.
+        // 🚨 CHAVE DE API: Substitua pela sua chave VÁLIDA do Google.
         // LEMBRETE: Sua chave fica exposta na URL do proxy.
         const API_KEY = "AIzaSyBO0SVSuu32UHnPj3lt50Jsb74FZ6hk8IE"; 
         
-        // Endpoint do Google para Geração de Imagens
+        // Endpoint base do Google para Geração de Imagens
         const GOOGLE_API_URL_BASE = 'https://generativelanguage.googleapis.com/v1/images:generate';
         
         // URL do Proxy CORS
@@ -105,7 +105,7 @@
             generateButton.disabled = true;
             resultImage.style.display = 'none';
 
-            // 1. Constrói o corpo da requisição
+            // 1. Constrói o corpo da requisição (JSON CORRETO)
             const requestBody = {
                 prompt: prompt, 
                 numberOfImages: 1, 
@@ -125,36 +125,59 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        // A URL do Google precisa ser enviada no cabeçalho X-Cors-Proxy-Url
-                        // A propriedade encodeURIComponent() é usada para codificar a URL do Google.
-                        'X-Cors-Proxy-Url': finalGoogleApiUrl,
                     },
                     body: JSON.stringify(requestBody)
                 });
+                
+                // 5. TRATAMENTO DE ERRO ROBUSTO:
+                
+                // Clona a resposta para que possamos tentar ler como texto se o JSON falhar
+                const responseClone = response.clone(); 
+                let data;
 
-                const data = await response.json();
+                // Tenta ler o JSON. Se falhar, é o erro que você está tendo (Unexpected end of JSON)
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    // Se a leitura JSON falhar, lê a resposta como texto (provavelmente HTML/Erro do proxy)
+                    const errorText = await responseClone.text(); 
+                    statusMessage.textContent = `🚨 Erro de Proxy/JSON: A resposta não foi um JSON válido. Verifique se a chave está correta, ou se o proxy público falhou.`;
+                    console.error("Resposta não-JSON (RAW):", errorText.substring(0, 500) + '...');
+                    return; 
+                }
 
-                if (response.ok && !data.error) {
-                    // 5. Processar e exibir a imagem
+                // 6. Trata a resposta HTTP (erros 4xx/5xx retornados pelo Google via Proxy)
+                if (!response.ok) {
+                    const errorMessage = data.error 
+                        ? (data.error.message || "Erro desconhecido da API.")
+                        : `Erro HTTP ${response.status} retornado pelo Proxy.`;
+                        
+                    statusMessage.textContent = `❌ Erro ao gerar imagem: ${errorMessage}`;
+                    console.error("Erro da API:", data);
+                    return;
+                }
+                
+                // 7. Processar resposta OK
+                if (data && data.generated_images && data.generated_images.length > 0) {
+                    // O caminho para o Base64 está correto
                     const base64Image = data.generated_images[0].image.imageBytes;
                     
                     resultImage.src = `data:image/jpeg;base64,${base64Image}`;
                     resultImage.style.display = 'block';
                     statusMessage.textContent = "✅ Imagem gerada com sucesso!";
 
+                } else if (data.error) {
+                    // Erro da API do Google, mas retornado como JSON (ex: chave inválida)
+                    statusMessage.textContent = `❌ Erro da API: ${data.error.message}`;
+                    console.error("Erro da API:", data.error);
                 } else {
-                    // 6. Tratar erros
-                    const errorMessage = data.error 
-                        ? (data.error.message || "Erro desconhecido da API.")
-                        : "Falha na requisição. Verifique o console.";
-                        
-                    statusMessage.textContent = `❌ Erro ao gerar imagem: ${errorMessage}`;
-                    console.error("Erro completo:", data);
+                    statusMessage.textContent = "⚠️ Resposta inesperada da API. Verifique o console para detalhes.";
+                    console.error("Resposta inesperada:", data);
                 }
 
             } catch (error) {
-                // 7. Tratar erros de rede
-                statusMessage.textContent = `🚨 Erro de conexão: ${error.message}.`;
+                // 8. Tratar erros de rede (Failed to fetch)
+                statusMessage.textContent = `🚨 Erro de conexão de rede (Failed to fetch): ${error.message}.`;
                 console.error("Erro de rede:", error);
             } finally {
                 generateButton.disabled = false;
