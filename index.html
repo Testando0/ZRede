@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Imagens Stable Diffusion XL Turbo</title>
+    <title>Gerador de Imagens Stable Diffusion (Inferência Direta)</title>
     
     <style>
         body { 
@@ -65,14 +65,14 @@
 </head>
 <body>
 
-    <h1>✨ Gerador de Imagens SDXL Turbo (Hugging Face)</h1>
-    <p style="text-align: center; color: #cc0000; font-weight: bold;">API Pública: Pode ser lento ou falhar por estar sobrecarregado.</p>
+    <h1>✨ Gerador de Imagens Stable Diffusion (Inferência Direta)</h1>
+    <p style="text-align: center; color: #cc0000; font-weight: bold;">API Pública: Não utiliza chave, mas pode falhar por segurança.</p>
     
     <form id="image-form">
         <input 
             id="prompt-input" 
             type="text" 
-            placeholder="Ex: Um dragão azul de armadura dourada em um vulcão ativo, arte digital" 
+            placeholder="Ex: Um cão surfista em uma onda cyberpunk, arte digital" 
             required
         >
         <button type="submit" id="generate-button">Gerar Imagem</button>
@@ -83,9 +83,8 @@
     <img id="result-image" src="" alt="Imagem gerada por Stable Diffusion">
 
     <script>
-        // ENDPOINT PÚBLICO ATIVO do Stable Diffusion XL Turbo (SDXL-T)
-        // Não requer chave de acesso.
-        const INFERENCE_URL = 'https://sdxl-turbo.hf.space/run/predict'; 
+        // ENDPOINT DE INFERÊNCIA MAIS ESTÁVEL para o Stable Diffusion 1.5
+        const INFERENCE_URL = 'https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5'; 
         
         const form = document.getElementById('image-form');
         const promptInput = document.getElementById('prompt-input');
@@ -95,46 +94,38 @@
 
         async function generateImage(prompt) {
             
-            statusMessage.textContent = "Gerando imagem... AGUARDE (Servidor público em uso).";
+            statusMessage.textContent = "Tentando gerar imagem no servidor de inferência...";
             generateButton.disabled = true;
             resultImage.style.display = 'none';
 
-            // Corpo da requisição ajustado para o modelo SDXL Turbo
+            // Corpo da requisição no formato API Inference
             const requestBody = {
-                data: [
-                    prompt,                                      // [0] Prompt principal
-                    'low quality, worst quality, blurry, disfigured', // [1] Prompt negativo
-                    1.5,                                         // [2] Guia de escala (Guidance Scale)
-                    '0',                                         // [3] Seed (Aleatória)
-                ]
+                inputs: prompt,
+                options: { wait_for_model: true } // Espera a fila, se necessário
             };
             
             try {
                 const response = await fetch(INFERENCE_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json'
+                        // Nenhum parâmetro de segurança/autenticação é enviado
+                    },
                     body: JSON.stringify(requestBody)
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Erro HTTP ${response.status}. O servidor público pode estar inativo ou sobrecarregado.`);
+                    // Este erro (403, 401) geralmente indica que o Hugging Face exige a identificação
+                    throw new Error(`Erro HTTP ${response.status}. Servidor rejeitou a requisição. (Pode exigir login gratuito)`);
                 }
 
-                const data = await response.json();
-                
-                // Processa o resultado (Base64) do Hugging Face
-                if (data.data && data.data.length > 0 && data.data[0].length > 0 && data.data[0][0].includes('data:image/png;base64,')) {
-                    
-                    const base64Url = data.data[0][0];
-                    
-                    resultImage.src = base64Url;
-                    resultImage.style.display = 'block';
-                    statusMessage.textContent = "✅ Imagem gerada com sucesso via SDXL Turbo!";
+                // A API de Inferência devolve o dado binário da imagem (Blob), não JSON
+                const imageBlob = await response.blob();
+                const imageUrl = URL.createObjectURL(imageBlob);
 
-                } else {
-                    statusMessage.textContent = "⚠️ Geração falhou. Servidor sem dados válidos.";
-                    console.error("Resposta da API:", data);
-                }
+                resultImage.src = imageUrl;
+                resultImage.style.display = 'block';
+                statusMessage.textContent = "✅ Imagem gerada com sucesso via Inferência Direta!";
 
             } catch (error) {
                 statusMessage.textContent = `🚨 Falha na Conexão/API: ${error.message}`;
