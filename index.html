@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Imagens Nano Banana (Gemini API)</title>
+    <title>Gerador de Imagens com Proxy CORS</title>
     
     <style>
         body { 
@@ -65,14 +65,14 @@
 </head>
 <body>
 
-    <h1>✨ Gerador de Imagens Nano Banana (Gemini API)</h1>
-    <p style="text-align: center; color: #555;">Insira um prompt detalhado para que a IA crie uma imagem.</p>
+    <h1>✨ Gerador de Imagens com Proxy CORS</h1>
+    <p style="text-align: center; color: #555;">Usando corsproxy.io para resolver o erro de origem cruzada.</p>
     
     <form id="image-form">
         <input 
             id="prompt-input" 
             type="text" 
-            placeholder="Ex: Um astronauta lendo um livro em um jardim de cogumelos, estilo aquarela digital" 
+            placeholder="Ex: Um tigre cyberpunk com fones de ouvido, luzes neon" 
             required
         >
         <button type="submit" id="generate-button">Gerar Imagem</button>
@@ -83,12 +83,15 @@
     <img id="result-image" src="" alt="Imagem gerada pela Inteligência Artificial">
 
     <script>
-        // 🚨 PASSO ESSENCIAL: Substitua esta placeholder pela sua chave VÁLIDA do Google AI Studio.
-        // CUIDADO: Por segurança, evite deixar chaves em código de frontend em produção.
-        const API_KEY = "SUA_CHAVE_DE_API_VÁLIDA_DO_GOOGLE_AQUI"; 
+        // 🚨 CHAVE DE API: Substitua pela sua chave VÁLIDA.
+        // LEMBRETE: Sua chave fica exposta na URL do proxy.
+        const API_KEY = "AIzaSyBO0SVSuu32UHnPj3lt50Jsb74FZ6hk8IE"; 
         
-        // Endpoint CORRETO para a API de Geração de Imagens do Google (V1)
-        const IMAGE_API_ENDPOINT = `https://generativelanguage.googleapis.com/v1/images:generate?key=${API_KEY}`;
+        // Endpoint do Google para Geração de Imagens
+        const GOOGLE_API_URL_BASE = 'https://generativelanguage.googleapis.com/v1/images:generate';
+        
+        // URL do Proxy CORS
+        const PROXY_URL_PREFIX = 'https://corsproxy.io/?'; 
         
         const form = document.getElementById('image-form');
         const promptInput = document.getElementById('prompt-input');
@@ -98,64 +101,68 @@
 
         async function generateImage(prompt) {
             
-            // 1. Configurar o estado de carregamento
-            statusMessage.textContent = "Gerando imagem... isso pode levar alguns segundos.";
+            statusMessage.textContent = "Gerando imagem... por favor, aguarde.";
             generateButton.disabled = true;
             resultImage.style.display = 'none';
 
-            // 2. Construir o corpo da requisição (payload JSON CORRIGIDO)
+            // 1. Constrói o corpo da requisição
             const requestBody = {
-                // Parâmetros no nível principal do JSON para a API /v1/images:generate
                 prompt: prompt, 
                 numberOfImages: 1, 
                 quality: "medium", 
-                aspectRatio: "1:1" // Experimente "4:3", "3:4" ou "16:9"
+                aspectRatio: "1:1"
             };
-
+            
+            // 2. Constrói a URL do Google COMPLETA (com a chave)
+            const finalGoogleApiUrl = `${GOOGLE_API_URL_BASE}?key=${API_KEY}`;
+            
+            // 3. Constrói a URL do Proxy: PROXY + URL do Google CODIFICADA
+            const PROXY_ENDPOINT = PROXY_URL_PREFIX + encodeURIComponent(finalGoogleApiUrl);
+            
             try {
-                // 3. Enviar a requisição
-                const response = await fetch(IMAGE_API_ENDPOINT, {
+                // 4. Envia a requisição para o Proxy
+                const response = await fetch(PROXY_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        // A URL do Google precisa ser enviada no cabeçalho X-Cors-Proxy-Url
+                        // A propriedade encodeURIComponent() é usada para codificar a URL do Google.
+                        'X-Cors-Proxy-Url': finalGoogleApiUrl,
                     },
                     body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    // 4. Processar a resposta (caminho CORRETO para o Base64)
+                if (response.ok && !data.error) {
+                    // 5. Processar e exibir a imagem
                     const base64Image = data.generated_images[0].image.imageBytes;
                     
-                    // 5. Exibir a imagem usando Data URI
                     resultImage.src = `data:image/jpeg;base64,${base64Image}`;
                     resultImage.style.display = 'block';
                     statusMessage.textContent = "✅ Imagem gerada com sucesso!";
 
                 } else {
-                    // 6. Tratar erros da API
+                    // 6. Tratar erros
                     const errorMessage = data.error 
                         ? (data.error.message || "Erro desconhecido da API.")
-                        : "Falha na requisição, verifique a rede ou a chave.";
+                        : "Falha na requisição. Verifique o console.";
                         
                     statusMessage.textContent = `❌ Erro ao gerar imagem: ${errorMessage}`;
-                    console.error("Erro completo da API:", data);
+                    console.error("Erro completo:", data);
                 }
 
             } catch (error) {
-                // 7. Tratar erros de rede ou processamento
-                statusMessage.textContent = `🚨 Erro de conexão ou processamento: ${error.message}`;
+                // 7. Tratar erros de rede
+                statusMessage.textContent = `🚨 Erro de conexão: ${error.message}.`;
                 console.error("Erro de rede:", error);
             } finally {
-                // 8. Restaurar o botão
                 generateButton.disabled = false;
             }
         }
 
-        // Listener para o envio do formulário
         form.addEventListener('submit', (e) => {
-            e.preventDefault(); // Impede que a página recarregue
+            e.preventDefault(); 
             const prompt = promptInput.value.trim();
             if (prompt) {
                 generateImage(prompt);
