@@ -2,24 +2,77 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Nxano Banana (Gemini Image) API em HTML</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Imagens Nano Banana (Gemini API)</title>
+    
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; text-align: center; }
-        input[type="text"], button { padding: 10px; width: 100%; margin-bottom: 10px; box-sizing: border-box; }
-        #result-image { border: 1px solid #ccc; max-width: 100%; height: auto; margin-top: 20px; display: none; }
-        #loading-message { color: #007bff; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 700px; 
+            margin: 40px auto; 
+            padding: 20px; 
+            background-color: #f4f7f9;
+        }
+        h1 { 
+            color: #1a73e8; 
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] { 
+            padding: 12px; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            font-size: 16px;
+        }
+        button { 
+            padding: 12px; 
+            background-color: #1a73e8; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover:not(:disabled) {
+            background-color: #155bb9;
+        }
+        button:disabled {
+            background-color: #9cbce1;
+            cursor: not-allowed;
+        }
+        #status-message {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #333;
+        }
+        #result-image { 
+            border: 2px solid #ddd; 
+            max-width: 100%; 
+            height: auto; 
+            margin-top: 20px; 
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none; /* Inicia oculto */
+        }
     </style>
 </head>
 <body>
 
-    <h1>Gerador de Imagens Nano Banana (Gemini APIx)</h1>
-    <p>Insira um prompt e clique em "Gerar" para criar uma imagem.</p>
+    <h1>✨ Gerador de Imagens Nano Banana (Gemini API)</h1>
+    <p style="text-align: center; color: #555;">Insira um prompt detalhado para que a IA crie uma imagem.</p>
     
     <form id="image-form">
         <input 
             id="prompt-input" 
             type="text" 
-            placeholder="Ex: Um gato usando óculos de sol, estilo pop art" 
+            placeholder="Ex: Um astronauta lendo um livro em um jardim de cogumelos, estilo aquarela digital" 
             required
         >
         <button type="submit" id="generate-button">Gerar Imagem</button>
@@ -30,14 +83,12 @@
     <img id="result-image" src="" alt="Imagem gerada pela Inteligência Artificial">
 
     <script>
-        // ⚠️ ALERTA DE SEGURANÇA: Esta chave está visível no código-fonte.
-        // USE APENAS PARA TESTES! Em produção, use um servidor de backend.
-        const API_KEY = "AIzaSyBO0SVSuu32UHnPj3lt50Jsb74FZ6hk8IE";
+        // 🚨 PASSO ESSENCIAL: Substitua esta placeholder pela sua chave VÁLIDA do Google AI Studio.
+        // CUIDADO: Por segurança, evite deixar chaves em código de frontend em produção.
+        const API_KEY = "SUA_CHAVE_DE_API_VÁLIDA_DO_GOOGLE_AQUI"; 
         
-        // O modelo para geração de imagens é a variante Flash Image (conhecida como Nano Banana)
-        const MODEL_NAME = "gemini-2-5-flash-image"; 
-        
-        const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+        // Endpoint CORRETO para a API de Geração de Imagens do Google (V1)
+        const IMAGE_API_ENDPOINT = `https://generativelanguage.googleapis.com/v1/images:generate?key=${API_KEY}`;
         
         const form = document.getElementById('image-form');
         const promptInput = document.getElementById('prompt-input');
@@ -48,33 +99,22 @@
         async function generateImage(prompt) {
             
             // 1. Configurar o estado de carregamento
-            statusMessage.textContent = "Gerando imagem... aguarde.";
+            statusMessage.textContent = "Gerando imagem... isso pode levar alguns segundos.";
             generateButton.disabled = true;
             resultImage.style.display = 'none';
 
-            // 2. Construir o corpo da requisição (payload JSON)
+            // 2. Construir o corpo da requisição (payload JSON CORRIGIDO)
             const requestBody = {
-                contents: [
-                    {
-                        role: "user",
-                        parts: [
-                            { text: prompt }
-                        ]
-                    }
-                ],
-                config: {
-                    // Parâmetros específicos para geração de imagem
-                    imageGenerationConfig: {
-                        numberOfImages: 1, // Gerar uma única imagem
-                        quality: "medium", // Qualidade da imagem
-                        aspectRatio: "1:1" // Proporção da imagem (pode ser "3:4", "4:3", "16:9" etc.)
-                    }
-                }
+                // Parâmetros no nível principal do JSON para a API /v1/images:generate
+                prompt: prompt, 
+                numberOfImages: 1, 
+                quality: "medium", 
+                aspectRatio: "1:1" // Experimente "4:3", "3:4" ou "16:9"
             };
 
             try {
-                // 3. Enviar a requisição para a API
-                const response = await fetch(API_ENDPOINT, {
+                // 3. Enviar a requisição
+                const response = await fetch(IMAGE_API_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -85,27 +125,27 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // 4. Processar a resposta
+                    // 4. Processar a resposta (caminho CORRETO para o Base64)
+                    const base64Image = data.generated_images[0].image.imageBytes;
                     
-                    // O dado da imagem é retornado em Base64
-                    const base64Image = data.candidates[0].image.image.imageBytes;
-                    
-                    // 5. Exibir a imagem
-                    // Criamos um Data URI para ser exibido diretamente no HTML
+                    // 5. Exibir a imagem usando Data URI
                     resultImage.src = `data:image/jpeg;base64,${base64Image}`;
                     resultImage.style.display = 'block';
-                    statusMessage.textContent = "Imagem gerada com sucesso!";
+                    statusMessage.textContent = "✅ Imagem gerada com sucesso!";
 
                 } else {
                     // 6. Tratar erros da API
-                    const errorMessage = data.error ? data.error.message : "Erro desconhecido na requisição.";
-                    statusMessage.textContent = `Erro ao gerar imagem: ${errorMessage}`;
-                    console.error("Erro da API:", data);
+                    const errorMessage = data.error 
+                        ? (data.error.message || "Erro desconhecido da API.")
+                        : "Falha na requisição, verifique a rede ou a chave.";
+                        
+                    statusMessage.textContent = `❌ Erro ao gerar imagem: ${errorMessage}`;
+                    console.error("Erro completo da API:", data);
                 }
 
             } catch (error) {
                 // 7. Tratar erros de rede ou processamento
-                statusMessage.textContent = `Erro de conexão: ${error.message}`;
+                statusMessage.textContent = `🚨 Erro de conexão ou processamento: ${error.message}`;
                 console.error("Erro de rede:", error);
             } finally {
                 // 8. Restaurar o botão
@@ -113,9 +153,9 @@
             }
         }
 
-        // Adicionar o listener para o envio do formulário
+        // Listener para o envio do formulário
         form.addEventListener('submit', (e) => {
-            e.preventDefault(); // Impedir o recarregamento da página
+            e.preventDefault(); // Impede que a página recarregue
             const prompt = promptInput.value.trim();
             if (prompt) {
                 generateImage(prompt);
