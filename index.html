@@ -33,9 +33,9 @@
         // 🚨 TOKEN EXPOSTO: SUBSTITUA AQUI PELA SUA CHAVE REAL DE ACESSO DO HUGGING FACE (hf_...)
         const HUGGING_FACE_TOKEN = "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"; 
         
-        // NOVO ENDPOINT DE INFERÊNCIA DO ROUTER
+        // ENDPOINT RECOMENDADO PARA STABLE DIFFUSION 1.5
         const HF_API_URL = "https://router.huggingface.co/models/runwayml/stable-diffusion-v1-5";
-
+        
         async function generateImage() {
             const prompt = document.getElementById('prompt-input').value.trim();
             const outputDiv = document.getElementById('output');
@@ -50,7 +50,7 @@
                 return;
             }
 
-            outputDiv.innerHTML = "Gerando imagem com Stable Diffusion... Isso pode levar tempo se o modelo estiver carregando.";
+            outputDiv.innerHTML = "Gerando imagem com Stable Diffusion... Aguarde. (Pode ser lento se o modelo não estiver ativo)";
             
             try {
                 // Requisição direta ao endpoint (expondo o token no header)
@@ -58,7 +58,6 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        // 🚨 TOKEN EXPOSTO AQUI:
                         'Authorization': `Bearer ${HUGGING_FACE_TOKEN}` 
                     },
                     body: JSON.stringify({
@@ -70,31 +69,44 @@
                 });
 
                 if (response.ok) {
-                    // A resposta é um ArrayBuffer (dados binários da imagem)
-                    const imageBlob = await response.blob();
+                    // 1. LÊ OS DADOS BINÁRIOS DE FORMA MAIS ROBUSTA
+                    const imageArrayBuffer = await response.arrayBuffer();
                     
-                    // Converte o Blob em um Data URL para ser exibido na tag <img>
+                    // 2. CRIA UM BLOB A PARTIR DO BUFFER (assumindo JPEG para SD 1.5)
+                    const imageBlob = new Blob([imageArrayBuffer], { type: 'image/jpeg' });
+                    
+                    // 3. CRIA UMA URL DO OBJETO PARA EXIBIÇÃO
                     const imageUrl = URL.createObjectURL(imageBlob);
 
                     outputDiv.innerHTML = `
-                        <p>Imagem Gerada com sucesso:</p>
+                        <p>Imagem Gerada:</p>
                         <img src="${imageUrl}" alt="${prompt}">
                     `;
                 } else {
-                    // Tenta ler o erro como texto (pode ser JSON ou apenas uma string)
+                    // TRATAMENTO DE ERROS DETALHADO
                     const errorText = await response.text();
-                    let errorMessage = errorText;
+                    let finalMessage = `Falha ao gerar imagem (Status ${response.status}).`;
+
                     try {
                         const errorJson = JSON.parse(errorText);
-                        errorMessage = errorJson.error || errorText;
+                        
+                        if (errorJson.error) {
+                             // Este é o erro que causa o 404: o modelo não está disponível
+                             finalMessage = `Mensagem: ${errorJson.error}`;
+                        }
                     } catch {}
-                    
-                    outputDiv.innerHTML = `<p style='color: red;'>Falha ao gerar imagem (Status ${response.status}). Mensagem: ${errorMessage}</p>`;
+
+                    // Adiciona um lembrete sobre o bloqueio da rota
+                    if (response.status === 404 || response.status === 400) {
+                         finalMessage += " (Provável bloqueio de rota. A Hugging Face não está permitindo esta URL para o seu Token).";
+                    }
+
+                    outputDiv.innerHTML = `<p style='color: red;'>${finalMessage}</p>`;
                     console.error("Erro da API:", errorText);
                 }
 
             } catch (error) {
-                outputDiv.innerHTML = `<p style='color: red;'>Erro de conexão ou requisição: ${error.message}</p>`;
+                outputDiv.innerHTML = `<p style='color: red;'>Erro de conexão: ${error.message}</p>`;
                 console.error(error);
             }
         }
