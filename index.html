@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎬 TMDB Filmes & Séries</title>
 
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
 
     <style>
         /* Estilos Globais Netflix-inspired */
@@ -166,10 +166,13 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        #video-player { 
-            width: 100%; 
+        
+        /* Estilo para o Plyr Player */
+        #video-container { 
+            max-width: 100%; 
+            margin: 0 auto; 
             border-radius: 5px;
-            overflow: hidden; 
+            overflow: hidden;
         }
 
         /* Animações */
@@ -204,17 +207,17 @@
     <div id="video-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h2>Detalhes do Conteúdo</h2>
-            <video id="video-player" class="video-js vjs-default-skin" controls preload="auto" poster="" data-setup="{}">
-                <p class="vjs-no-js">
-                    Para visualizar este vídeo, habilite o JavaScript e considere atualizar para um navegador que
-                    <a href="https://videojs.com/html5-video-support/" target="_blank">suporte vídeo HTML5</a>
-                </p>
-            </video>
+            <h2 id="modal-title">Detalhes do Conteúdo</h2>
+            
+            <div id="video-container">
+                <video id="video-player" controls preload="auto" poster="">
+                    <p>Seu navegador não suporta a tag de vídeo HTML5.</p>
+                </video>
+            </div>
         </div>
     </div>
 
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
 
     <script>
         const TMDB_API_KEY = 'cf72f14362cff1da8bed9fa86831de66'; 
@@ -225,9 +228,10 @@
         const noResultsMessage = document.getElementById('no-results');
         const mainTitle = document.getElementById('main-title');
         const modal = document.getElementById('video-modal');
+        const modalTitle = document.getElementById('modal-title');
         const closeBtn = document.querySelector('.close-btn');
 
-        let player = null;
+        let player = null; // Agora armazena a instância do Plyr
         let searchTimeout; 
         let cachedRecommendations = [];
 
@@ -237,7 +241,7 @@
             tv: '/tv/popular'
         };
 
-        // Função para buscar filmes e séries populares
+        // Função para buscar filmes e séries populares (SEM MUDANÇAS)
         async function fetchPopularMedia() {
             movieListElement.innerHTML = '<p style="text-align:center;">Carregando recomendações...</p>';
             mainTitle.textContent = 'Carregando...';
@@ -267,7 +271,7 @@
             }
         }
 
-        // Função para buscar conteúdo com base em uma query
+        // Função para buscar conteúdo com base em uma query (SEM MUDANÇAS)
         async function searchMedia(query) {
             if (!query.trim()) {
                 mainTitle.textContent = 'Recomendações Populares';
@@ -296,7 +300,7 @@
             }
         }
 
-        // Função para exibir o conteúdo na grade
+        // Função para exibir o conteúdo na grade (SEM MUDANÇAS)
         function displayMedia(mediaList) {
             movieListElement.innerHTML = '';
             if (mediaList.length === 0) {
@@ -327,45 +331,48 @@
             });
         }
 
-        // FUNÇÃO DE REPRODUÇÃO CORRIGIDA
+        // FUNÇÃO DE REPRODUÇÃO COM PLYR (Ajustada)
         function openPlayerModal(item) {
             const title = item.title || item.name;
             
             modal.style.display = 'block';
-            document.querySelector('.modal-content h2').textContent = `Reproduzindo ${item.media_type === 'movie' ? 'Filme' : 'Série'}: ${title}`;
+            modalTitle.textContent = `Reproduzindo ${item.media_type === 'movie' ? 'Filme' : 'Série'}: ${title}`;
 
-            // 1. Destrói o player existente antes de criar um novo
-            if (player && !player.isDisposed()) {
-                player.dispose();
+            // 1. Destrói o player anterior
+            if (player) {
+                player.destroy(); // Método de destruição do Plyr
             }
             
-            // 2. CORREÇÃO DA URL: Usando o vídeo de demonstração 'Sintel' do Blender (MP4)
-            // Este link é estável e garante que o Video.js carregue algo
+            // 2. URL de vídeo estável (Sintel do Blender)
+            // ESTA URL GARANTE A REPRODUÇÃO FUNCIONALIDADE
             const stableDemoVideoUrl = 'https://archive.org/download/Sintel/sintel-2048-surround.mp4'; 
             
-            player = videojs('video-player', {
-                fluid: true,
-                autoplay: true, // Adicionado autoplay para testar a reprodução imediata
-                poster: `${IMAGE_BASE_URL}${item.backdrop_path || item.poster_path}`,
-                sources: [{
-                    src: stableDemoVideoUrl, // URL ESTÁVEL
-                    type: 'video/mp4'
-                }]
-            });
+            const videoElement = document.getElementById('video-player');
             
-            // O player.play() é chamado automaticamente pelo 'autoplay: true'
+            // 3. Define o poster e o conteúdo (source) dinamicamente
+            videoElement.setAttribute('poster', `${IMAGE_BASE_URL}${item.backdrop_path || item.poster_path}`);
+            videoElement.innerHTML = `
+                <source src="${stableDemoVideoUrl}" type="video/mp4">
+            `;
+            
+            // 4. Inicializa o Plyr
+            player = new Plyr(videoElement, {
+                autoplay: true,
+                controls: ['play-large', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'fullscreen']
+            });
 
-            // HACK: Em alguns navegadores, o autoplay é bloqueado. Usamos um pequeno timeout para garantir a tentativa de play.
-            player.ready(function() {
-                this.play();
+            // 5. Iniciar a reprodução (com tratamento para bloqueio de autoplay)
+            player.play().catch(error => {
+                console.warn("Autoplay bloqueado pelo navegador. O usuário precisa clicar no play.", error);
             });
         }
 
-        // Funções de controle do Modal
+        // Funções de controle do Modal (Limpeza garantida)
         function closePlayerModal() {
             modal.style.display = 'none';
-            if (player && !player.isDisposed()) {
-                player.pause(); 
+            if (player) {
+                player.pause(); // Pausa o vídeo
+                // Opcional: player.destroy() se não for reusar o elemento
             }
         }
 
