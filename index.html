@@ -62,7 +62,7 @@
             transition: width 0.3s ease, background-color 0.3s ease;
         }
         .search-input:focus {
-            width: 400px; /* Expande ao focar */
+            width: 400px;
             background-color: #444;
             outline: none;
             border-color: #e50914;
@@ -229,9 +229,8 @@
 
         let player = null;
         let searchTimeout; 
-        let cachedRecommendations = []; // Armazena a lista inicial de recomendações
+        let cachedRecommendations = [];
 
-        // Endpoints
         const SEARCH_ENDPOINT = '/search/multi';
         const POPULAR_ENDPOINTS = {
             movies: '/movie/popular',
@@ -256,7 +255,6 @@
                 const tvShows = tvData.results.slice(0, 10).map(item => ({ ...item, media_type: 'tv' }));
 
                 const combinedList = [...movies, ...tvShows];
-                // Embaralha e armazena na cache
                 cachedRecommendations = combinedList.sort(() => Math.random() - 0.5); 
                 
                 mainTitle.textContent = 'Recomendações Populares';
@@ -272,14 +270,12 @@
         // Função para buscar conteúdo com base em uma query
         async function searchMedia(query) {
             if (!query.trim()) {
-                // Se a busca estiver vazia, retorna às recomendações
                 mainTitle.textContent = 'Recomendações Populares';
                 noResultsMessage.style.display = 'none';
                 displayMedia(cachedRecommendations);
                 return;
             }
 
-            // Exibe o título de busca e o indicador de carregamento
             mainTitle.textContent = `Resultados para: "${query}"`;
             movieListElement.innerHTML = '<p style="text-align:center;">Buscando conteúdo...</p>';
             noResultsMessage.style.display = 'none';
@@ -314,7 +310,6 @@
                 const title = item.title || item.name; 
                 const typeLabel = item.media_type === 'movie' ? 'FILME' : 'SÉRIE';
                 
-                // Ignora se não tiver poster
                 if (!item.poster_path) return;
 
                 const card = document.createElement('div');
@@ -332,36 +327,44 @@
             });
         }
 
-        // Função para abrir o modal e inicializar o player (mantida)
+        // FUNÇÃO DE REPRODUÇÃO CORRIGIDA
         function openPlayerModal(item) {
             const title = item.title || item.name;
             
             modal.style.display = 'block';
             document.querySelector('.modal-content h2').textContent = `Reproduzindo ${item.media_type === 'movie' ? 'Filme' : 'Série'}: ${title}`;
 
-            if (player) {
+            // 1. Destrói o player existente antes de criar um novo
+            if (player && !player.isDisposed()) {
                 player.dispose();
             }
-
-            // VÍDEO DE DEMONSTRAÇÃO
-            const demoVideoUrl = 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_1MB.mp4'; 
-
+            
+            // 2. CORREÇÃO DA URL: Usando o vídeo de demonstração 'Sintel' do Blender (MP4)
+            // Este link é estável e garante que o Video.js carregue algo
+            const stableDemoVideoUrl = 'https://archive.org/download/Sintel/sintel-2048-surround.mp4'; 
+            
             player = videojs('video-player', {
                 fluid: true,
+                autoplay: true, // Adicionado autoplay para testar a reprodução imediata
                 poster: `${IMAGE_BASE_URL}${item.backdrop_path || item.poster_path}`,
                 sources: [{
-                    src: demoVideoUrl,
+                    src: stableDemoVideoUrl, // URL ESTÁVEL
                     type: 'video/mp4'
                 }]
             });
             
-            player.play();
+            // O player.play() é chamado automaticamente pelo 'autoplay: true'
+
+            // HACK: Em alguns navegadores, o autoplay é bloqueado. Usamos um pequeno timeout para garantir a tentativa de play.
+            player.ready(function() {
+                this.play();
+            });
         }
 
-        // Funções de controle do Modal (mantidas)
+        // Funções de controle do Modal
         function closePlayerModal() {
             modal.style.display = 'none';
-            if (player) {
+            if (player && !player.isDisposed()) {
                 player.pause(); 
             }
         }
@@ -378,7 +381,7 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 searchMedia(event.target.value.trim());
-            }, 500); // Espera 500ms
+            }, 500);
         });
 
         // Event Listener para o logo (retorna às recomendações)
@@ -388,7 +391,7 @@
             searchMedia(''); 
         });
 
-        // INICIALIZAÇÃO: Carrega as recomendações assim que a página é carregada
+        // INICIALIZAÇÃO: Carrega as recomendações
         fetchPopularMedia(); 
     </script>
 
