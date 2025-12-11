@@ -3,145 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Imagens Stable Diffusion (Inferência Direta)</title>
+    <title>Veo3 AI Video Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            max-width: 700px; 
-            margin: 40px auto; 
-            padding: 20px; 
-            background-color: #f4f7f9;
+        :root {
+            --primary: #6366f1;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
         }
-        h1 { 
-            color: #1a73e8; 
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #334155;
+        }
+
+        h1 {
             text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
         }
-        form {
+
+        .input-group {
             display: flex;
             flex-direction: column;
             gap: 10px;
             margin-bottom: 20px;
         }
-        input[type="text"] { 
-            padding: 12px; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
-            font-size: 16px;
-        }
-        button { 
-            padding: 12px; 
-            background-color: #1a73e8; 
-            color: white; 
-            border: none; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        button:hover:not(:disabled) {
-            background-color: #155bb9;
-        }
-        button:disabled {
-            background-color: #9cbce1;
-            cursor: not-allowed;
-        }
-        #status-message {
-            text-align: center;
-            font-weight: bold;
-            margin-top: 10px;
-            color: #333;
-        }
-        #result-image { 
-            border: 2px solid #ddd; 
-            max-width: 100%; 
-            height: auto; 
-            margin-top: 20px; 
+
+        textarea {
+            width: 100%;
+            padding: 12px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #475569;
+            background-color: #0f172a;
+            color: white;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #4f46e5;
+        }
+
+        button:disabled {
+            background-color: #475569;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+            white-space: pre-wrap;
             display: none;
+        }
+
+        .status-info { background: #3b82f620; color: #60a5fa; }
+        .status-success { background: #22c55e20; color: #4ade80; }
+        .status-error { background: #ef444420; color: #f87171; }
+
+        .video-container {
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid #334155;
+        }
+
+        .download-btn {
+            margin-top: 10px;
+            background-color: #22c55e;
+            text-decoration: none;
+            display: inline-block;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
         }
     </style>
 </head>
 <body>
 
-    <h1>✨ Gerador de Imagens Stable Diffusion (Inferência Direta)</h1>
-    <p style="text-align: center; color: #cc0000; font-weight: bold;">API Pública: Não utiliza chave, mas pode falhar por segurança.</p>
-    
-    <form id="image-form">
-        <input 
-            id="prompt-input" 
-            type="text" 
-            placeholder="Ex: Um cão surfista em uma onda cyberpunk, arte digital" 
-            required
-        >
-        <button type="submit" id="generate-button">Gerar Imagem</button>
-    </form>
+    <div class="container">
+        <h1><i class="fas fa-video"></i> Veo3 AI Video</h1>
+        
+        <div class="input-group">
+            <label for="prompt">Descreva o vídeo que você quer:</label>
+            <textarea id="prompt" placeholder="Ex: Um gato cibernético andando na chuva em Tóquio, estilo cinematográfico..."></textarea>
+        </div>
 
-    <p id="status-message" aria-live="polite"></p>
+        <button id="generateBtn" onclick="runGenerator()">
+            <i class="fas fa-magic"></i> Gerar Vídeo
+        </button>
 
-    <img id="result-image" src="" alt="Imagem gerada por Stable Diffusion">
+        <div id="status"></div>
+
+        <div class="video-container" id="videoResult">
+            <h3>Seu Vídeo:</h3>
+            <video id="player" controls playsinline></video>
+            <br>
+            <a id="downloadLink" href="#" target="_blank" class="download-btn">
+                <i class="fas fa-download"></i> Baixar Vídeo
+            </a>
+        </div>
+    </div>
 
     <script>
-        // ENDPOINT DE INFERÊNCIA MAIS ESTÁVEL para o Stable Diffusion 1.5
-        const INFERENCE_URL = 'https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5'; 
-        
-        const form = document.getElementById('image-form');
-        const promptInput = document.getElementById('prompt-input');
-        const resultImage = document.getElementById('result-image');
-        const statusMessage = document.getElementById('status-message');
-        const generateButton = document.getElementById('generate-button');
+        // Configurações extraídas do seu código Node.js
+        const CONFIG = {
+            bypassUrl: "https://fgsi.koyeb.app/api/tools/bypasscf/v5",
+            createUrl: "https://aiarticle.erweima.ai/api/v1/secondary-page/api/create",
+            statusUrl: "https://aiarticle.erweima.ai/api/v1/secondary-page/api/",
+            origin: "https://veo3api.ai/",
+            referer: "https://veo3api.ai/",
+            sitekey: "0x4AAAAAAA6UyTUbN2VIQ0np",
+            apikey: "fgsiapi-2894f7c8-6d", // Sua API Key do Bypass
+            proxy: "https://corsproxy.io/?" // Necessário para rodar no navegador (evitar CORS)
+        };
 
-        async function generateImage(prompt) {
-            
-            statusMessage.textContent = "Tentando gerar imagem no servidor de inferência...";
-            generateButton.disabled = true;
-            resultImage.style.display = 'none';
+        const statusEl = document.getElementById('status');
+        const generateBtn = document.getElementById('generateBtn');
+        const videoContainer = document.getElementById('videoResult');
+        const player = document.getElementById('player');
+        const downloadLink = document.getElementById('downloadLink');
 
-            // Corpo da requisição no formato API Inference
-            const requestBody = {
-                inputs: prompt,
-                options: { wait_for_model: true } // Espera a fila, se necessário
-            };
-            
+        function showStatus(msg, type) {
+            statusEl.style.display = 'block';
+            statusEl.className = type === 'error' ? 'status-error' : (type === 'success' ? 'status-success' : 'status-info');
+            statusEl.textContent = msg;
+        }
+
+        // Função auxiliar para usar o Proxy
+        const fetchWithProxy = async (url, options = {}) => {
+            const proxyUrl = CONFIG.proxy + encodeURIComponent(url);
+            return axios({ ...options, url: proxyUrl });
+        };
+
+        async function bypassCF() {
+            showStatus("🔓 Obtendo token de segurança (Bypass CF)...", "info");
             try {
-                const response = await fetch(INFERENCE_URL, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                        // Nenhum parâmetro de segurança/autenticação é enviado
-                    },
-                    body: JSON.stringify(requestBody)
+                // Requisição GET para o bypass
+                const res = await fetchWithProxy(CONFIG.bypassUrl, {
+                    method: 'GET',
+                    params: {
+                        apikey: CONFIG.apikey,
+                        url: CONFIG.origin,
+                        sitekey: CONFIG.sitekey,
+                        mode: "turnstile-min"
+                    }
                 });
-
-                if (!response.ok) {
-                    // Este erro (403, 401) geralmente indica que o Hugging Face exige a identificação
-                    throw new Error(`Erro HTTP ${response.status}. Servidor rejeitou a requisição. (Pode exigir login gratuito)`);
-                }
-
-                // A API de Inferência devolve o dado binário da imagem (Blob), não JSON
-                const imageBlob = await response.blob();
-                const imageUrl = URL.createObjectURL(imageBlob);
-
-                resultImage.src = imageUrl;
-                resultImage.style.display = 'block';
-                statusMessage.textContent = "✅ Imagem gerada com sucesso via Inferência Direta!";
-
+                return res.data?.data?.token;
             } catch (error) {
-                statusMessage.textContent = `🚨 Falha na Conexão/API: ${error.message}`;
-                console.error("Erro completo:", error);
-            } finally {
-                generateButton.disabled = false;
+                console.error("Erro no Bypass:", error);
+                throw new Error("Falha ao quebrar o captcha Cloudflare.");
             }
         }
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault(); 
-            const prompt = promptInput.value.trim();
-            if (prompt) {
-                generateImage(prompt);
+        async function createVideo(token, prompt) {
+            showStatus("🎬 Enviando pedido de criação...", "info");
+            
+            // Substituindo Buffer do Node.js por btoa (Base64) do navegador
+            const uniqueId = btoa(Date.now().toString());
+
+            const headers = {
+                "authority": "aiarticle.erweima.ai",
+                "accept-language": "ms-MY,ms;q=0.9,en-US;q=0.8,en;q=0.7",
+                "origin": CONFIG.origin,
+                "referer": CONFIG.referer,
+                "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="132"',
+                "sec-ch-ua-mobile": "?1",
+                "sec-ch-ua-platform": '"Android"',
+                "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Mobile Safari/537.36",
+                "verify": token,
+                "uniqueid": uniqueId
+            };
+
+            const payload = {
+                prompt: prompt,
+                imgUrls: [],
+                quality: "720p",
+                duration: 8,
+                autoSoundFlag: true,
+                soundPrompt: "",
+                autoSpeechFlag: true,
+                speechPrompt: "",
+                speakerId: "Auto",
+                aspectRatio: "16:9",
+                secondaryPageId: 2019,
+                channel: "VEO3",
+                source: "veo3api.ai",
+                type: "features",
+                watermarkFlag: true,
+                privateFlag: true,
+                isTemp: true,
+                vipFlag: true,
+                model: "veo-3-fast"
+            };
+
+            try {
+                // Nota: Headers como 'referer' e 'origin' geralmente são bloqueados pelo navegador.
+                // O Proxy (corsproxy.io) tenta repassar, mas se falhar, é restrição do browser.
+                const res = await axios.post(CONFIG.proxy + encodeURIComponent(CONFIG.createUrl), payload, { headers });
+                return res.data?.data?.recordId;
+            } catch (error) {
+                console.error("Erro Create:", error);
+                throw new Error("Falha ao iniciar a geração do vídeo.");
             }
-        });
+        }
+
+        async function checkStatusLoop(recordId) {
+            return new Promise((resolve, reject) => {
+                showStatus("⏳ Processando vídeo... (Isso pode levar 1-2 minutos)", "info");
+                
+                const interval = setInterval(async () => {
+                    try {
+                        const urlStatus = CONFIG.statusUrl + recordId;
+                        
+                        // Usamos headers parecidos com o create para manter consistência
+                        const res = await axios.get(CONFIG.proxy + encodeURIComponent(urlStatus), {
+                            headers: {
+                                "authority": "aiarticle.erweima.ai",
+                                "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Mobile Safari/537.36",
+                            }
+                        });
+
+                        const data = res.data?.data;
+
+                        if (data && data.state === "success" && data.completeData) {
+                            clearInterval(interval);
+                            const result = JSON.parse(data.completeData);
+                            resolve(result);
+                        } else if (data && (data.failCode || data.failMsg)) {
+                            clearInterval(interval);
+                            reject(new Error(`Falha API: ${data.failMsg || "Erro desconhecido"}`));
+                        } else {
+                            // Ainda processando...
+                            console.log("Status: " + (data?.state || "loading..."));
+                        }
+                    } catch (err) {
+                        clearInterval(interval);
+                        reject(err);
+                    }
+                }, 5000); // Checa a cada 5 segundos
+            });
+        }
+
+        async function runGenerator() {
+            const prompt = document.getElementById('prompt').value.trim();
+            if (!prompt) return alert("Por favor, digite um prompt!");
+
+            generateBtn.disabled = true;
+            videoContainer.style.display = 'none';
+            
+            try {
+                // 1. Pegar Token
+                const token = await bypassCF();
+                if (!token) throw new Error("Token de bypass vazio.");
+
+                // 2. Criar Vídeo
+                const recordId = await createVideo(token, prompt);
+                if (!recordId) throw new Error("Não recebi um ID para o vídeo.");
+
+                // 3. Aguardar conclusão
+                const finalData = await checkStatusLoop(recordId);
+
+                if (finalData?.data?.image_url) {
+                    // Converter URL de imagem para MP4 conforme lógica original
+                    const videoUrl = finalData.data.image_url.replace(/\.(jpg|jpeg|png|webp|gif)$/i, ".mp4");
+                    
+                    showStatus("✅ Vídeo gerado com sucesso!", "success");
+                    
+                    player.src = videoUrl;
+                    downloadLink.href = videoUrl;
+                    videoContainer.style.display = 'block';
+                } else {
+                    throw new Error("Vídeo não encontrado na resposta final.");
+                }
+
+            } catch (error) {
+                showStatus(`🚨 Erro: ${error.message}`, "error");
+                console.error(error);
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
