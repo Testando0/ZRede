@@ -3,265 +3,394 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veo3 - Gerador de Vídeo AI</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>🎬 TMDB Filmes & Séries</title>
+
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+
     <style>
-        body {
-            font-family: sans-serif;
-            background-color: #121212;
-            color: #fff;
+        /* Estilos Globais Netflix-inspired */
+        body { 
+            font-family: 'Netflix Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            background-color: #141414; 
+            color: #fff; 
+            margin: 0; 
+            padding: 0; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        h1 { 
+            text-align: center; 
+            color: #e50914; 
+            margin-bottom: 40px; 
+            font-size: 2.5em; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Header e Barra de Pesquisa */
+        .header {
+            background-color: #000;
+            padding: 20px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            min-height: 100vh;
+            border-bottom: 1px solid #333;
+            margin-bottom: 30px;
+        }
+        .logo {
+            color: #e50914;
+            font-size: 2.2em;
+            font-weight: bold;
+            text-decoration: none;
+            letter-spacing: -2px;
+        }
+        .search-bar {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-input {
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 1em;
+            width: 300px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        .search-input:focus {
+            width: 400px; /* Expande ao focar */
+            background-color: #444;
+            outline: none;
+            border-color: #e50914;
+        }
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            color: #aaa;
+        }
+
+        /* Grade de Filmes/Séries */
+        .movie-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-top: 30px;
+        }
+        .movie-card { 
+            background-color: #222; 
+            border-radius: 5px; 
+            overflow: hidden; 
+            cursor: pointer; 
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .movie-card:hover { 
+            transform: scale(1.05); 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+        }
+        .movie-card img { 
+            width: 100%; 
+            height: 300px; 
+            object-fit: cover; 
+            display: block; 
+        }
+        .movie-card p { 
+            padding: 10px; 
+            text-align: center; 
+            font-size: 0.95em; 
+            min-height: 40px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin: 0;
         }
-        .container {
-            width: 90%;
-            max-width: 500px;
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            background: #2c2c2c;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 5px;
-            padding: 10px;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-            resize: none;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #6200ea;
+        
+        /* Etiqueta de Tipo (Filme ou Série) */
+        .media-type {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #e50914;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 4px 7px;
+            font-size: 0.7em;
+            border-radius: 3px;
             font-weight: bold;
-            font-size: 16px;
+            z-index: 10;
         }
-        button:disabled {
-            background-color: #444;
-            cursor: not-allowed;
+
+        /* Estilos do Modal */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.9); 
+            animation: fadeIn 0.3s forwards;
         }
-        #status {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #bbb;
-            white-space: pre-wrap;
-        }
-        video {
-            width: 100%;
-            margin-top: 20px;
+        .modal-content { 
+            background-color: #000; 
+            margin: 5% auto; 
+            padding: 30px; 
             border-radius: 8px;
-            display: none;
-            border: 1px solid #444;
+            width: 90%; 
+            max-width: 900px; 
+            position: relative; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.7);
+            animation: slideIn 0.3s forwards;
         }
-        .download-btn {
-            display: none;
-            margin-top: 10px;
-            color: #03dac6;
-            text-decoration: none;
-            font-weight: bold;
+        .close-btn { 
+            color: #aaa; 
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 30px; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+        .close-btn:hover, .close-btn:focus { 
+            color: #e50914; 
+            text-decoration: none; 
+        }
+        .modal-content h2 {
+            color: #e50914;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #video-player { 
+            width: 100%; 
+            border-radius: 5px;
+            overflow: hidden; 
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <a href="#" class="logo">NETFLIX</a>
+        <div class="search-bar">
+            <input type="text" id="search-input" class="search-input" placeholder="Buscar filmes ou séries..." autocomplete="off">
+            <i class="search-icon">&#128269;</i> 
+        </div>
+    </div>
 
-<div class="container">
-    <h2>🎬 Veo3 Video Generator</h2>
-    <textarea id="promptInput" placeholder="Digite seu prompt aqui (ex: Um astronauta dançando na lua)..."></textarea>
-    <button id="btnGenerate" onclick="iniciarGeracao()">Gerar Vídeo</button>
-    <div id="status"></div>
-    <video id="videoPlayer" controls playsinline></video>
-    <a id="downloadLink" class="download-btn" target="_blank">Baixar Vídeo</a>
-</div>
-
-<script>
-    // Configurações da API extraídas do seu código
-    const CONFIG = {
-        bypassUrl: "https://fgsi.koyeb.app/api/tools/bypasscf/v5",
-        createUrl: "https://aiarticle.erweima.ai/api/v1/secondary-page/api/create",
-        statusUrl: "https://aiarticle.erweima.ai/api/v1/secondary-page/api/",
-        referer: "https://veo3api.ai/",
-        origin: "https://veo3api.ai/",
-        sitekey: "0x4AAAAAAA6UyTUbN2VIQ0np",
-        // API Key fornecida no seu código
-        bypassApiKey: "fgsiapi-2894f7c8-6d", 
-        // Proxy para evitar CORS no navegador
-        proxy: "https://corsproxy.io/?" 
-    };
-
-    const statusDiv = document.getElementById('status');
-    const videoPlayer = document.getElementById('videoPlayer');
-    const btnGenerate = document.getElementById('btnGenerate');
-    const downloadLink = document.getElementById('downloadLink');
-
-    function log(msg) {
-        statusDiv.innerText = msg;
-    }
-
-    // Função auxiliar para criar uniqueId (Substitui Buffer do Node.js)
-    function generateUniqueId() {
-        return btoa(Date.now().toString());
-    }
-
-    // 1. Obter Token (Bypass CF)
-    async function getToken() {
-        log("🔄 Obtendo token de segurança...");
-        try {
-            const url = `${CONFIG.bypassUrl}?apikey=${CONFIG.bypassApiKey}&url=${CONFIG.origin}&sitekey=${CONFIG.sitekey}&mode=turnstile-min`;
-            const res = await axios.get(CONFIG.proxy + encodeURIComponent(url));
-            
-            if (res.data && res.data.data && res.data.data.token) {
-                return res.data.data.token;
-            }
-            throw new Error("Token não encontrado na resposta.");
-        } catch (e) {
-            console.error(e);
-            throw new Error("Falha ao obter Token Bypass: " + e.message);
-        }
-    }
-
-    // 2. Solicitar Criação do Vídeo
-    async function createVideoReq(token, prompt) {
-        log("🚀 Enviando solicitação de vídeo...");
+    <div class="container">
+        <h1 id="main-title">Recomendações Populares</h1>
         
-        const payload = {
-            prompt: prompt,
-            imgUrls: [],
-            quality: "720p",
-            duration: 8,
-            autoSoundFlag: true,
-            soundPrompt: "",
-            autoSpeechFlag: true,
-            speechPrompt: "",
-            speakerId: "Auto",
-            aspectRatio: "16:9",
-            secondaryPageId: 2019,
-            channel: "VEO3",
-            source: "veo3api.ai",
-            type: "features",
-            watermarkFlag: true,
-            privateFlag: true,
-            isTemp: true,
-            vipFlag: true,
-            model: "veo-3-fast"
+        <p id="no-results" style="text-align: center; display: none;">Nenhum resultado encontrado. Tente outra pesquisa.</p>
+        
+        <div id="movie-list" class="movie-grid">
+            </div>
+    </div>
+
+    <div id="video-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Detalhes do Conteúdo</h2>
+            <video id="video-player" class="video-js vjs-default-skin" controls preload="auto" poster="" data-setup="{}">
+                <p class="vjs-no-js">
+                    Para visualizar este vídeo, habilite o JavaScript e considere atualizar para um navegador que
+                    <a href="https://videojs.com/html5-video-support/" target="_blank">suporte vídeo HTML5</a>
+                </p>
+            </video>
+        </div>
+    </div>
+
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+
+    <script>
+        const TMDB_API_KEY = 'cf72f14362cff1da8bed9fa86831de66'; 
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w300';
+        const movieListElement = document.getElementById('movie-list');
+        const searchInput = document.getElementById('search-input');
+        const noResultsMessage = document.getElementById('no-results');
+        const mainTitle = document.getElementById('main-title');
+        const modal = document.getElementById('video-modal');
+        const closeBtn = document.querySelector('.close-btn');
+
+        let player = null;
+        let searchTimeout; 
+        let cachedRecommendations = []; // Armazena a lista inicial de recomendações
+
+        // Endpoints
+        const SEARCH_ENDPOINT = '/search/multi';
+        const POPULAR_ENDPOINTS = {
+            movies: '/movie/popular',
+            tv: '/tv/popular'
         };
 
-        const headers = {
-            "authority": "aiarticle.erweima.ai",
-            "accept-language": "ms-MY,ms;q=0.9,en-US;q=0.8,en;q=0.7",
-            "origin": CONFIG.origin,
-            "referer": CONFIG.referer,
-            // Headers simulando Android (como no seu código original)
-            "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="132"',
-            "sec-ch-ua-mobile": "?1",
-            "sec-ch-ua-platform": '"Android"',
-            "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Mobile Safari/537.36",
-            "verify": token,
-            "uniqueid": generateUniqueId()
-        };
+        // Função para buscar filmes e séries populares
+        async function fetchPopularMedia() {
+            movieListElement.innerHTML = '<p style="text-align:center;">Carregando recomendações...</p>';
+            mainTitle.textContent = 'Carregando...';
 
-        try {
-            // Usamos o proxy para o POST também
-            const res = await axios.post(CONFIG.proxy + encodeURIComponent(CONFIG.createUrl), payload, { headers });
-            
-            if (res.data && res.data.data && res.data.data.recordId) {
-                return res.data.data.recordId;
+            try {
+                const [moviesResponse, tvResponse] = await Promise.all([
+                    fetch(`${BASE_URL}${POPULAR_ENDPOINTS.movies}?api_key=${TMDB_API_KEY}&language=pt-BR&page=1`),
+                    fetch(`${BASE_URL}${POPULAR_ENDPOINTS.tv}?api_key=${TMDB_API_KEY}&language=pt-BR&page=1`)
+                ]);
+
+                const moviesData = await moviesResponse.json();
+                const tvData = await tvResponse.json();
+
+                const movies = moviesData.results.slice(0, 10).map(item => ({ ...item, media_type: 'movie' }));
+                const tvShows = tvData.results.slice(0, 10).map(item => ({ ...item, media_type: 'tv' }));
+
+                const combinedList = [...movies, ...tvShows];
+                // Embaralha e armazena na cache
+                cachedRecommendations = combinedList.sort(() => Math.random() - 0.5); 
+                
+                mainTitle.textContent = 'Recomendações Populares';
+                displayMedia(cachedRecommendations);
+
+            } catch (error) {
+                console.error('Erro ao buscar recomendações:', error);
+                mainTitle.textContent = 'Erro de Conexão';
+                movieListElement.innerHTML = '<p style="text-align:center;">Não foi possível carregar as recomendações. Tente novamente mais tarde.</p>';
             }
-            throw new Error("Record ID não retornado pela API.");
-        } catch (e) {
-            console.error(e);
-            throw new Error("Falha ao criar tarefa de vídeo: " + e.message);
         }
-    }
 
-    // 3. Verificar Status (Polling)
-    async function waitForVideo(recordId) {
-        return new Promise((resolve, reject) => {
-            log("⏳ Processando vídeo (Isso pode demorar um pouco)...");
+        // Função para buscar conteúdo com base em uma query
+        async function searchMedia(query) {
+            if (!query.trim()) {
+                // Se a busca estiver vazia, retorna às recomendações
+                mainTitle.textContent = 'Recomendações Populares';
+                noResultsMessage.style.display = 'none';
+                displayMedia(cachedRecommendations);
+                return;
+            }
+
+            // Exibe o título de busca e o indicador de carregamento
+            mainTitle.textContent = `Resultados para: "${query}"`;
+            movieListElement.innerHTML = '<p style="text-align:center;">Buscando conteúdo...</p>';
+            noResultsMessage.style.display = 'none';
             
-            const interval = setInterval(async () => {
-                try {
-                    const statusUrl = CONFIG.statusUrl + recordId;
-                    
-                    const headers = {
-                        "authority": "aiarticle.erweima.ai",
-                        "origin": CONFIG.origin,
-                        "referer": CONFIG.referer,
-                        "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Mobile Safari/537.36"
-                    };
-
-                    const res = await axios.get(CONFIG.proxy + encodeURIComponent(statusUrl), { headers });
-                    const data = res.data?.data;
-
-                    if (data) {
-                        if (data.state === "success" && data.completeData) {
-                            clearInterval(interval);
-                            const resultJson = JSON.parse(data.completeData);
-                            resolve(resultJson);
-                        } else if (data.failCode || data.failMsg) {
-                            clearInterval(interval);
-                            reject(new Error(`API Error: ${data.failMsg}`));
-                        }
-                    }
-                } catch (e) {
-                    clearInterval(interval);
-                    reject(e);
-                }
-            }, 5000); // Verifica a cada 5 segundos
-        });
-    }
-
-    // Função Principal
-    async function iniciarGeracao() {
-        const prompt = document.getElementById('promptInput').value;
-        if (!prompt) return alert("Digite um prompt!");
-
-        btnGenerate.disabled = true;
-        videoPlayer.style.display = 'none';
-        downloadLink.style.display = 'none';
-
-        try {
-            // Passo A: Token
-            const token = await getToken();
-            
-            // Passo B: Criar
-            const recordId = await createVideoReq(token, prompt);
-            
-            // Passo C: Esperar
-            const result = await waitForVideo(recordId);
-
-            if (result && result.data && result.data.image_url) {
-                // Lógica de substituição de extensão do seu código original
-                const videoUrl = result.data.image_url.replace(/\.(jpg|jpeg|png|webp|gif)$/i, ".mp4");
+            try {
+                const response = await fetch(`${BASE_URL}${SEARCH_ENDPOINT}?api_key=${TMDB_API_KEY}&language=pt-BR&query=${encodeURIComponent(query)}`);
+                const data = await response.json();
                 
-                log("✅ Vídeo gerado com sucesso!");
-                videoPlayer.src = videoUrl;
-                videoPlayer.style.display = 'block';
-                
-                downloadLink.href = videoUrl;
-                downloadLink.style.display = 'inline-block';
+                const filteredResults = data.results.filter(item => 
+                    (item.media_type === 'movie' || item.media_type === 'tv') && item.poster_path
+                );
+
+                displayMedia(filteredResults);
+            } catch (error) {
+                console.error('Erro ao buscar mídia:', error);
+                movieListElement.innerHTML = '<p style="text-align:center;">Erro ao carregar resultados da busca.</p>';
+                noResultsMessage.style.display = 'none';
+            }
+        }
+
+        // Função para exibir o conteúdo na grade
+        function displayMedia(mediaList) {
+            movieListElement.innerHTML = '';
+            if (mediaList.length === 0) {
+                noResultsMessage.style.display = 'block';
+                return;
             } else {
-                throw new Error("Vídeo não encontrado na resposta final.");
+                noResultsMessage.style.display = 'none';
             }
 
-        } catch (e) {
-            log("❌ Erro: " + e.message);
-        } finally {
-            btnGenerate.disabled = false;
+            mediaList.forEach(item => {
+                const title = item.title || item.name; 
+                const typeLabel = item.media_type === 'movie' ? 'FILME' : 'SÉRIE';
+                
+                // Ignora se não tiver poster
+                if (!item.poster_path) return;
+
+                const card = document.createElement('div');
+                card.classList.add('movie-card');
+                card.dataset.id = item.id;
+                card.dataset.type = item.media_type;
+                
+                card.innerHTML = `
+                    <span class="media-type">${typeLabel}</span>
+                    <img src="${IMAGE_BASE_URL}${item.poster_path}" alt="${title}">
+                    <p>${title}</p>
+                `;
+                card.addEventListener('click', () => openPlayerModal(item));
+                movieListElement.appendChild(card);
+            });
         }
-    }
-</script>
+
+        // Função para abrir o modal e inicializar o player (mantida)
+        function openPlayerModal(item) {
+            const title = item.title || item.name;
+            
+            modal.style.display = 'block';
+            document.querySelector('.modal-content h2').textContent = `Reproduzindo ${item.media_type === 'movie' ? 'Filme' : 'Série'}: ${title}`;
+
+            if (player) {
+                player.dispose();
+            }
+
+            // VÍDEO DE DEMONSTRAÇÃO
+            const demoVideoUrl = 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_1MB.mp4'; 
+
+            player = videojs('video-player', {
+                fluid: true,
+                poster: `${IMAGE_BASE_URL}${item.backdrop_path || item.poster_path}`,
+                sources: [{
+                    src: demoVideoUrl,
+                    type: 'video/mp4'
+                }]
+            });
+            
+            player.play();
+        }
+
+        // Funções de controle do Modal (mantidas)
+        function closePlayerModal() {
+            modal.style.display = 'none';
+            if (player) {
+                player.pause(); 
+            }
+        }
+
+        closeBtn.onclick = closePlayerModal;
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closePlayerModal();
+            }
+        }
+
+        // Event Listener para a barra de pesquisa com debounce
+        searchInput.addEventListener('input', (event) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchMedia(event.target.value.trim());
+            }, 500); // Espera 500ms
+        });
+
+        // Event Listener para o logo (retorna às recomendações)
+        document.querySelector('.logo').addEventListener('click', (event) => {
+            event.preventDefault();
+            searchInput.value = '';
+            searchMedia(''); 
+        });
+
+        // INICIALIZAÇÃO: Carrega as recomendações assim que a página é carregada
+        fetchPopularMedia(); 
+    </script>
 
 </body>
 </html>
