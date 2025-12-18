@@ -69,7 +69,7 @@
       max-height: 400px;
     }
 
-    /* Player Shield (O pedido de ignorar toques) */
+    /* Player Shield (Bloqueia cliques na tela do player exceto controles) */
     .player-container {
       position: relative;
       width: 100%;
@@ -83,19 +83,18 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: 85%; /* Deixa 15% em baixo livre para os controles */
+      height: 85%; /* Deixa 15% em baixo livre para os controles nativos */
       z-index: 50;
       background: transparent; 
     }
 
-    /* Animações de Login */
+    /* Animações */
     .auth-overlay {
       background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bcae-07a3f8dc141a/f6d7434e-d6de-4185-a6d4-c77a2d08737b/BR-pt-20220502-popsignuptwoweeks-perspective_alpha_website_medium.jpg');
       background-size: cover;
       background-position: center;
     }
 
-    /* Modal */
     .modal-enter {
       opacity: 0;
       transform: scale(0.9);
@@ -151,9 +150,12 @@
         </div>
 
         <div class="flex items-center gap-4">
-          <div class="relative">
-            <i class="fas fa-search text-white cursor-pointer text-xl" onclick="toggleSearch()"></i>
-            <input type="text" id="search-input" class="absolute right-8 top-[-5px] bg-black/80 border border-white/50 text-white px-2 py-1 rounded w-0 opacity-0 transition-all duration-300 focus:w-64 focus:opacity-100" placeholder="Títulos, gente, géneros">
+          <div class="relative flex items-center">
+            <i class="fas fa-search text-white cursor-pointer text-xl mr-2" onclick="toggleSearch()"></i>
+            <input type="text" id="search-input" 
+                   class="bg-black/80 border border-white/50 text-white px-2 py-1 rounded w-0 opacity-0 transition-all duration-300 focus:w-64 focus:opacity-100" 
+                   placeholder="Títulos, gente, géneros"
+                   onkeydown="handleSearch(event)">
           </div>
           <div class="group relative cursor-pointer">
             <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png" alt="Profile" class="w-8 h-8 rounded">
@@ -204,21 +206,17 @@
           <div class="flex items-center gap-4 mb-4 text-sm font-bold text-gray-400">
             <span id="modal-year" class="text-green-400">2024</span>
             <span id="modal-rating" class="border border-gray-500 px-1 text-xs">16+</span>
-            <span id="modal-runtime">2h 10m</span>
+            <span id="modal-runtime">-- min</span>
           </div>
-          <p id="modal-desc" class="text-lg leading-relaxed">Descrição do filme aqui...</p>
+          <p id="modal-desc" class="text-lg leading-relaxed">Descrição...</p>
         </div>
         <div class="text-sm text-gray-400">
-          <p class="mb-2"><span class="text-gray-500">Gêneros:</span> <span id="modal-genres" class="text-white">Ação</span></p>
-          <p class="mb-2"><span class="text-gray-500">Elenco:</span> <span id="modal-cast" class="text-white">...</span></p>
+          <p class="mb-2"><span class="text-gray-500">Tipo:</span> <span id="modal-type" class="text-white">Filme</span></p>
         </div>
       </div>
       
       <div id="episodes-container" class="p-8 border-t border-gray-700 hidden">
-        <h3 class="text-xl font-bold mb-4">Episódios</h3>
-        <select id="season-select" class="bg-[#333] border border-gray-600 p-2 rounded mb-4 text-white">
-          <option value="1">Temporada 1</option>
-        </select>
+        <h3 class="text-xl font-bold mb-4">Episódios (Selecione para Assistir)</h3>
         <div id="episodes-list" class="space-y-2 max-h-60 overflow-y-auto">
           </div>
       </div>
@@ -231,11 +229,13 @@
         <button onclick="closePlayer()" class="text-white hover:text-gray-300"><i class="fas fa-arrow-left text-2xl"></i></button>
         <h3 id="player-title" class="text-lg font-bold">Assistindo</h3>
       </div>
-      <div class="text-netflixRed font-bold text-sm tracking-widest">SUPERFLIX PLAYER</div>
+      <div class="text-netflixRed font-bold text-sm tracking-widest uppercase border border-netflixRed px-2 py-1 rounded">
+        SERVER PREMIUM 4K
+      </div>
     </div>
     
     <div class="flex-grow relative bg-black flex items-center justify-center player-wrapper">
-      <div class="click-shield" title="Controles disponíveis apenas na barra inferior"></div>
+      <div class="click-shield" title="Controles na barra inferior"></div>
       
       <iframe id="video-frame" class="w-full h-full" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
     </div>
@@ -243,8 +243,8 @@
 
   <script>
     // --- CONFIGURAÇÃO ---
-    // IMPORTANTE: Insira uma chave TMDB Gratuita aqui para as capas funcionarem.
-    const TMDB_API_KEY = 'YOUR_TMDB_API_KEY_HERE'; 
+    // COLOQUE SUA CHAVE AQUI PARA AS IMAGENS APARECEREM E A PESQUISA FUNCIONAR
+    const TMDB_API_KEY = '8265bd1679663a7ea12ac168da84d2e8'; 
     const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
     const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/original';
     
@@ -252,12 +252,6 @@
     let currentUser = JSON.parse(localStorage.getItem('kuromiUser'));
     let currentContent = null;
     let isRegistering = false;
-
-    // --- ELEMENTOS ---
-    const appContent = document.getElementById('app-content');
-    const authScreen = document.getElementById('auth-screen');
-    const mainView = document.getElementById('main-view');
-    const navbar = document.getElementById('navbar');
 
     // --- INICIALIZAÇÃO ---
     window.addEventListener('load', () => {
@@ -267,80 +261,75 @@
         showAuth();
       }
       
-      // Scroll Navbar effect
+      // Efeito Navbar
       window.addEventListener('scroll', () => {
+        const nav = document.getElementById('navbar');
         if (window.scrollY > 50) {
-          navbar.classList.remove('bg-gradient-to-b');
-          navbar.classList.add('bg-black');
+          nav.classList.remove('bg-gradient-to-b');
+          nav.classList.add('bg-black');
         } else {
-          navbar.classList.add('bg-gradient-to-b');
-          navbar.classList.remove('bg-black');
+          nav.classList.add('bg-gradient-to-b');
+          nav.classList.remove('bg-black');
         }
       });
     });
 
-    // --- SISTEMA DE AUTH (MOCK) ---
+    // --- AUTH ---
     function showAuth() {
-      authScreen.classList.remove('hidden');
-      appContent.classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('app-content').classList.add('hidden');
     }
-
     function showApp() {
-      authScreen.classList.add('hidden');
-      appContent.classList.remove('hidden');
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('app-content').classList.remove('hidden');
       router('home');
     }
-
-    const authForm = document.getElementById('auth-form');
-    const authSwitchBtn = document.getElementById('auth-switch-btn');
-    const authTitle = document.getElementById('auth-title');
-    const btnText = document.getElementById('btn-text');
-    const authError = document.getElementById('auth-error');
-
-    authSwitchBtn.addEventListener('click', (e) => {
+    
+    // Botão de alternar Login/Cadastro
+    document.getElementById('auth-switch-btn').addEventListener('click', (e) => {
       e.preventDefault();
       isRegistering = !isRegistering;
+      const title = document.getElementById('auth-title');
+      const btn = document.getElementById('btn-text');
+      const text = document.getElementById('auth-switch-text');
+      const link = document.getElementById('auth-switch-btn');
+      
       if (isRegistering) {
-        authTitle.innerText = "Criar Conta";
-        btnText.innerText = "Cadastrar";
-        document.getElementById('auth-switch-text').innerText = "Já tem conta? ";
-        authSwitchBtn.innerText = "Entrar agora.";
+        title.innerText = "Criar Conta";
+        btn.innerText = "Cadastrar";
+        text.innerText = "Já tem conta? ";
+        link.innerText = "Entrar agora.";
       } else {
-        authTitle.innerText = "Entrar";
-        btnText.innerText = "Entrar";
-        document.getElementById('auth-switch-text').innerText = "Novo por aqui? ";
-        authSwitchBtn.innerText = "Assine agora.";
+        title.innerText = "Entrar";
+        btn.innerText = "Entrar";
+        text.innerText = "Novo por aqui? ";
+        link.innerText = "Assine agora.";
       }
-      authError.classList.add('hidden');
     });
 
-    authForm.addEventListener('submit', (e) => {
+    // Submit do Form
+    document.getElementById('auth-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const pass = document.getElementById('password').value;
 
-      if (email && pass) {
-        if (isRegistering) {
-          const user = { email, pass };
-          localStorage.setItem('kuromiRegistered', JSON.stringify(user));
-          localStorage.setItem('kuromiUser', JSON.stringify(user));
-          currentUser = user;
+      if (isRegistering) {
+        const user = { email, pass };
+        localStorage.setItem('kuromiRegistered', JSON.stringify(user));
+        localStorage.setItem('kuromiUser', JSON.stringify(user));
+        currentUser = user;
+        showApp();
+      } else {
+        const stored = JSON.parse(localStorage.getItem('kuromiRegistered'));
+        // Login admin simples ou checagem de cadastro
+        if ((stored && stored.email === email && stored.pass === pass) || (email === 'admin' && pass === 'admin')) {
+          localStorage.setItem('kuromiUser', JSON.stringify({email}));
+          currentUser = {email};
           showApp();
         } else {
-          const stored = JSON.parse(localStorage.getItem('kuromiRegistered'));
-          if (stored && stored.email === email && stored.pass === pass) {
-            localStorage.setItem('kuromiUser', JSON.stringify(stored));
-            currentUser = stored;
-            showApp();
-          } else if (email === 'admin@admin.com' && pass === '123456') {
-             const user = { email, pass };
-             localStorage.setItem('kuromiUser', JSON.stringify(user));
-             currentUser = user;
-             showApp();
-          } else {
-            authError.innerText = "Email ou senha inválidos. (Tente criar conta primeiro)";
-            authError.classList.remove('hidden');
-          }
+          const err = document.getElementById('auth-error');
+          err.innerText = "Email ou senha incorretos.";
+          err.classList.remove('hidden');
         }
       }
     });
@@ -350,10 +339,11 @@
       location.reload();
     }
 
-    // --- ROTEAMENTO (SPA) ---
+    // --- ROTEAMENTO ---
     async function router(route) {
       window.scrollTo(0,0);
-      mainView.innerHTML = '<div class="flex h-screen items-center justify-center"><div class="w-12 h-12 border-4 border-netflixRed border-t-transparent rounded-full animate-spin"></div></div>';
+      const main = document.getElementById('main-view');
+      main.innerHTML = '<div class="flex h-screen items-center justify-center"><div class="w-12 h-12 border-4 border-netflixRed border-t-transparent rounded-full animate-spin"></div></div>';
       
       switch(route) {
         case 'home': await loadHome(); break;
@@ -365,39 +355,109 @@
       }
     }
 
-    // --- API & DATA FETCHING ---
-    async function fetchData(endpoint) {
-      if (TMDB_API_KEY === 'YOUR_TMDB_API_KEY_HERE') {
-        console.warn("API Key não configurada. Usando dados mockados.");
+    // --- API FETCH HELPER ---
+    async function fetchData(endpoint, page = 1) {
+      if (TMDB_API_KEY === 'SUA_CHAVE_AQUI') {
+        console.warn("API Key ausente. Usando Mock.");
         return getMockData(endpoint);
       }
       try {
-        const response = await fetch(`${TMDB_BASE_URL}${endpoint}&api_key=${TMDB_API_KEY}&language=pt-BR`);
+        const response = await fetch(`${TMDB_BASE_URL}${endpoint}&api_key=${TMDB_API_KEY}&language=pt-BR&page=${page}`);
         return await response.json();
       } catch (error) {
         return { results: [] };
       }
     }
 
-    // --- RENDERIZAÇÃO ---
+    // --- BUSCA / PESQUISA (CORRIGIDA) ---
+    function toggleSearch() {
+      const input = document.getElementById('search-input');
+      if (input.classList.contains('w-0')) {
+        input.classList.remove('w-0', 'opacity-0');
+        input.classList.add('w-64', 'opacity-100');
+        input.focus();
+      } else {
+        input.classList.add('w-0', 'opacity-0');
+        input.classList.remove('w-64', 'opacity-100');
+      }
+    }
+
+    async function handleSearch(event) {
+      if (event.key === 'Enter') {
+        const query = event.target.value;
+        if (query.length > 0) {
+          await performSearch(query);
+        }
+      }
+    }
+
+    async function performSearch(query) {
+      const main = document.getElementById('main-view');
+      main.innerHTML = '<div class="pt-24 px-12"><h2 class="text-2xl mb-4">Pesquisando por: "'+query+'"</h2><div class="w-12 h-12 border-4 border-red-600 rounded-full animate-spin"></div></div>';
+
+      if (TMDB_API_KEY === 'SUA_CHAVE_AQUI') {
+        main.innerHTML = '<div class="pt-24 px-12"><h2 class="text-red-500">Configure a chave da API para pesquisar.</h2></div>';
+        return;
+      }
+
+      try {
+        const url = `/search/multi?query=${encodeURIComponent(query)}&include_adult=false`;
+        const data = await fetchData(url);
+        
+        // Filtrar apenas filmes e séries (remover pessoas)
+        const results = data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv');
+
+        if (results.length === 0) {
+          main.innerHTML = `<div class="pt-24 px-12 text-center text-gray-400">Nenhum resultado encontrado para "${query}".</div>`;
+          return;
+        }
+
+        let html = `
+          <div class="pt-24 px-4 md:px-12">
+            <h2 class="text-2xl font-bold mb-6 text-white">Resultados para: "${query}"</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              ${results.map(item => `
+                <div onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${item.media_type}')" class="cursor-pointer hover:scale-105 transition duration-300 relative group">
+                  <img src="${item.poster_path ? 'https://image.tmdb.org/t/p/w500'+item.poster_path : 'https://via.placeholder.com/300x450?text=Sem+Capa'}" class="rounded w-full h-auto object-cover">
+                  <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
+                     <i class="fas fa-play-circle text-4xl text-netflixRed"></i>
+                  </div>
+                  <p class="mt-2 text-sm text-gray-300 truncate">${item.title || item.name}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        main.innerHTML = html;
+      } catch (e) {
+        console.error(e);
+        main.innerHTML = '<div class="pt-24 px-12 text-red-500">Erro na pesquisa.</div>';
+      }
+    }
+
+    // --- CARREGAMENTO DE PÁGINAS ---
+
     async function loadHome() {
       const trending = await fetchData('/trending/all/week?');
       const action = await fetchData('/discover/movie?with_genres=28');
-      const comedies = await fetchData('/discover/movie?with_genres=35');
       const series = await fetchData('/discover/tv?sort_by=popularity.desc');
 
       const heroItem = trending.results[0];
-      const heroImage = heroItem.backdrop_path ? `${IMAGE_BASE_URL}${heroItem.backdrop_path}` : 'https://wallpaperaccess.com/full/1202063.jpg';
+      const heroImage = heroItem && heroItem.backdrop_path ? `${IMAGE_BASE_URL}${heroItem.backdrop_path}` : 'https://wallpaperaccess.com/full/1202063.jpg';
       
-      let html = `
+      const main = document.getElementById('main-view');
+      main.innerHTML = `
         <header class="relative h-[80vh] object-cover bg-center bg-no-repeat" style="background-image: url('${heroImage}')">
           <div class="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-black/30"></div>
           <div class="absolute bottom-32 left-4 md:left-12 max-w-xl">
-            <h1 class="text-5xl md:text-6xl font-bold mb-4 drop-shadow-lg">${heroItem.title || heroItem.name}</h1>
-            <p class="text-lg text-gray-200 mb-6 drop-shadow-md line-clamp-3">${heroItem.overview}</p>
+            <h1 class="text-5xl md:text-6xl font-bold mb-4 drop-shadow-lg">${heroItem ? (heroItem.title || heroItem.name) : 'KuromiCine'}</h1>
+            <p class="text-lg text-gray-200 mb-6 drop-shadow-md line-clamp-3">${heroItem ? heroItem.overview : ''}</p>
             <div class="flex gap-4">
               <button onclick="openModalDetails(${JSON.stringify(heroItem).replace(/"/g, '&quot;')}, '${heroItem.media_type}')" class="bg-white text-black px-8 py-2 rounded font-bold hover:bg-white/80 transition flex items-center gap-2">
-                <i class="fas fa-info-circle"></i> Mais Info
+                <i class="fas fa-play"></i> Assistir
+              </button>
+              <button onclick="openModalDetails(${JSON.stringify(heroItem).replace(/"/g, '&quot;')}, '${heroItem.media_type}')" class="bg-gray-500/70 text-white px-8 py-2 rounded font-bold hover:bg-gray-500/50 transition">
+                <i class="fas fa-info-circle"></i> Info
               </button>
             </div>
           </div>
@@ -406,59 +466,78 @@
         <div class="relative z-10 -mt-24 pl-4 md:pl-12 pb-12 space-y-8">
           ${buildRow('Em Alta', trending.results)}
           ${buildRow('Séries Populares', series.results, 'tv')}
-          ${buildRow('Filmes de Ação', action.results, 'movie')}
-          ${buildRow('Comédias', comedies.results, 'movie')}
+          ${buildRow('Ação e Aventura', action.results, 'movie')}
         </div>
       `;
-      mainView.innerHTML = html;
     }
 
     async function loadCategory(type) {
       let endpoint = '';
       let title = '';
+      let mediaType = 'movie';
       
       if (type === 'anime') {
         endpoint = '/discover/tv?with_genres=16&with_keywords=210024';
         title = 'Animes';
+        mediaType = 'tv';
       } else if (type === 'drama') {
         endpoint = '/discover/tv?with_original_language=ko';
         title = 'Doramas';
+        mediaType = 'tv';
       } else if (type === 'movie') {
         endpoint = '/movie/popular?';
         title = 'Filmes';
+        mediaType = 'movie';
       } else {
         endpoint = '/tv/popular?';
         title = 'Séries';
+        mediaType = 'tv';
       }
 
-      const data = await fetchData(endpoint);
-      const topRated = await fetchData(type === 'movie' ? '/movie/top_rated?' : '/tv/top_rated?');
+      // Buscar múltiplas páginas para parecer que tem "todos" os filmes (Fetch Pages 1, 2, 3)
+      const p1 = await fetchData(endpoint, 1);
+      const p2 = await fetchData(endpoint, 2);
+      const p3 = await fetchData(endpoint, 3);
+      
+      // Combinar resultados
+      const allResults = [...p1.results, ...p2.results, ...p3.results];
+      // Remover duplicatas por ID
+      const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
 
-      let html = `
+      const main = document.getElementById('main-view');
+      main.innerHTML = `
         <div class="pt-24 px-4 md:px-12">
           <h2 class="text-3xl font-bold mb-8">${title}</h2>
-          ${buildRow(`Top ${title}`, data.results, type === 'anime' || type === 'drama' ? 'tv' : type, true)}
-          ${buildRow('Mais Bem Avaliados', topRated.results, type === 'anime' || type === 'drama' ? 'tv' : type)}
+          
+          ${buildRow(`Top ${title}`, p1.results.slice(0,10), mediaType, true)}
           
           <h3 class="text-xl text-gray-400 font-bold mt-12 mb-4">Catálogo Completo</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            ${data.results.map(item => `
-              <div onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${type === 'anime' || type === 'drama' ? 'tv' : type}')" class="cursor-pointer hover:scale-105 transition duration-300">
-                <img src="${item.poster_path ? 'https://image.tmdb.org/t/p/w500'+item.poster_path : 'https://via.placeholder.com/300x450?text=No+Image'}" class="rounded w-full h-auto object-cover">
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            ${uniqueResults.map(item => `
+              <div onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${mediaType}')" class="cursor-pointer hover:scale-105 transition duration-300 relative group">
+                <img src="${item.poster_path ? 'https://image.tmdb.org/t/p/w500'+item.poster_path : 'https://via.placeholder.com/300x450?text=No+Image'}" class="rounded w-full h-auto object-cover bg-zinc-800">
+                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
+                   <i class="fas fa-play text-white text-3xl"></i>
+                </div>
                 <p class="mt-2 text-sm text-gray-300 truncate">${item.title || item.name}</p>
               </div>
             `).join('')}
           </div>
+          
+          <div class="py-8 text-center">
+            <button class="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-2 rounded text-sm">Carregar Mais</button>
+          </div>
         </div>
       `;
-      mainView.innerHTML = html;
     }
 
     function loadCalendar() {
       const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
       const today = new Date().getDay();
+      const main = document.getElementById('main-view');
       
-      let html = `
+      main.innerHTML = `
         <div class="pt-24 px-4 md:px-12">
           <h2 class="text-3xl font-bold mb-8 text-netflixRed">Calendário de Lançamentos</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -466,15 +545,15 @@
               <div class="bg-[#181818] p-6 rounded border ${index === today ? 'border-netflixRed' : 'border-transparent'}">
                 <h3 class="text-xl font-bold mb-4 ${index === today ? 'text-netflixRed' : 'text-white'}">${day}</h3>
                 <ul class="space-y-3 text-gray-400 text-sm">
-                  <li class="flex justify-between"><span>Lançamento Anime X</span> <span class="text-white">EP 10${index}</span></li>
-                  <li class="flex justify-between"><span>Série Y</span> <span class="text-white">S02E0${index+1}</span></li>
+                  <li class="flex justify-between border-b border-gray-800 pb-2"><span>One Piece</span> <span class="text-white">EP ${1090+index}</span></li>
+                  <li class="flex justify-between border-b border-gray-800 pb-2"><span>Jujutsu Kaisen</span> <span class="text-white">EP ${30+index}</span></li>
+                  <li class="flex justify-between border-b border-gray-800 pb-2"><span>Dragon Ball Daima</span> <span class="text-white">EP 0${index+1}</span></li>
                 </ul>
               </div>
             `).join('')}
           </div>
         </div>
       `;
-      mainView.innerHTML = html;
     }
 
     function buildRow(title, items, typeOverride = null, large = false) {
@@ -486,7 +565,7 @@
             ${items.map(item => {
               const mediaType = typeOverride || item.media_type || 'movie';
               const imgPath = large ? item.poster_path : item.backdrop_path;
-              const imgUrl = imgPath ? `https://image.tmdb.org/t/p/w500${imgPath}` : 'https://via.placeholder.com/300x169?text=KuromiCine';
+              const imgUrl = imgPath ? `https://image.tmdb.org/t/p/w500${imgPath}` : 'https://via.placeholder.com/300x169?text=Capa';
               return `
                 <img 
                   onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${mediaType}')"
@@ -501,34 +580,38 @@
       `;
     }
 
-    // --- MODAL DE DETALHES ---
-    async function openModalDetails(item, type) {
+    // --- MODALS ---
+    
+    function openModalDetails(item, type) {
       currentContent = { ...item, type: type || 'movie' };
       const modal = document.getElementById('details-modal');
       
       document.getElementById('modal-title').innerText = item.title || item.name;
-      document.getElementById('modal-desc').innerText = item.overview || "Sem descrição disponível.";
+      document.getElementById('modal-desc').innerText = item.overview || "Sem descrição disponível em português.";
       document.getElementById('modal-backdrop').src = item.backdrop_path ? `${IMAGE_BASE_URL}${item.backdrop_path}` : '';
       document.getElementById('modal-year').innerText = (item.release_date || item.first_air_date || '????').substring(0,4);
       document.getElementById('modal-rating').innerText = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+      document.getElementById('modal-type').innerText = type === 'tv' ? 'Série' : 'Filme';
       
+      // Lógica de Episódios
       const epContainer = document.getElementById('episodes-container');
       const epList = document.getElementById('episodes-list');
       epList.innerHTML = '';
       
       if (type === 'tv') {
         epContainer.classList.remove('hidden');
-        for(let i=1; i<=5; i++) {
+        // Gera episódios fictícios pois a API gratuita não retorna lista de eps direto no objeto search/discover
+        for(let i=1; i<=12; i++) {
           epList.innerHTML += `
-            <div onclick="playContent('S01E0${i}')" class="flex items-center gap-4 p-3 hover:bg-[#333] cursor-pointer rounded transition">
-              <div class="text-2xl text-gray-500">${i}</div>
-              <div class="w-32 h-16 bg-gray-700 rounded overflow-hidden relative">
-                <img src="${item.backdrop_path ? 'https://image.tmdb.org/t/p/w200'+item.backdrop_path : ''}" class="w-full h-full object-cover opacity-50">
-                <i class="fas fa-play absolute inset-0 flex items-center justify-center text-white"></i>
+            <div onclick="playContent('S01E0${i}')" class="flex items-center gap-4 p-3 hover:bg-[#333] cursor-pointer rounded transition border-b border-gray-800">
+              <div class="text-xl text-gray-500 w-8">${i}</div>
+              <div class="w-24 h-14 bg-gray-700 rounded overflow-hidden relative">
+                 <img src="${item.backdrop_path ? 'https://image.tmdb.org/t/p/w200'+item.backdrop_path : ''}" class="w-full h-full object-cover opacity-60">
+                 <i class="fas fa-play absolute inset-0 flex items-center justify-center text-white text-xs"></i>
               </div>
-              <div>
-                <h4 class="font-bold text-sm">Episódio ${i}</h4>
-                <p class="text-xs text-gray-400">45m</p>
+              <div class="flex-grow">
+                <h4 class="font-bold text-sm text-gray-200">Episódio ${i}</h4>
+                <p class="text-xs text-gray-500">24m</p>
               </div>
             </div>
           `;
@@ -536,6 +619,7 @@
       } else {
         epContainer.classList.add('hidden');
       }
+
       modal.classList.remove('hidden');
     }
 
@@ -543,68 +627,51 @@
       document.getElementById('details-modal').classList.add('hidden');
     }
 
-    // --- PLAYER LOGIC (APENAS SUPERFLIX) ---
-    function playContent(episodeStr = null) {
+    // --- PLAYER AUTOMÁTICO (SUPERFLIX / PREMIUM) ---
+    
+    function playContent(episodeLabel = null) {
       const modal = document.getElementById('player-modal');
       const iframe = document.getElementById('video-frame');
       const title = document.getElementById('player-title');
+      
+      // Fecha o modal de detalhes
+      closeDetails();
       
       let id = currentContent.id;
       let type = currentContent.type === 'tv' ? 'serie' : 'filme';
       let url = '';
 
-      title.innerText = (currentContent.title || currentContent.name) + (episodeStr ? ` - ${episodeStr}` : '');
+      title.innerText = (currentContent.title || currentContent.name) + (episodeLabel ? ` - ${episodeLabel}` : '');
 
-      // Superflix API Unificada
-      // Docs: https://superflixapi.asia
+      // CONFIGURAÇÃO DO PLAYER PREMIUM (SUPERFLIX)
+      // Abre automaticamente sem perguntar player
       if (type === 'serie') {
-        // Por padrão abre a série, o usuário seleciona temporada/ep dentro do embed se a API suportar
-        // ou direciona direto para a série
-        url = `https://superflixapi.asia/serie/${id}`; 
+         // Para séries, enviamos para a página da série. O usuário escolhe temp/ep dentro do embed
+         // Se tivermos estrutura de temp/ep (S01E01), a URL seria diferente, mas a SuperflixAPI lida com ID base bem.
+         url = `https://superflixapi.asia/serie/${id}`;
       } else {
-        url = `https://superflixapi.asia/filme/${id}`;
+         url = `https://superflixapi.asia/filme/${id}`;
       }
       
       iframe.src = url;
       modal.classList.remove('hidden');
-      closeDetails();
     }
 
     function closePlayer() {
       const modal = document.getElementById('player-modal');
       const iframe = document.getElementById('video-frame');
-      iframe.src = ''; 
+      iframe.src = ''; // Parar vídeo
       modal.classList.add('hidden');
     }
-    
-    // --- SEARCH ---
-    function toggleSearch() {
-      const input = document.getElementById('search-input');
-      if (input.classList.contains('w-0')) {
-        input.classList.remove('w-0', 'opacity-0');
-        input.classList.add('w-64', 'opacity-100');
-        input.focus();
-      } else {
-        input.classList.add('w-0', 'opacity-0');
-        input.classList.remove('w-64', 'opacity-100');
-      }
-    }
 
-    // --- MOCK DATA ---
+    // --- MOCK DATA (Fallback) ---
     function getMockData(endpoint) {
       const mockMovies = [
-        { id: 550, title: "Clube da Luta", backdrop_path: null, overview: "Um homem deprimido...", vote_average: 8.4, release_date: "1999-10-15" },
-        { id: 11, title: "Star Wars", backdrop_path: null, overview: "Guerra nas estrelas...", vote_average: 8.2, release_date: "1977-05-25" },
-        { id: 12, title: "Procurando Nemo", backdrop_path: null, overview: "Peixe perdido...", vote_average: 7.8, release_date: "2003-05-30" },
+        { id: 550, title: "Clube da Luta", backdrop_path: null, overview: "Um homem deprimido...", vote_average: 8.4, release_date: "1999" },
+        { id: 11, title: "Star Wars", backdrop_path: null, overview: "Guerra...", vote_average: 8.2, release_date: "1977" },
+        { id: 12, title: "Procurando Nemo", backdrop_path: null, overview: "Peixe...", vote_average: 7.8, release_date: "2003" },
       ];
-      
-      return {
-        results: mockMovies.map(m => ({
-          ...m, 
-          backdrop_path: '/hZkgoQYus5vegHoetLkCJzb17zJ.jpg',
-          poster_path: '/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg'
-        }))
-      };
+      return { results: mockMovies };
     }
   </script>
 </body>
