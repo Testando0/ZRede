@@ -86,7 +86,7 @@
       height: 85%; /* Deixa 15% em baixo livre para os controles nativos */
       z-index: 50;
       background: transparent; 
-      display: none; /* Mantido em none no início para não travar o carregamento */
+      display: none; /* INICIA DESATIVADO PARA NÃO QUEBRAR A ESCOLHA DE EPISÓDIOS */
     }
 
     /* Animações */
@@ -480,19 +480,15 @@
       return `<div class="mb-8"><h2 class="text-xl font-bold text-white mb-2 ml-2">${title}</h2><div class="row-posters hide-scroll">${items.map(item => `<img onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${typeOverride || item.media_type || 'movie'}')" class="row-poster ${large ? 'row-poster-large' : ''}" src="${item.backdrop_path ? 'https://image.tmdb.org/t/p/w500'+item.backdrop_path : 'https://via.placeholder.com/300x169'}" alt="${item.name || item.title}">`).join('')}</div></div>`;
     }
 
-    // --- MODALS ---
-    
     function openModalDetails(item, type) {
       currentContent = { ...item, type: type || 'movie' };
       const modal = document.getElementById('details-modal');
       document.getElementById('modal-title').innerText = item.title || item.name;
       document.getElementById('modal-desc').innerText = item.overview || "Sem descrição.";
       document.getElementById('modal-backdrop').src = item.backdrop_path ? `${IMAGE_BASE_URL}${item.backdrop_path}` : '';
-      
       const epContainer = document.getElementById('episodes-container');
       const epList = document.getElementById('episodes-list');
       epList.innerHTML = '';
-      
       if (type === 'tv') {
         epContainer.classList.remove('hidden');
         for(let i=1; i<=12; i++) {
@@ -515,38 +511,22 @@
       document.getElementById('details-modal').classList.add('hidden');
     }
 
-    // --- PLAYER ---
-    
     function playContent(episodeLabel = null) {
       const modal = document.getElementById('player-modal');
       const iframe = document.getElementById('video-frame');
       const shield = document.getElementById('player-shield-overlay');
-      
       closeDetails();
-      
       let id = currentContent.id;
       let type = currentContent.type === 'tv' ? 'serie' : 'filme';
-      let url = '';
-
-      if (type === 'serie') {
-         url = `https://superflixapi.asia/serie/${id}`;
-      } else {
-         url = `https://superflixapi.asia/filme/${id}`;
-      }
       
-      // ADICIONANDO AUTOPLAY NA URL
-      url += (url.includes('?') ? '&' : '?') + 'autoplay=1';
+      // ADICIONADO AUTOPLAY NA URL
+      let url = type === 'serie' ? `https://superflixapi.asia/serie/${id}?autoplay=1` : `https://superflixapi.asia/filme/${id}?autoplay=1`;
 
       document.getElementById('player-title').innerText = (currentContent.title || currentContent.name) + (episodeLabel ? ` - ${episodeLabel}` : '');
-
-      // Limpa qualquer timer antigo e garante que o escudo comece oculto
       if(shieldTimer) clearTimeout(shieldTimer);
       shield.style.display = 'none'; 
-
       iframe.src = url;
       modal.classList.remove('hidden');
-
-      // O ESCUDO SÓ APARECE 20 SEGUNDOS DEPOIS DO PLAYER ABRIR
       shieldTimer = setTimeout(() => {
         shield.style.display = 'block';
       }, 20000); 
