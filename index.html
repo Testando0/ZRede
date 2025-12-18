@@ -3,139 +3,150 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KuromiCine - Premium</title>
+  <title>KuromiCine — Premium</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { colors: { netflixRed: '#E50914', netflixBlack: '#141414' } } }
-    }
-  </script>
+  
   <style>
-    body { background-color: #141414; color: white; overflow-x: hidden; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-    .hide-scroll::-webkit-scrollbar { display: none; }
-    .row-posters { display: flex; overflow-x: scroll; padding: 20px; gap: 15px; scroll-behavior: smooth; }
-    .row-poster { width: 180px; flex-shrink: 0; object-fit: cover; transition: transform 450ms; border-radius: 4px; cursor: pointer; }
-    .row-poster:hover { transform: scale(1.1); z-index: 10; }
+    :root { --netflix-red: #E50914; --bg-black: #141414; }
+    body { background-color: var(--bg-black); color: white; font-family: 'Helvetica Neue', Helvetica, sans-serif; margin: 0; }
     
+    /* Scroll Personalizado */
+    .hide-scroll::-webkit-scrollbar { display: none; }
+    .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Carrossel Estilo Netflix */
+    .row-posters { display: flex; overflow-x: scroll; padding: 20px 0; gap: 12px; }
+    .row-poster { 
+      width: 160px; height: 240px; object-fit: cover; 
+      border-radius: 4px; cursor: pointer; transition: transform 0.4s ease;
+    }
+    .row-poster:hover { transform: scale(1.1); z-index: 10; }
+
     /* Escudo Anti-Anúncios */
     .click-shield {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 88%;
-      z-index: 100;
-      background: transparent;
-      display: none;
+      position: absolute; top: 0; left: 0; width: 100%; height: 88%;
+      z-index: 100; background: transparent; display: none;
     }
+
+    /* Animação Modal */
+    .modal-active { animation: fadeIn 0.3s forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
   </style>
 </head>
 <body>
 
-  <nav class="fixed w-full z-50 transition-all bg-black/90" id="navbar">
-    <div class="px-4 md:px-12 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-8">
-        <h1 class="text-netflixRed text-3xl font-bold cursor-pointer tracking-tighter" onclick="location.reload()">KUROMICINE</h1>
-        <ul class="hidden md:flex gap-4 text-sm font-medium text-gray-300">
-          <li class="cursor-pointer hover:text-white" onclick="router('home')">Início</li>
-          <li class="cursor-pointer hover:text-white" onclick="router('series')">Séries</li>
-          <li class="cursor-pointer hover:text-white" onclick="router('filmes')">Filmes</li>
+  <nav id="navbar" class="fixed w-full z-50 transition-all duration-500 bg-gradient-to-b from-black/80 to-transparent">
+    <div class="px-6 md:px-12 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-10">
+        <h1 class="text-netflixRed text-3xl font-black cursor-pointer tracking-tighter" style="color:#E50914" onclick="location.reload()">KUROMICINE</h1>
+        <ul class="hidden md:flex gap-5 text-sm font-light text-gray-300">
+          <li class="cursor-pointer hover:text-white transition" onclick="router('home')">Início</li>
+          <li class="cursor-pointer hover:text-white transition" onclick="router('series')">Séries</li>
+          <li class="cursor-pointer hover:text-white transition" onclick="router('filmes')">Filmes</li>
+          <li class="cursor-pointer hover:text-white transition" onclick="router('animes')">Animes</li>
         </ul>
       </div>
-      <div class="flex items-center gap-4">
-        <div class="relative flex items-center bg-zinc-900 border border-white/10 rounded px-3 py-1">
-          <i class="fas fa-search text-gray-500 mr-2"></i>
-          <input type="text" id="search-input" class="bg-transparent text-white outline-none w-40 md:w-64 text-sm" placeholder="Títulos, personagens..." onkeydown="handleSearch(event)">
+      <div class="flex items-center gap-5">
+        <div class="relative flex items-center bg-black/60 border border-white/20 rounded-md px-3 py-1.5">
+          <i class="fas fa-search text-gray-400 text-sm mr-2"></i>
+          <input type="text" id="search-input" class="bg-transparent text-white outline-none w-32 md:w-64 text-sm" placeholder="O que você quer assistir?" onkeydown="handleSearch(event)">
         </div>
       </div>
     </div>
   </nav>
 
-  <main id="main-view" class="pt-20 min-h-screen"></main>
+  <main id="main-view" class="min-h-screen pb-24"></main>
 
-  <div id="details-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-[#181818] w-full max-w-5xl rounded-xl overflow-hidden relative shadow-2xl border border-white/5">
-      <button onclick="closeDetails()" class="absolute top-4 right-4 z-10 w-10 h-10 bg-black/60 rounded-full text-white hover:bg-netflixRed transition">
+  <div id="details-modal" class="fixed inset-0 z-[60] hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-2 md:p-10">
+    <div class="bg-[#181818] w-full max-w-5xl rounded-lg overflow-hidden relative shadow-2xl modal-active">
+      <button onclick="closeDetails()" class="absolute top-5 right-5 z-[70] w-10 h-10 bg-black/50 rounded-full text-white hover:bg-red-600 transition">
         <i class="fas fa-times"></i>
       </button>
       
-      <div class="relative h-64 md:h-[450px]">
+      <div class="relative h-60 md:h-[480px]">
         <img id="modal-backdrop" src="" class="w-full h-full object-cover">
         <div class="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent"></div>
         <div class="absolute bottom-10 left-6 md:left-12">
-          <h2 id="modal-title" class="text-4xl md:text-6xl font-bold mb-6 drop-shadow-2xl"></h2>
-          <button onclick="playContent()" class="bg-white text-black px-12 py-4 rounded font-bold hover:bg-gray-200 transition flex items-center gap-3 text-xl uppercase tracking-tighter">
-            <i class="fas fa-play"></i> Assistir Agora
+          <h2 id="modal-title" class="text-4xl md:text-6xl font-extrabold mb-6"></h2>
+          <button onclick="playContent()" class="bg-white text-black px-12 py-4 rounded-md font-bold hover:bg-gray-300 transition flex items-center gap-3 text-xl">
+            <i class="fas fa-play"></i> ASSISTIR AGORA
           </button>
         </div>
       </div>
       
-      <div class="p-8 md:p-12">
-        <div class="flex items-center gap-4 mb-6 text-green-400 font-bold">
-          <span id="modal-year"></span>
-          <span class="border border-gray-600 px-2 text-xs text-gray-300">4K ULTRA HD</span>
-          <span class="text-gray-400">Servidor Premium</span>
+      <div class="p-8 md:p-12 grid md:grid-cols-3 gap-10">
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-4 mb-5 text-green-400 font-bold">
+            <span id="modal-year"></span>
+            <span class="border border-gray-600 px-2 py-0.5 text-xs text-gray-300 rounded">4K PREMIUM</span>
+            <span class="text-gray-400" id="modal-type">FILME</span>
+          </div>
+          <p id="modal-desc" class="text-gray-300 text-lg leading-relaxed"></p>
         </div>
-        <p id="modal-desc" class="text-gray-300 text-lg leading-relaxed max-w-3xl"></p>
+        <div id="series-episodes" class="hidden">
+          <h3 class="font-bold text-gray-400 uppercase text-xs mb-4">Temporada 1</h3>
+          <div class="space-y-2 max-h-40 overflow-y-auto pr-2 hide-scroll" id="episode-list"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div id="player-modal" class="fixed inset-0 z-[70] hidden bg-black flex flex-col">
-    <div class="p-4 flex justify-between items-center bg-zinc-900 border-b border-white/5">
-      <button onclick="closePlayer()" class="text-white flex items-center gap-2 font-bold hover:text-netflixRed transition">
-        <i class="fas fa-arrow-left"></i> VOLTAR
+  <div id="player-modal" class="fixed inset-0 z-[100] hidden bg-black flex flex-col">
+    <div class="p-4 bg-zinc-900 flex justify-between items-center border-b border-white/5">
+      <button onclick="closePlayer()" class="text-white flex items-center gap-3 font-bold hover:text-red-500 transition">
+        <i class="fas fa-arrow-left text-xl"></i> VOLTAR
       </button>
-      
-      <div id="shield-status" class="text-xs font-bold px-6 py-2 rounded-full bg-zinc-800 text-gray-400 transition-all duration-700">
+      <div id="shield-status" class="text-[10px] md:text-xs font-bold px-5 py-2 rounded-full bg-zinc-800 text-gray-400 transition-all duration-1000">
         <i class="fas fa-clock mr-2"></i> AGUARDANDO SELEÇÃO (ESCOLHA O ÁUDIO EM 20s)
       </div>
-
-      <div class="text-netflixRed text-xs font-black uppercase tracking-[0.2em] hidden md:block">Server Premium</div>
+      <div class="text-red-600 font-black text-xs uppercase hidden md:block">Streaming Premium</div>
     </div>
-
     <div class="flex-grow bg-black relative">
       <div id="player-shield" class="click-shield"></div>
-      
       <iframe id="video-frame" class="w-full h-full" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
     </div>
   </div>
 
   <script>
-    const TMDB_API_KEY = '6f44605953049b6d6f94736f1c7d242a'; // Chave de API
+    const TMDB_API_KEY = '6f44605953049b6d6f94736f1c7d242a'; 
     const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-    const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/original';
-    
     let currentContent = null;
     let shieldTimer;
 
+    // Scroll Navbar Effect
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('navbar');
+      if (window.scrollY > 50) nav.classList.add('bg-black');
+      else nav.classList.remove('bg-black');
+    });
+
     async function fetchData(endpoint, page = 1) {
-      const res = await fetch(`${TMDB_BASE_URL}${endpoint}&api_key=${TMDB_API_KEY}&language=pt-BR&page=${page}`);
-      return res.json();
+      try {
+        const res = await fetch(`${TMDB_BASE_URL}${endpoint}&api_key=${TMDB_API_KEY}&language=pt-BR&page=${page}`);
+        return await res.json();
+      } catch (e) { return { results: [] }; }
     }
 
-    // PESQUISA FUNCIONAL
+    // PESQUISA ATUALIZADA
     async function handleSearch(e) {
       if (e.key === 'Enter') {
         const query = e.target.value;
         if (!query) return;
-        
         const main = document.getElementById('main-view');
-        main.innerHTML = `<div class="p-12 text-center"><i class="fas fa-circle-notch animate-spin text-4xl text-netflixRed"></i></div>`;
+        main.innerHTML = `<div class="pt-32 text-center"><i class="fas fa-spinner animate-spin text-3xl text-red-600"></i></div>`;
         
         const data = await fetchData(`/search/multi?query=${encodeURIComponent(query)}`);
         const results = data.results.filter(i => i.poster_path);
-
+        
         main.innerHTML = `
-          <div class="pt-10 px-4 md:px-12">
-            <h2 class="text-2xl font-bold mb-8 text-gray-400">Resultados para: <span class="text-white">"${query}"</span></h2>
+          <div class="pt-32 px-12">
+            <h2 class="text-2xl font-bold mb-10 text-gray-400">Resultados para <span class="text-white">"${query}"</span></h2>
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
               ${results.map(item => `
-                <div onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="cursor-pointer hover:scale-105 transition duration-300">
-                  <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="rounded shadow-2xl">
-                  <p class="mt-2 text-sm text-gray-400 truncate">${item.title || item.name}</p>
+                <div onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="cursor-pointer hover:scale-110 transition duration-300">
+                  <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="rounded-md shadow-xl">
                 </div>
               `).join('')}
             </div>
@@ -143,95 +154,96 @@
       }
     }
 
-    // ROTEAMENTO E CARREGAMENTO EXPANDIDO (Várias páginas)
+    // ROTEADOR COM CATALOGO EXPANDIDO
     async function router(route) {
       const main = document.getElementById('main-view');
-      main.innerHTML = `<div class="h-screen flex items-center justify-center"><i class="fas fa-spinner animate-spin text-4xl text-netflixRed"></i></div>`;
+      main.innerHTML = `<div class="h-screen flex items-center justify-center"><i class="fas fa-circle-notch animate-spin text-4xl text-red-600"></i></div>`;
 
       if (route === 'home') {
-        const t = await fetchData('/trending/all/week');
-        const m = await fetchData('/movie/popular');
-        const s = await fetchData('/tv/popular');
+        const trending = await fetchData('/trending/all/week');
+        const movies = await fetchData('/movie/popular');
+        const series = await fetchData('/tv/popular');
         
+        const hero = trending.results[0];
         main.innerHTML = `
-          <header class="relative h-[80vh] bg-cover bg-center" style="background-image: url('${IMAGE_BASE_URL}${t.results[0].backdrop_path}')">
-            <div class="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent"></div>
-            <div class="absolute bottom-20 left-4 md:left-12">
-              <h1 class="text-5xl md:text-7xl font-black mb-6">${t.results[0].title || t.results[0].name}</h1>
-              <button onclick="openModalDetails(${JSON.stringify(t.results[0]).replace(/"/g, '&quot;')})" class="bg-white text-black px-10 py-3 rounded font-bold hover:bg-white/80 transition text-lg">
-                <i class="fas fa-play mr-2"></i> ASSISTIR AGORA
+          <header class="relative h-[85vh] bg-cover bg-center" style="background-image: url('https://image.tmdb.org/t/p/original${hero.backdrop_path}')">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-black/30"></div>
+            <div class="absolute bottom-28 left-6 md:left-12 max-w-2xl">
+              <h1 class="text-5xl md:text-7xl font-black mb-6 drop-shadow-lg">${hero.title || hero.name}</h1>
+              <p class="text-lg text-gray-200 mb-8 line-clamp-3">${hero.overview}</p>
+              <button onclick="openModalDetails(${JSON.stringify(hero).replace(/"/g, '&quot;')})" class="bg-white text-black px-12 py-4 rounded-md font-black hover:bg-gray-300 transition text-xl flex items-center gap-2">
+                <i class="fas fa-play"></i> ASSISTIR
               </button>
             </div>
           </header>
-          <div class="relative z-10 -mt-20 space-y-12 pb-20">
-            ${buildRow('Tendências da Semana', t.results)}
-            ${buildRow('Filmes em Destaque', m.results, 'movie')}
-            ${buildRow('Séries Populares', s.results, 'tv')}
+          <div class="relative z-10 -mt-24 px-6 md:px-12 space-y-12">
+            ${buildRow('Em Alta', trending.results)}
+            ${buildRow('Filmes Mais Vistos', movies.results, 'movie')}
+            ${buildRow('Séries Populares', series.results, 'tv')}
           </div>`;
       } else {
-        const type = route === 'filmes' ? 'movie' : 'tv';
-        // Busca 2 páginas para ter mais filmes
+        const type = (route === 'filmes') ? 'movie' : 'tv';
+        // Carrega 3 páginas (60 itens) para dar o efeito de catálogo completo
         const p1 = await fetchData(`/${type}/popular`, 1);
         const p2 = await fetchData(`/${type}/popular`, 2);
-        const all = [...p1.results, ...p2.results];
+        const p3 = await fetchData(`/${type}/popular`, 3);
+        const all = [...p1.results, ...p2.results, ...p3.results];
 
         main.innerHTML = `
-          <div class="pt-10 px-4 md:px-12">
-            <h2 class="text-4xl font-bold mb-10 capitalize">${route}</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-              ${all.map(item => `
-                <div onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${type}')" class="cursor-pointer hover:scale-105 transition duration-300">
-                  <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="rounded-md">
-                </div>
-              `).join('')}
+          <div class="pt-32 px-6 md:px-12">
+            <h2 class="text-4xl font-black mb-12 capitalize tracking-tighter">${route}</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              ${all.map(item => `<img onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${type}')" src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="rounded-md hover:scale-110 transition cursor-pointer">`).join('')}
             </div>
           </div>`;
       }
     }
 
     function buildRow(title, items, type) {
-      return `<div class="pl-4 md:pl-12">
-        <h2 class="text-2xl font-bold mb-4 text-gray-200">${title}</h2>
+      return `<div>
+        <h2 class="text-2xl font-bold mb-2 text-gray-100">${title}</h2>
         <div class="row-posters hide-scroll">
           ${items.map(i => `<img onclick="openModalDetails(${JSON.stringify(i).replace(/"/g, '&quot;')}, '${type || i.media_type}')" class="row-poster" src="https://image.tmdb.org/t/p/w500${i.poster_path}">`).join('')}
         </div>
       </div>`;
     }
 
-    // DETALHES E PLAYER
+    // MODAL E PLAYER
     function openModalDetails(item, type) {
       currentContent = { ...item, type: type || item.media_type || 'movie' };
       document.getElementById('modal-title').innerText = item.title || item.name;
-      document.getElementById('modal-desc').innerText = item.overview || "Nenhuma descrição disponível.";
+      document.getElementById('modal-desc').innerText = item.overview || "Carregando descrição...";
       document.getElementById('modal-year').innerText = (item.release_date || item.first_air_date || '').split('-')[0];
-      document.getElementById('modal-backdrop').src = IMAGE_BASE_URL + item.backdrop_path;
+      document.getElementById('modal-backdrop').src = 'https://image.tmdb.org/t/p/original' + item.backdrop_path;
+      document.getElementById('modal-type').innerText = currentContent.type === 'tv' ? 'SÉRIE' : 'FILME';
       document.getElementById('details-modal').classList.remove('hidden');
     }
 
     function playContent() {
-      const type = currentContent.type === 'tv' || currentContent.name ? 'serie' : 'filme';
+      const type = currentContent.type === 'tv' ? 'serie' : 'filme';
       const id = currentContent.id;
       
-      // Abre direto no servidor premium Superflix
+      // Carrega no servidor premium
       document.getElementById('video-frame').src = `https://superflixapi.asia/${type}/${id}`;
       
-      // Reset do Escudo
       const shield = document.getElementById('player-shield');
       const status = document.getElementById('shield-status');
+      
+      // Reset
       shield.style.display = 'none';
-      status.innerHTML = '<i class="fas fa-clock mr-2"></i> AGUARDANDO SELEÇÃO (ESCOLHA O ÁUDIO EM 20s)';
+      status.innerHTML = '<i class="fas fa-clock mr-2"></i> ESCOLHA O ÁUDIO/LEGENDA (ESPERE 20s)';
       status.className = "text-xs font-bold px-6 py-2 rounded-full bg-zinc-800 text-gray-400";
 
       document.getElementById('player-modal').classList.remove('hidden');
       closeDetails();
 
-      // Ativação Automática do Escudo após 20 segundos
+      // ESCUDO AUTOMÁTICO EM 20 SEGUNDOS
       clearTimeout(shieldTimer);
       shieldTimer = setTimeout(() => {
         if(!document.getElementById('player-modal').classList.contains('hidden')) {
           shield.style.display = 'block';
-          status.innerHTML = '<i class="fas fa-shield-alt mr-2"></i> PROTEÇÃO ATIVA (ANÚNCIOS BLOQUEADOS)';
-          status.className = "text-xs font-bold px-6 py-2 rounded-full bg-green-600 text-white shadow-lg shadow-green-900/40";
+          status.innerHTML = '<i class="fas fa-shield-alt mr-2"></i> PROTEÇÃO ATIVA';
+          status.className = "text-xs font-bold px-6 py-2 rounded-full bg-green-600 text-white shadow-lg";
         }
       }, 20000);
     }
