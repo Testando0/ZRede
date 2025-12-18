@@ -86,7 +86,7 @@
       height: 85%; /* Deixa 15% em baixo livre para os controles nativos */
       z-index: 50;
       background: transparent; 
-      display: none; /* Começa escondido para o usuário escolher o áudio */
+      display: none; /* INICIA DESATIVADO PARA NÃO QUEBRAR A ESCOLHA DE EPISÓDIOS */
     }
 
     /* Animações */
@@ -230,16 +230,13 @@
         <button onclick="closePlayer()" class="text-white hover:text-gray-300"><i class="fas fa-arrow-left text-2xl"></i></button>
         <h3 id="player-title" class="text-lg font-bold">Assistindo</h3>
       </div>
-      <div id="shield-timer" class="text-xs text-gray-400 border border-gray-700 px-3 py-1 rounded">
-        Escudo: Escolha o áudio...
-      </div>
       <div class="text-netflixRed font-bold text-sm tracking-widest uppercase border border-netflixRed px-2 py-1 rounded">
         SERVER PREMIUM 4K
       </div>
     </div>
     
     <div class="flex-grow relative bg-black flex items-center justify-center player-wrapper">
-      <div id="player-shield" class="click-shield" title="Controles na barra inferior"></div>
+      <div id="player-shield-overlay" class="click-shield" title="Controles na barra inferior"></div>
       
       <iframe id="video-frame" class="w-full h-full" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
     </div>
@@ -248,7 +245,7 @@
   <script>
     // --- CONFIGURAÇÃO ---
     // COLOQUE SUA CHAVE AQUI PARA AS IMAGENS APARECEREM E A PESQUISA FUNCIONAR
-    const TMDB_API_KEY = '8265bd1679663a7ea12ac168da84d2e8'; 
+    const TMDB_API_KEY = 'SUA_CHAVE_AQUI'; 
     const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
     const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/original';
     
@@ -256,7 +253,7 @@
     let currentUser = JSON.parse(localStorage.getItem('kuromiUser'));
     let currentContent = null;
     let isRegistering = false;
-    let shieldTimeout; // Variável para controlar o tempo do escudo
+    let shieldTimer = null; // GERENCIADOR DO TEMPO DO ESCUDO
 
     // --- INICIALIZAÇÃO ---
     window.addEventListener('load', () => {
@@ -632,14 +629,13 @@
       document.getElementById('details-modal').classList.add('hidden');
     }
 
-    // --- PLAYER AUTOMÁTICO (SUPERFLIX / PREMIUM) COM LÓGICA DE 20s ---
+    // --- PLAYER AUTOMÁTICO (SUPERFLIX / PREMIUM) ---
     
     function playContent(episodeLabel = null) {
       const modal = document.getElementById('player-modal');
       const iframe = document.getElementById('video-frame');
       const title = document.getElementById('player-title');
-      const shield = document.getElementById('player-shield');
-      const timerDisplay = document.getElementById('shield-timer');
+      const shield = document.getElementById('player-shield-overlay');
       
       // Fecha o modal de detalhes
       closeDetails();
@@ -650,54 +646,37 @@
 
       title.innerText = (currentContent.title || currentContent.name) + (episodeLabel ? ` - ${episodeLabel}` : '');
 
+      // CONFIGURAÇÃO DO PLAYER PREMIUM (SUPERFLIX)
       if (type === 'serie') {
          url = `https://superflixapi.asia/serie/${id}`;
       } else {
          url = `https://superflixapi.asia/filme/${id}`;
       }
       
+      // LIMPEZA DE TIMERS ANTERIORES E RESET DO ESCUDO
+      if(shieldTimer) clearTimeout(shieldTimer);
+      shield.style.display = 'none'; 
+
       iframe.src = url;
       modal.classList.remove('hidden');
 
-      // LÓGICA DO ESCUDO DE 20 SEGUNDOS
-      // 1. Resetar estados
-      shield.style.display = 'none';
-      clearTimeout(shieldTimeout);
-      
-      let timeLeft = 20;
-      timerDisplay.innerText = `Escudo em: ${timeLeft}s`;
-      timerDisplay.classList.add('text-yellow-500');
-
-      // 2. Iniciar contagem regressiva visual
-      const countdown = setInterval(() => {
-        timeLeft--;
-        if (timeLeft > 0) {
-          timerDisplay.innerText = `Escudo em: ${timeLeft}s`;
-        } else {
-          clearInterval(countdown);
-        }
-      }, 1000);
-
-      // 3. Ativar escudo após 20 segundos
-      shieldTimeout = setTimeout(() => {
+      // ADICIONA O ATRASO DE 20 SEGUNDOS PARA O ESCUDO APARECER
+      shieldTimer = setTimeout(() => {
         shield.style.display = 'block';
-        timerDisplay.innerText = "Escudo: ATIVADO (Antipopup)";
-        timerDisplay.classList.remove('text-yellow-500');
-        timerDisplay.classList.add('text-green-500');
-        clearInterval(countdown);
-      }, 20000);
+        console.log("Escudo antipopup ativado após 20 segundos.");
+      }, 20000); 
     }
 
     function closePlayer() {
       const modal = document.getElementById('player-modal');
       const iframe = document.getElementById('video-frame');
-      const shield = document.getElementById('player-shield');
+      const shield = document.getElementById('player-shield-overlay');
       
-      // Limpa timer e esconde escudo ao fechar
-      clearTimeout(shieldTimeout);
+      // PARA O VÍDEO E RESETAR O ESCUDO E O TIMER
+      iframe.src = ''; 
+      if(shieldTimer) clearTimeout(shieldTimer);
       shield.style.display = 'none';
       
-      iframe.src = ''; 
       modal.classList.add('hidden');
     }
 
