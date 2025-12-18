@@ -244,8 +244,7 @@
 
   <script>
     // --- CONFIGURAÇÃO ---
-    // COLOQUE SUA CHAVE AQUI PARA AS IMAGENS APARECEREM E A PESQUISA FUNCIONAR
-    const TMDB_API_KEY = '8265bd1679663a7ea12ac168da84d2e8'; 
+    const TMDB_API_KEY = '6f44605953049b6d6f94736f1c7d242a'; 
     const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
     const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/original';
     
@@ -253,7 +252,7 @@
     let currentUser = JSON.parse(localStorage.getItem('kuromiUser'));
     let currentContent = null;
     let isRegistering = false;
-    let shieldTimer = null; // GERENCIADOR DO TEMPO DO ESCUDO
+    let shieldTimer = null; 
 
     // --- INICIALIZAÇÃO ---
     window.addEventListener('load', () => {
@@ -263,7 +262,6 @@
         showAuth();
       }
       
-      // Efeito Navbar
       window.addEventListener('scroll', () => {
         const nav = document.getElementById('navbar');
         if (window.scrollY > 50) {
@@ -287,7 +285,6 @@
       router('home');
     }
     
-    // Botão de alternar Login/Cadastro
     document.getElementById('auth-switch-btn').addEventListener('click', (e) => {
       e.preventDefault();
       isRegistering = !isRegistering;
@@ -309,31 +306,12 @@
       }
     });
 
-    // Submit do Form
     document.getElementById('auth-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const pass = document.getElementById('password').value;
-
-      if (isRegistering) {
-        const user = { email, pass };
-        localStorage.setItem('kuromiRegistered', JSON.stringify(user));
-        localStorage.setItem('kuromiUser', JSON.stringify(user));
-        currentUser = user;
-        showApp();
-      } else {
-        const stored = JSON.parse(localStorage.getItem('kuromiRegistered'));
-        // Login admin simples ou checagem de cadastro
-        if ((stored && stored.email === email && stored.pass === pass) || (email === 'admin' && pass === 'admin')) {
-          localStorage.setItem('kuromiUser', JSON.stringify({email}));
-          currentUser = {email};
-          showApp();
-        } else {
-          const err = document.getElementById('auth-error');
-          err.innerText = "Email ou senha incorretos.";
-          err.classList.remove('hidden');
-        }
-      }
+      localStorage.setItem('kuromiUser', JSON.stringify({email}));
+      showApp();
     });
 
     function logout() {
@@ -357,12 +335,7 @@
       }
     }
 
-    // --- API FETCH HELPER ---
     async function fetchData(endpoint, page = 1) {
-      if (TMDB_API_KEY === 'SUA_CHAVE_AQUI') {
-        console.warn("API Key ausente. Usando Mock.");
-        return getMockData(endpoint);
-      }
       try {
         const response = await fetch(`${TMDB_BASE_URL}${endpoint}&api_key=${TMDB_API_KEY}&language=pt-BR&page=${page}`);
         return await response.json();
@@ -371,7 +344,6 @@
       }
     }
 
-    // --- BUSCA / PESQUISA (CORRIGIDA) ---
     function toggleSearch() {
       const input = document.getElementById('search-input');
       if (input.classList.contains('w-0')) {
@@ -395,25 +367,10 @@
 
     async function performSearch(query) {
       const main = document.getElementById('main-view');
-      main.innerHTML = '<div class="pt-24 px-12"><h2 class="text-2xl mb-4">Pesquisando por: "'+query+'"</h2><div class="w-12 h-12 border-4 border-red-600 rounded-full animate-spin"></div></div>';
-
-      if (TMDB_API_KEY === 'SUA_CHAVE_AQUI') {
-        main.innerHTML = '<div class="pt-24 px-12"><h2 class="text-red-500">Configure a chave da API para pesquisar.</h2></div>';
-        return;
-      }
-
       try {
         const url = `/search/multi?query=${encodeURIComponent(query)}&include_adult=false`;
         const data = await fetchData(url);
-        
-        // Filtrar apenas filmes e séries (remover pessoas)
         const results = data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv');
-
-        if (results.length === 0) {
-          main.innerHTML = `<div class="pt-24 px-12 text-center text-gray-400">Nenhum resultado encontrado para "${query}".</div>`;
-          return;
-        }
-
         let html = `
           <div class="pt-24 px-4 md:px-12">
             <h2 class="text-2xl font-bold mb-6 text-white">Resultados para: "${query}"</h2>
@@ -432,21 +389,16 @@
         `;
         main.innerHTML = html;
       } catch (e) {
-        console.error(e);
         main.innerHTML = '<div class="pt-24 px-12 text-red-500">Erro na pesquisa.</div>';
       }
     }
-
-    // --- CARREGAMENTO DE PÁGINAS ---
 
     async function loadHome() {
       const trending = await fetchData('/trending/all/week?');
       const action = await fetchData('/discover/movie?with_genres=28');
       const series = await fetchData('/discover/tv?sort_by=popularity.desc');
-
       const heroItem = trending.results[0];
       const heroImage = heroItem && heroItem.backdrop_path ? `${IMAGE_BASE_URL}${heroItem.backdrop_path}` : 'https://wallpaperaccess.com/full/1202063.jpg';
-      
       const main = document.getElementById('main-view');
       main.innerHTML = `
         <header class="relative h-[80vh] object-cover bg-center bg-no-repeat" style="background-image: url('${heroImage}')">
@@ -458,13 +410,9 @@
               <button onclick="openModalDetails(${JSON.stringify(heroItem).replace(/"/g, '&quot;')}, '${heroItem.media_type}')" class="bg-white text-black px-8 py-2 rounded font-bold hover:bg-white/80 transition flex items-center gap-2">
                 <i class="fas fa-play"></i> Assistir
               </button>
-              <button onclick="openModalDetails(${JSON.stringify(heroItem).replace(/"/g, '&quot;')}, '${heroItem.media_type}')" class="bg-gray-500/70 text-white px-8 py-2 rounded font-bold hover:bg-gray-500/50 transition">
-                <i class="fas fa-info-circle"></i> Info
-              </button>
             </div>
           </div>
         </header>
-        
         <div class="relative z-10 -mt-24 pl-4 md:pl-12 pb-12 space-y-8">
           ${buildRow('Em Alta', trending.results)}
           ${buildRow('Séries Populares', series.results, 'tv')}
@@ -477,44 +425,17 @@
       let endpoint = '';
       let title = '';
       let mediaType = 'movie';
-      
-      if (type === 'anime') {
-        endpoint = '/discover/tv?with_genres=16&with_keywords=210024';
-        title = 'Animes';
-        mediaType = 'tv';
-      } else if (type === 'drama') {
-        endpoint = '/discover/tv?with_original_language=ko';
-        title = 'Doramas';
-        mediaType = 'tv';
-      } else if (type === 'movie') {
-        endpoint = '/movie/popular?';
-        title = 'Filmes';
-        mediaType = 'movie';
-      } else {
-        endpoint = '/tv/popular?';
-        title = 'Séries';
-        mediaType = 'tv';
-      }
+      if (type === 'anime') { endpoint = '/discover/tv?with_genres=16&with_keywords=210024'; title = 'Animes'; mediaType = 'tv'; }
+      else if (type === 'drama') { endpoint = '/discover/tv?with_original_language=ko'; title = 'Doramas'; mediaType = 'tv'; }
+      else if (type === 'movie') { endpoint = '/movie/popular?'; title = 'Filmes'; mediaType = 'movie'; }
+      else { endpoint = '/tv/popular?'; title = 'Séries'; mediaType = 'tv'; }
 
-      // Buscar múltiplas páginas para parecer que tem "todos" os filmes (Fetch Pages 1, 2, 3)
       const p1 = await fetchData(endpoint, 1);
-      const p2 = await fetchData(endpoint, 2);
-      const p3 = await fetchData(endpoint, 3);
-      
-      // Combinar resultados
-      const allResults = [...p1.results, ...p2.results, ...p3.results];
-      // Remover duplicatas por ID
-      const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
-
+      const uniqueResults = p1.results;
       const main = document.getElementById('main-view');
       main.innerHTML = `
         <div class="pt-24 px-4 md:px-12">
           <h2 class="text-3xl font-bold mb-8">${title}</h2>
-          
-          ${buildRow(`Top ${title}`, p1.results.slice(0,10), mediaType, true)}
-          
-          <h3 class="text-xl text-gray-400 font-bold mt-12 mb-4">Catálogo Completo</h3>
-          
           <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             ${uniqueResults.map(item => `
               <div onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${mediaType}')" class="cursor-pointer hover:scale-105 transition duration-300 relative group">
@@ -526,10 +447,6 @@
               </div>
             `).join('')}
           </div>
-          
-          <div class="py-8 text-center">
-            <button class="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-2 rounded text-sm">Carregar Mais</button>
-          </div>
         </div>
       `;
     }
@@ -538,48 +455,12 @@
       const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
       const today = new Date().getDay();
       const main = document.getElementById('main-view');
-      
-      main.innerHTML = `
-        <div class="pt-24 px-4 md:px-12">
-          <h2 class="text-3xl font-bold mb-8 text-netflixRed">Calendário de Lançamentos</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            ${days.map((day, index) => `
-              <div class="bg-[#181818] p-6 rounded border ${index === today ? 'border-netflixRed' : 'border-transparent'}">
-                <h3 class="text-xl font-bold mb-4 ${index === today ? 'text-netflixRed' : 'text-white'}">${day}</h3>
-                <ul class="space-y-3 text-gray-400 text-sm">
-                  <li class="flex justify-between border-b border-gray-800 pb-2"><span>One Piece</span> <span class="text-white">EP ${1090+index}</span></li>
-                  <li class="flex justify-between border-b border-gray-800 pb-2"><span>Jujutsu Kaisen</span> <span class="text-white">EP ${30+index}</span></li>
-                  <li class="flex justify-between border-b border-gray-800 pb-2"><span>Dragon Ball Daima</span> <span class="text-white">EP 0${index+1}</span></li>
-                </ul>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
+      main.innerHTML = `<div class="pt-24 px-4 md:px-12"><h2 class="text-3xl font-bold mb-8 text-netflixRed">Calendário</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${days.map((day, index) => `<div class="bg-[#181818] p-6 rounded border ${index === today ? 'border-netflixRed' : 'border-transparent'}"><h3 class="text-xl font-bold mb-4">${day}</h3></div>`).join('')}</div></div>`;
     }
 
     function buildRow(title, items, typeOverride = null, large = false) {
       if (!items || items.length === 0) return '';
-      return `
-        <div class="mb-8">
-          <h2 class="text-xl font-bold text-white mb-2 ml-2 hover:text-netflixRed cursor-pointer">${title}</h2>
-          <div class="row-posters hide-scroll">
-            ${items.map(item => {
-              const mediaType = typeOverride || item.media_type || 'movie';
-              const imgPath = large ? item.poster_path : item.backdrop_path;
-              const imgUrl = imgPath ? `https://image.tmdb.org/t/p/w500${imgPath}` : 'https://via.placeholder.com/300x169?text=Capa';
-              return `
-                <img 
-                  onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${mediaType}')"
-                  class="row-poster ${large ? 'row-poster-large' : ''}" 
-                  src="${imgUrl}" 
-                  alt="${item.name || item.title}"
-                >
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `;
+      return `<div class="mb-8"><h2 class="text-xl font-bold text-white mb-2 ml-2">${title}</h2><div class="row-posters hide-scroll">${items.map(item => `<img onclick="openModalDetails(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${typeOverride || item.media_type || 'movie'}')" class="row-poster ${large ? 'row-poster-large' : ''}" src="${item.backdrop_path ? 'https://image.tmdb.org/t/p/w500'+item.backdrop_path : 'https://via.placeholder.com/300x169'}" alt="${item.name || item.title}">`).join('')}</div></div>`;
     }
 
     // --- MODALS ---
@@ -587,33 +468,22 @@
     function openModalDetails(item, type) {
       currentContent = { ...item, type: type || 'movie' };
       const modal = document.getElementById('details-modal');
-      
       document.getElementById('modal-title').innerText = item.title || item.name;
-      document.getElementById('modal-desc').innerText = item.overview || "Sem descrição disponível em português.";
+      document.getElementById('modal-desc').innerText = item.overview || "Sem descrição.";
       document.getElementById('modal-backdrop').src = item.backdrop_path ? `${IMAGE_BASE_URL}${item.backdrop_path}` : '';
-      document.getElementById('modal-year').innerText = (item.release_date || item.first_air_date || '????').substring(0,4);
-      document.getElementById('modal-rating').innerText = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-      document.getElementById('modal-type').innerText = type === 'tv' ? 'Série' : 'Filme';
       
-      // Lógica de Episódios
       const epContainer = document.getElementById('episodes-container');
       const epList = document.getElementById('episodes-list');
       epList.innerHTML = '';
       
       if (type === 'tv') {
         epContainer.classList.remove('hidden');
-        // Gera episódios fictícios pois a API gratuita não retorna lista de eps direto no objeto search/discover
         for(let i=1; i<=12; i++) {
           epList.innerHTML += `
-            <div onclick="playContent('S01E0${i}')" class="flex items-center gap-4 p-3 hover:bg-[#333] cursor-pointer rounded transition border-b border-gray-800">
+            <div onclick="playContent('S01E${i}')" class="flex items-center gap-4 p-3 hover:bg-[#333] cursor-pointer rounded transition border-b border-gray-800">
               <div class="text-xl text-gray-500 w-8">${i}</div>
-              <div class="w-24 h-14 bg-gray-700 rounded overflow-hidden relative">
-                 <img src="${item.backdrop_path ? 'https://image.tmdb.org/t/p/w200'+item.backdrop_path : ''}" class="w-full h-full object-cover opacity-60">
-                 <i class="fas fa-play absolute inset-0 flex items-center justify-center text-white text-xs"></i>
-              </div>
               <div class="flex-grow">
                 <h4 class="font-bold text-sm text-gray-200">Episódio ${i}</h4>
-                <p class="text-xs text-gray-500">24m</p>
               </div>
             </div>
           `;
@@ -621,7 +491,6 @@
       } else {
         epContainer.classList.add('hidden');
       }
-
       modal.classList.remove('hidden');
     }
 
@@ -629,66 +498,59 @@
       document.getElementById('details-modal').classList.add('hidden');
     }
 
-    // --- PLAYER AUTOMÁTICO (SUPERFLIX / PREMIUM) ---
+    // --- PLAYER COM AUTOPLAY E ESCUDO DE 20s ---
     
     function playContent(episodeLabel = null) {
       const modal = document.getElementById('player-modal');
       const iframe = document.getElementById('video-frame');
-      const title = document.getElementById('player-title');
       const shield = document.getElementById('player-shield-overlay');
       
-      // Fecha o modal de detalhes
       closeDetails();
       
       let id = currentContent.id;
       let type = currentContent.type === 'tv' ? 'serie' : 'filme';
       let url = '';
 
-      title.innerText = (currentContent.title || currentContent.name) + (episodeLabel ? ` - ${episodeLabel}` : '');
+      document.getElementById('player-title').innerText = (currentContent.title || currentContent.name) + (episodeLabel ? ` - ${episodeLabel}` : '');
 
-      // CONFIGURAÇÃO DO PLAYER PREMIUM (SUPERFLIX)
+      // Define a URL base
       if (type === 'serie') {
          url = `https://superflixapi.asia/serie/${id}`;
       } else {
          url = `https://superflixapi.asia/filme/${id}`;
       }
       
-      // LIMPEZA DE TIMERS ANTERIORES E RESET DO ESCUDO
+      // ADICIONA O AUTOPLAY NA URL ATRAVÉS DO PARÂMETRO COMUM
+      // Nota: Muitos embeds usam ?autoplay=1 ou &autoplay=1
+      if (url.includes('?')) {
+          url += '&autoplay=1';
+      } else {
+          url += '?autoplay=1';
+      }
+
+      // RESET DO TIMER E DO ESCUDO
       if(shieldTimer) clearTimeout(shieldTimer);
       shield.style.display = 'none'; 
 
       iframe.src = url;
       modal.classList.remove('hidden');
 
-      // ADICIONA O ATRASO DE 20 SEGUNDOS PARA O ESCUDO APARECER
+      // ESCUDO ATIVA APÓS 20 SEGUNDOS
       shieldTimer = setTimeout(() => {
         shield.style.display = 'block';
-        console.log("Escudo antipopup ativado após 20 segundos.");
+        console.log("Escudo ativo.");
       }, 20000); 
     }
 
     function closePlayer() {
-      const modal = document.getElementById('player-modal');
       const iframe = document.getElementById('video-frame');
       const shield = document.getElementById('player-shield-overlay');
-      
-      // PARA O VÍDEO E RESETAR O ESCUDO E O TIMER
       iframe.src = ''; 
       if(shieldTimer) clearTimeout(shieldTimer);
       shield.style.display = 'none';
-      
-      modal.classList.add('hidden');
+      document.getElementById('player-modal').classList.add('hidden');
     }
 
-    // --- MOCK DATA (Fallback) ---
-    function getMockData(endpoint) {
-      const mockMovies = [
-        { id: 550, title: "Clube da Luta", backdrop_path: null, overview: "Um homem deprimido...", vote_average: 8.4, release_date: "1999" },
-        { id: 11, title: "Star Wars", backdrop_path: null, overview: "Guerra...", vote_average: 8.2, release_date: "1977" },
-        { id: 12, title: "Procurando Nemo", backdrop_path: null, overview: "Peixe...", vote_average: 7.8, release_date: "2003" },
-      ];
-      return { results: mockMovies };
-    }
   </script>
 </body>
 </html>
