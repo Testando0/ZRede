@@ -86,7 +86,7 @@
       height: 85%; /* Deixa 15% em baixo livre para os controles nativos */
       z-index: 50;
       background: transparent; 
-      display: none; /* INICIA DESATIVADO PARA NÃO QUEBRAR A ESCOLHA DE EPISÓDIOS */
+      display: none; /* INICIA DESATIVADO */
     }
 
     /* Animações */
@@ -175,8 +175,7 @@
       </div>
     </nav>
 
-    <main id="main-view" class="flex-grow pb-20 md:pb-0">
-      </main>
+    <main id="main-view" class="flex-grow pb-20 md:pb-0"></main>
 
   </div>
 
@@ -218,8 +217,7 @@
       
       <div id="episodes-container" class="p-8 border-t border-gray-700 hidden">
         <h3 class="text-xl font-bold mb-4">Episódios (Selecione para Assistir)</h3>
-        <div id="episodes-list" class="space-y-2 max-h-60 overflow-y-auto">
-          </div>
+        <div id="episodes-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
       </div>
     </div>
   </div>
@@ -237,7 +235,6 @@
     
     <div class="flex-grow relative bg-black flex items-center justify-center player-wrapper">
       <div id="player-shield-overlay" class="click-shield" title="Controles na barra inferior"></div>
-      
       <iframe id="video-frame" class="w-full h-full" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
     </div>
   </div>
@@ -309,8 +306,8 @@
     document.getElementById('auth-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
-      const pass = document.getElementById('password').value;
       localStorage.setItem('kuromiUser', JSON.stringify({email}));
+      currentUser = {email};
       showApp();
     });
 
@@ -465,7 +462,7 @@
 
     // --- MODALS ---
     
-    function openModalDetails(item, type) {
+    async function openModalDetails(item, type) {
       currentContent = { ...item, type: type || 'movie' };
       const modal = document.getElementById('details-modal');
       document.getElementById('modal-title').innerText = item.title || item.name;
@@ -478,6 +475,7 @@
       
       if (type === 'tv') {
         epContainer.classList.remove('hidden');
+        // Simulação de episódios para manter funcionamento
         for(let i=1; i<=12; i++) {
           epList.innerHTML += `
             <div onclick="playContent('S01E${i}')" class="flex items-center gap-4 p-3 hover:bg-[#333] cursor-pointer rounded transition border-b border-gray-800">
@@ -498,7 +496,7 @@
       document.getElementById('details-modal').classList.add('hidden');
     }
 
-    // --- PLAYER COM AUTOPLAY E ESCUDO DE 20s ---
+    // --- PLAYER ---
     
     function playContent(episodeLabel = null) {
       const modal = document.getElementById('player-modal');
@@ -509,36 +507,24 @@
       
       let id = currentContent.id;
       let type = currentContent.type === 'tv' ? 'serie' : 'filme';
-      let url = '';
+      let baseUrl = type === 'serie' ? `https://superflixapi.asia/serie/${id}` : `https://superflixapi.asia/filme/${id}`;
+      
+      // APLICA AUTOPLAY VIA URL
+      let finalUrl = baseUrl + (baseUrl.includes('?') ? '&autoplay=1' : '?autoplay=1');
 
       document.getElementById('player-title').innerText = (currentContent.title || currentContent.name) + (episodeLabel ? ` - ${episodeLabel}` : '');
 
-      // Define a URL base
-      if (type === 'serie') {
-         url = `https://superflixapi.asia/serie/${id}`;
-      } else {
-         url = `https://superflixapi.asia/filme/${id}`;
-      }
-      
-      // ADICIONA O AUTOPLAY NA URL ATRAVÉS DO PARÂMETRO COMUM
-      // Nota: Muitos embeds usam ?autoplay=1 ou &autoplay=1
-      if (url.includes('?')) {
-          url += '&autoplay=1';
-      } else {
-          url += '?autoplay=1';
-      }
-
-      // RESET DO TIMER E DO ESCUDO
+      // RESET COMPLETO DO ESTADO ANTERIOR
       if(shieldTimer) clearTimeout(shieldTimer);
       shield.style.display = 'none'; 
-
-      iframe.src = url;
+      iframe.src = finalUrl;
+      
       modal.classList.remove('hidden');
 
-      // ESCUDO ATIVA APÓS 20 SEGUNDOS
+      // LÓGICA DO ESCUDO: ATIVA APÓS 20 SEGUNDOS
       shieldTimer = setTimeout(() => {
         shield.style.display = 'block';
-        console.log("Escudo ativo.");
+        console.log("Escudo Anti-Popup Ativado.");
       }, 20000); 
     }
 
